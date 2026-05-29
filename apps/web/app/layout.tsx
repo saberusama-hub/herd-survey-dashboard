@@ -6,11 +6,14 @@ import './globals.css';
 import { Providers } from './providers';
 
 export const metadata: Metadata = {
-  title: { default: 'Herd Survey · Federal R&D Dashboard', template: '%s · Herd Survey' },
+  title: {
+    default: 'Research Data Platform · Federal R&D Funding',
+    template: '%s · Research Data Platform',
+  },
   description:
     'Explore 20 years (FY2005–FY2024) of federal research funding to U.S. universities. HERD, USAS, NIH, NSF, SBIR, Federal Funds — all reconciled, all open.',
   openGraph: {
-    title: 'Herd Survey · Federal R&D Dashboard',
+    title: 'Research Data Platform · Federal R&D Funding',
     description: 'Federal research funding to U.S. universities, 2005–2024.',
     type: 'website',
   },

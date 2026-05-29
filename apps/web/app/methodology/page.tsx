@@ -139,9 +139,12 @@ export default function MethodologyPage() {
         <h2 className="h-section">Citation</h2>
         <Card>
           <CardContent className="text-sm font-mono">
-            Afzal, U. (2026).{' '}
-            <em>Herd Survey: A longitudinal database of federal R&amp;D funding to U.S. universities, FY2005–FY2024</em>
-            . NYU.
+            Policy and Strategy team (2026).{' '}
+            <em>
+              Research Data Platform: A longitudinal database of federal R&amp;D funding to U.S. universities,
+              FY2005–FY2024
+            </em>
+            .
           </CardContent>
         </Card>
       </section>

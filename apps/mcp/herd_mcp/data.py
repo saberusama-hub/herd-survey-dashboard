@@ -1,4 +1,4 @@
-"""DuckDB connection + parquet registration for the Herd Survey MCP server.
+"""DuckDB connection + parquet registration for the Research Data Platform MCP server.
 
 The server runs in two modes:
   - LOCAL: points at a local directory of parquet files (e.g., the dashboard

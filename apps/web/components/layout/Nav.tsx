@@ -21,7 +21,7 @@ export function Nav() {
     <header className="sticky top-0 z-40 border-b border-border bg-surface/85 backdrop-blur">
       <div className="container-wide flex h-14 items-center gap-8">
         <Link href="/" className="font-medium tracking-tight text-text-primary">
-          Herd Survey
+          Research Data Platform
         </Link>
         <nav className="hidden md:flex items-center gap-1 text-sm">
           {NAV.map((item) => (

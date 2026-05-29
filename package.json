@@ -2,9 +2,9 @@
   "name": "herd-survey-dashboard",
   "version": "0.1.0",
   "private": true,
-  "description": "Modern research data analytics dashboard for federal R&D funding (FY2005-FY2024).",
+  "description": "Research Data Platform — federal R&D funding to U.S. universities (FY2005–FY2024).",
   "license": "MIT",
-  "author": "Usama Afzal <usama.afzal@nyu.edu>",
+  "author": "Policy and Strategy team",
   "scripts": {
     "dev": "pnpm --filter @herd/web dev",
     "build": "pnpm --filter @herd/web build",

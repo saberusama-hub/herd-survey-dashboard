@@ -1,5 +1,5 @@
 """
-build_data.py — Convert Herd Survey data lake → browser-bundled parquet.
+build_data.py — Convert source data lake → browser-bundled parquet for the Research Data Platform.
 
 Uses pyarrow only (no duckdb in the build pipeline — DuckDB lives in the
 browser via DuckDB-WASM at runtime). Pre-built pyarrow wheel works on

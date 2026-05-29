@@ -122,7 +122,7 @@ def get_methodology() -> dict[str, Any]:
             "value_pass": "Phase 13.6 — 2.7M cells scanned, 122 distinct value-level assertions, 0 blockers",
         },
         "citation": (
-            "Afzal, U. (2026). Herd Survey: A longitudinal database of federal R&D funding to U.S. "
-            "universities, FY2005–FY2024. NYU."
+            "Policy and Strategy team (2026). Research Data Platform: A longitudinal database of federal "
+            "R&D funding to U.S. universities, FY2005–FY2024."
         ),
     }

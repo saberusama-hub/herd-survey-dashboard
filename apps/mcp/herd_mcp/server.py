@@ -28,9 +28,10 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 # We're publicly accessible over HTTPS behind HF Spaces' reverse proxy, so
 # disable it here — the threat model it protects against doesn't apply.
 mcp = FastMCP(
-    name="herd-survey",
+    name="research-data-platform",
     instructions=(
-        "Herd Survey · Federal R&D funding to U.S. universities, FY2005–FY2024.\n\n"
+        "Research Data Platform · Federal R&D funding to U.S. universities, FY2005–FY2024.\n"
+        "Maintained by the Policy and Strategy team.\n\n"
         "Use `list_tables` to discover the 15 registered views. Use `describe_table` "
         "before writing SQL to confirm column names and types. Use `query_duckdb` for "
         "ad-hoc analysis (SELECT-only, single-statement, ≤50k rows). Use "
