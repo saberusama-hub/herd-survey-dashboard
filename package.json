@@ -1,0 +1,21 @@
+{
+  "name": "herd-survey-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Modern research data analytics dashboard for federal R&D funding (FY2005-FY2024).",
+  "license": "MIT",
+  "author": "Usama Afzal <usama.afzal@nyu.edu>",
+  "scripts": {
+    "dev": "pnpm --filter @herd/web dev",
+    "build": "pnpm --filter @herd/web build",
+    "lint": "pnpm --filter @herd/web lint",
+    "typecheck": "pnpm --filter @herd/web typecheck",
+    "test": "pnpm --filter @herd/web test",
+    "data:build": "python3 scripts/build_data.py",
+    "data:verify": "python3 scripts/verify_data.py"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@9.12.0"
+}
