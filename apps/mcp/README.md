@@ -1,3 +1,15 @@
+---
+title: Herd Survey MCP
+emoji: 📊
+colorFrom: indigo
+colorTo: green
+sdk: docker
+app_port: 7860
+pinned: false
+license: mit
+short_description: MCP server exposing Herd Survey federal R&D data to claude.ai
+---
+
 # Herd Survey MCP Server
 
 Exposes the Herd Survey dataset to [claude.ai](https://claude.ai) (and any MCP-compatible client) so users can ask natural-language questions about 20 years of federal R&D funding — using their existing Claude subscription. No API key, no API costs.
