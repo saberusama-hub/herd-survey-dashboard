@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* surfaces (warm off-white) */
+    --surface: 60 9% 98%;
+    --surface-elevated: 0 0% 100%;
+    --border: 30 7% 90%;
+    --ring: 173 80% 26%;
+
+    /* text */
+    --text-primary: 24 10% 4%;
+    --text-secondary: 25 5% 33%;
+    --text-tertiary: 24 6% 64%;
+
+    /* accent: deep teal */
+    --accent: 173 80% 26%;
+    --accent-muted: 167 85% 89%;
+
+    --positive: 142 71% 30%;
+    --negative: 0 73% 41%;
+    --warning: 40 86% 32%;
+
+    /* chart sequence — desaturated, accessible */
+    --chart-1: 173 80% 26%;
+    --chart-2: 226 71% 40%;
+    --chart-3: 30 90% 35%;
+    --chart-4: 333 71% 42%;
+    --chart-5: 80 60% 30%;
+    --chart-6: 263 70% 50%;
+    --chart-7: 215 19% 35%;
+  }
+
+  .dark {
+    --surface: 25 7% 4%;
+    --surface-elevated: 24 8% 7%;
+    --border: 25 5% 18%;
+    --ring: 173 67% 53%;
+
+    --text-primary: 60 9% 98%;
+    --text-secondary: 30 5% 70%;
+    --text-tertiary: 25 5% 50%;
+
+    --accent: 173 67% 53%;
+    --accent-muted: 173 50% 18%;
+
+    --positive: 142 60% 50%;
+    --negative: 0 70% 60%;
+    --warning: 40 80% 55%;
+  }
+
+  * {
+    @apply border-border;
+  }
+  html {
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
+  }
+  body {
+    @apply bg-surface text-text-primary font-sans antialiased;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+  ::selection {
+    background: hsl(var(--accent-muted));
+    color: hsl(var(--text-primary));
+  }
+}
+
+@layer components {
+  .container-narrow {
+    @apply max-w-5xl mx-auto px-6 sm:px-8;
+  }
+  .container-wide {
+    @apply max-w-[1440px] mx-auto px-6 sm:px-8;
+  }
+  .h-display {
+    @apply text-4xl md:text-5xl font-medium tracking-tight;
+  }
+  .h-section {
+    @apply text-2xl md:text-3xl font-medium tracking-tight;
+  }
+  .h-card {
+    @apply text-base font-medium text-text-secondary uppercase tracking-wide text-2xs;
+  }
+}
