@@ -1,0 +1,1623 @@
+{
+  "built_at_utc": "2026-05-29T19:19:07.429841+00:00",
+  "source_dir": "/Users/Usama/Documents/Documents - Usama\u2019s MacBook Pro/Claude Projects/Herd Survey/data/processed",
+  "files": {
+    "sheet_01_institution_funding_panel": {
+      "rows": 1014,
+      "size_bytes": 489225,
+      "sha256": "8b18b8d4f8c3f859b06b9a3d4f4437fe111d6a39854583d365dce83d7febae48",
+      "columns": [
+        {
+          "name": "institution_sk",
+          "type": "string"
+        },
+        {
+          "name": "canonical_name",
+          "type": "string"
+        },
+        {
+          "name": "state_code",
+          "type": "string"
+        },
+        {
+          "name": "sector",
+          "type": "string"
+        },
+        {
+          "name": "is_hbcu",
+          "type": "bool"
+        },
+        {
+          "name": "is_hsi",
+          "type": "bool"
+        },
+        {
+          "name": "FY2005 Federal government",
+          "type": "double"
+        },
+        {
+          "name": "FY2005 State and local government",
+          "type": "double"
+        },
+        {
+          "name": "FY2005 Business",
+          "type": "double"
+        },
+        {
+          "name": "FY2005 Nonprofit organizations",
+          "type": "null"
+        },
+        {
+          "name": "FY2005 Institution funds",
+          "type": "double"
+        },
+        {
+          "name": "FY2005 All other sources",
+          "type": "double"
+        },
+        {
+          "name": "FY2005 Total",
+          "type": "double"
+        },
+        {
+          "name": "FY2006 Federal government",
+          "type": "double"
+        },
+        {
+          "name": "FY2006 State and local government",
+          "type": "double"
+        },
+        {
+          "name": "FY2006 Business",
+          "type": "double"
+        },
+        {
+          "name": "FY2006 Nonprofit organizations",
+          "type": "null"
+        },
+        {
+          "name": "FY2006 Institution funds",
+          "type": "double"
+        },
+        {
+          "name": "FY2006 All other sources",
+          "type": "double"
+        },
+        {
+          "name": "FY2006 Total",
+          "type": "double"
+        },
+        {
+          "name": "FY2007 Federal government",
+          "type": "double"
+        },
+        {
+          "name": "FY2007 State and local government",
+          "type": "double"
+        },
+        {
+          "name": "FY2007 Business",
+          "type": "double"
+        },
+        {
+          "name": "FY2007 Nonprofit organizations",
+          "type": "null"
+        },
+        {
+          "name": "FY2007 Institution funds",
+          "type": "double"
+        },
+        {
+          "name": "FY2007 All other sources",
+          "type": "double"
+        },
+        {
+          "name": "FY2007 Total",
+          "type": "double"
+        },
+        {
+          "name": "FY2008 Federal government",
+          "type": "double"
+        },
+        {
+          "name": "FY2008 State and local government",
+          "type": "double"
+        },
+        {
+          "name": "FY2008 Business",
+          "type": "double"
+        },
+        {
+          "name": "FY2008 Nonprofit organizations",
+          "type": "null"
+        },
+        {
+          "name": "FY2008 Institution funds",
+          "type": "double"
+        },
+        {
+          "name": "FY2008 All other sources",
+          "type": "double"
+        },
+        {
+          "name": "FY2008 Total",
+          "type": "double"
+        },
+        {
+          "name": "FY2009 Federal government",
+          "type": "double"
+        },
+        {
+          "name": "FY2009 State and local government",
+          "type": "double"
+        },
+        {
+          "name": "FY2009 Business",
+          "type": "double"
+        },
+        {
+          "name": "FY2009 Nonprofit organizations",
+          "type": "null"
+        },
+        {
+          "name": "FY2009 Institution funds",
+          "type": "double"
+        },
+        {
+          "name": "FY2009 All other sources",
+          "type": "double"
+        },
+        {
+          "name": "FY2009 Total",
+          "type": "double"
+        },
+        {
+          "name": "FY2010 Federal government",
+          "type": "double"
+        },
+        {
+          "name": "FY2010 State and local government",
+          "type": "double"
+        },
+        {
+          "name": "FY2010 Business",
+          "type": "double"
+        },
+        {
+          "name": "FY2010 Nonprofit organizations",
+          "type": "double"
+        },
+        {
+          "name": "FY2010 Institution funds",
+          "type": "double"
+        },
+        {
+          "name": "FY2010 All other sources",
+          "type": "double"
+        },
+        {
+          "name": "FY2010 Total",
+          "type": "double"
+        },
+        {
+          "name": "FY2011 Federal government",
+          "type": "double"
+        },
+        {
+          "name": "FY2011 State and local government",
+          "type": "double"
+        },
+        {
+          "name": "FY2011 Business",
+          "type": "double"
+        },
+        {
+          "name": "FY2011 Nonprofit organizations",
+          "type": "double"
+        },
+        {
+          "name": "FY2011 Institution funds",
+          "type": "double"
+        },
+        {
+          "name": "FY2011 All other sources",
+          "type": "double"
+        },
+        {
+          "name": "FY2011 Total",
+          "type": "double"
+        },
+        {
+          "name": "FY2012 Federal government",
+          "type": "double"
+        },
+        {
+          "name": "FY2012 State and local government",
+          "type": "double"
+        },
+        {
+          "name": "FY2012 Business",
+          "type": "double"
+        },
+        {
+          "name": "FY2012 Nonprofit organizations",
+          "type": "double"
+        },
+        {
+          "name": "FY2012 Institution funds",
+          "type": "double"
+        },
+        {
+          "name": "FY2012 All other sources",
+          "type": "double"
+        },
+        {
+          "name": "FY2012 Total",
+          "type": "double"
+        },
+        {
+          "name": "FY2013 Federal government",
+          "type": "double"
+        },
+        {
+          "name": "FY2013 State and local government",
+          "type": "double"
+        },
+        {
+          "name": "FY2013 Business",
+          "type": "double"
+        },
+        {
+          "name": "FY2013 Nonprofit organizations",
+          "type": "double"
+        },
+        {
+          "name": "FY2013 Institution funds",
+          "type": "double"
+        },
+        {
+          "name": "FY2013 All other sources",
+          "type": "double"
+        },
+        {
+          "name": "FY2013 Total",
+          "type": "double"
+        },
+        {
+          "name": "FY2014 Federal government",
+          "type": "double"
+        },
+        {
+          "name": "FY2014 State and local government",
+          "type": "double"
+        },
+        {
+          "name": "FY2014 Business",
+          "type": "double"
+        },
+        {
+          "name": "FY2014 Nonprofit organizations",
+          "type": "double"
+        },
+        {
+          "name": "FY2014 Institution funds",
+          "type": "double"
+        },
+        {
+          "name": "FY2014 All other sources",
+          "type": "double"
+        },
+        {
+          "name": "FY2014 Total",
+          "type": "double"
+        },
+        {
+          "name": "FY2015 Federal government",
+          "type": "double"
+        },
+        {
+          "name": "FY2015 State and local government",
+          "type": "double"
+        },
+        {
+          "name": "FY2015 Business",
+          "type": "double"
+        },
+        {
+          "name": "FY2015 Nonprofit organizations",
+          "type": "double"
+        },
+        {
+          "name": "FY2015 Institution funds",
+          "type": "double"
+        },
+        {
+          "name": "FY2015 All other sources",
+          "type": "double"
+        },
+        {
+          "name": "FY2015 Total",
+          "type": "double"
+        },
+        {
+          "name": "FY2016 Federal government",
+          "type": "double"
+        },
+        {
+          "name": "FY2016 State and local government",
+          "type": "double"
+        },
+        {
+          "name": "FY2016 Business",
+          "type": "double"
+        },
+        {
+          "name": "FY2016 Nonprofit organizations",
+          "type": "double"
+        },
+        {
+          "name": "FY2016 Institution funds",
+          "type": "double"
+        },
+        {
+          "name": "FY2016 All other sources",
+          "type": "double"
+        },
+        {
+          "name": "FY2016 Total",
+          "type": "double"
+        },
+        {
+          "name": "FY2017 Federal government",
+          "type": "double"
+        },
+        {
+          "name": "FY2017 State and local government",
+          "type": "double"
+        },
+        {
+          "name": "FY2017 Business",
+          "type": "double"
+        },
+        {
+          "name": "FY2017 Nonprofit organizations",
+          "type": "double"
+        },
+        {
+          "name": "FY2017 Institution funds",
+          "type": "double"
+        },
+        {
+          "name": "FY2017 All other sources",
+          "type": "double"
+        },
+        {
+          "name": "FY2017 Total",
+          "type": "double"
+        },
+        {
+          "name": "FY2018 Federal government",
+          "type": "double"
+        },
+        {
+          "name": "FY2018 State and local government",
+          "type": "double"
+        },
+        {
+          "name": "FY2018 Business",
+          "type": "double"
+        },
+        {
+          "name": "FY2018 Nonprofit organizations",
+          "type": "double"
+        },
+        {
+          "name": "FY2018 Institution funds",
+          "type": "double"
+        },
+        {
+          "name": "FY2018 All other sources",
+          "type": "double"
+        },
+        {
+          "name": "FY2018 Total",
+          "type": "double"
+        },
+        {
+          "name": "FY2019 Federal government",
+          "type": "double"
+        },
+        {
+          "name": "FY2019 State and local government",
+          "type": "double"
+        },
+        {
+          "name": "FY2019 Business",
+          "type": "double"
+        },
+        {
+          "name": "FY2019 Nonprofit organizations",
+          "type": "double"
+        },
+        {
+          "name": "FY2019 Institution funds",
+          "type": "double"
+        },
+        {
+          "name": "FY2019 All other sources",
+          "type": "double"
+        },
+        {
+          "name": "FY2019 Total",
+          "type": "double"
+        },
+        {
+          "name": "FY2020 Federal government",
+          "type": "double"
+        },
+        {
+          "name": "FY2020 State and local government",
+          "type": "double"
+        },
+        {
+          "name": "FY2020 Business",
+          "type": "double"
+        },
+        {
+          "name": "FY2020 Nonprofit organizations",
+          "type": "double"
+        },
+        {
+          "name": "FY2020 Institution funds",
+          "type": "double"
+        },
+        {
+          "name": "FY2020 All other sources",
+          "type": "double"
+        },
+        {
+          "name": "FY2020 Total",
+          "type": "double"
+        },
+        {
+          "name": "FY2021 Federal government",
+          "type": "double"
+        },
+        {
+          "name": "FY2021 State and local government",
+          "type": "double"
+        },
+        {
+          "name": "FY2021 Business",
+          "type": "double"
+        },
+        {
+          "name": "FY2021 Nonprofit organizations",
+          "type": "double"
+        },
+        {
+          "name": "FY2021 Institution funds",
+          "type": "double"
+        },
+        {
+          "name": "FY2021 All other sources",
+          "type": "double"
+        },
+        {
+          "name": "FY2021 Total",
+          "type": "double"
+        },
+        {
+          "name": "FY2022 Federal government",
+          "type": "double"
+        },
+        {
+          "name": "FY2022 State and local government",
+          "type": "double"
+        },
+        {
+          "name": "FY2022 Business",
+          "type": "double"
+        },
+        {
+          "name": "FY2022 Nonprofit organizations",
+          "type": "double"
+        },
+        {
+          "name": "FY2022 Institution funds",
+          "type": "double"
+        },
+        {
+          "name": "FY2022 All other sources",
+          "type": "double"
+        },
+        {
+          "name": "FY2022 Total",
+          "type": "double"
+        },
+        {
+          "name": "FY2023 Federal government",
+          "type": "double"
+        },
+        {
+          "name": "FY2023 State and local government",
+          "type": "double"
+        },
+        {
+          "name": "FY2023 Business",
+          "type": "double"
+        },
+        {
+          "name": "FY2023 Nonprofit organizations",
+          "type": "double"
+        },
+        {
+          "name": "FY2023 Institution funds",
+          "type": "double"
+        },
+        {
+          "name": "FY2023 All other sources",
+          "type": "double"
+        },
+        {
+          "name": "FY2023 Total",
+          "type": "double"
+        },
+        {
+          "name": "FY2024 Federal government",
+          "type": "double"
+        },
+        {
+          "name": "FY2024 State and local government",
+          "type": "double"
+        },
+        {
+          "name": "FY2024 Business",
+          "type": "double"
+        },
+        {
+          "name": "FY2024 Nonprofit organizations",
+          "type": "double"
+        },
+        {
+          "name": "FY2024 Institution funds",
+          "type": "double"
+        },
+        {
+          "name": "FY2024 All other sources",
+          "type": "double"
+        },
+        {
+          "name": "FY2024 Total",
+          "type": "double"
+        }
+      ]
+    },
+    "sheet_02_institution_agency": {
+      "rows": 41120,
+      "size_bytes": 335950,
+      "sha256": "078bfcbcd0bb4de390744e51f8a0b5ab4b03c08339279e2c82317ffb788a2725",
+      "columns": [
+        {
+          "name": "institution_sk",
+          "type": "string"
+        },
+        {
+          "name": "canonical_name",
+          "type": "string"
+        },
+        {
+          "name": "state_code",
+          "type": "string"
+        },
+        {
+          "name": "sector",
+          "type": "string"
+        },
+        {
+          "name": "fiscal_year",
+          "type": "int64"
+        },
+        {
+          "name": "NSF",
+          "type": "double"
+        },
+        {
+          "name": "DOD",
+          "type": "double"
+        },
+        {
+          "name": "DOE",
+          "type": "double"
+        },
+        {
+          "name": "NASA",
+          "type": "double"
+        },
+        {
+          "name": "USDA",
+          "type": "double"
+        },
+        {
+          "name": "ED",
+          "type": "double"
+        },
+        {
+          "name": "EPA",
+          "type": "double"
+        },
+        {
+          "name": "HHS",
+          "type": "double"
+        },
+        {
+          "name": "DOC",
+          "type": "double"
+        },
+        {
+          "name": "Other",
+          "type": "double"
+        },
+        {
+          "name": "Total",
+          "type": "double"
+        },
+        {
+          "name": "HERD_federal_check",
+          "type": "double"
+        },
+        {
+          "name": "discrepancy_pct",
+          "type": "double"
+        }
+      ]
+    },
+    "sheet_03_rd_by_field": {
+      "rows": 105515,
+      "size_bytes": 2080181,
+      "sha256": "51dcaa9d39b089db22c3c3fd2526bde375e9c5f9d15f51d996ca5c276a174574",
+      "columns": [
+        {
+          "name": "institution_sk",
+          "type": "string"
+        },
+        {
+          "name": "canonical_name",
+          "type": "string"
+        },
+        {
+          "name": "state_code",
+          "type": "string"
+        },
+        {
+          "name": "sector",
+          "type": "string"
+        },
+        {
+          "name": "fiscal_year",
+          "type": "int64"
+        },
+        {
+          "name": "field_sk",
+          "type": "string"
+        },
+        {
+          "name": "field_label",
+          "type": "string"
+        },
+        {
+          "name": "is_se",
+          "type": "bool"
+        },
+        {
+          "name": "total_rd_usd_nominal",
+          "type": "double"
+        },
+        {
+          "name": "federal_rd_usd_nominal",
+          "type": "double"
+        },
+        {
+          "name": "nonfederal_rd_usd_nominal",
+          "type": "double"
+        },
+        {
+          "name": "federal_share_pct",
+          "type": "double"
+        },
+        {
+          "name": "total_rd_usd_real_2024",
+          "type": "double"
+        }
+      ]
+    },
+    "sheet_04_federal_rd_by_agency": {
+      "rows": 572,
+      "size_bytes": 23219,
+      "sha256": "ccf439ca808ac83a1f4b42672b968cd68f42b2befed45928f7b077866085aa39",
+      "columns": [
+        {
+          "name": "agency_sk",
+          "type": "string"
+        },
+        {
+          "name": "agency_name",
+          "type": "string"
+        },
+        {
+          "name": "agency_parent",
+          "type": "null"
+        },
+        {
+          "name": "fiscal_year",
+          "type": "int64"
+        },
+        {
+          "name": "total_obligations_usd_nominal",
+          "type": "double"
+        },
+        {
+          "name": "basic_research_usd_nominal",
+          "type": "double"
+        },
+        {
+          "name": "applied_research_usd_nominal",
+          "type": "double"
+        },
+        {
+          "name": "experimental_development_usd_nominal",
+          "type": "double"
+        },
+        {
+          "name": "rd_plant_usd_nominal",
+          "type": "double"
+        },
+        {
+          "name": "total_obligations_usd_real_2024",
+          "type": "double"
+        },
+        {
+          "name": "share_of_federal_rd_pct",
+          "type": "double"
+        }
+      ]
+    },
+    "sheet_05_top_grants_ledger": {
+      "rows": 20000,
+      "size_bytes": 878368,
+      "sha256": "778393243be593199d2c009e0b53e20356f155bc31b120cc63c65ec0401cb103",
+      "columns": [
+        {
+          "name": "source_system",
+          "type": "string"
+        },
+        {
+          "name": "fiscal_year",
+          "type": "int64"
+        },
+        {
+          "name": "award_id",
+          "type": "int64"
+        },
+        {
+          "name": "institution_sk",
+          "type": "string"
+        },
+        {
+          "name": "institution_name",
+          "type": "string"
+        },
+        {
+          "name": "institution_state",
+          "type": "string"
+        },
+        {
+          "name": "pi_name",
+          "type": "string"
+        },
+        {
+          "name": "pi_sk",
+          "type": "string"
+        },
+        {
+          "name": "agency_or_ic_name",
+          "type": "string"
+        },
+        {
+          "name": "mechanism_code",
+          "type": "string"
+        },
+        {
+          "name": "mechanism_name",
+          "type": "string"
+        },
+        {
+          "name": "total_cost_or_amount_usd_nominal",
+          "type": "double"
+        },
+        {
+          "name": "amount_real_2024",
+          "type": "double"
+        },
+        {
+          "name": "project_title",
+          "type": "string"
+        },
+        {
+          "name": "start_date",
+          "type": "date32[day]"
+        },
+        {
+          "name": "end_date",
+          "type": "date32[day]"
+        }
+      ]
+    },
+    "sheet_06_sbir_sttr": {
+      "rows": 125586,
+      "size_bytes": 6135208,
+      "sha256": "d68ebf6d40f2f341039b0e49f3e2c9c3229f5b82fb4592ca10a92098f301e3d9",
+      "columns": [
+        {
+          "name": "program",
+          "type": "string"
+        },
+        {
+          "name": "phase",
+          "type": "string"
+        },
+        {
+          "name": "fiscal_year",
+          "type": "int64"
+        },
+        {
+          "name": "agency_name",
+          "type": "string"
+        },
+        {
+          "name": "branch_name",
+          "type": "string"
+        },
+        {
+          "name": "firm_name",
+          "type": "string"
+        },
+        {
+          "name": "firm_state",
+          "type": "string"
+        },
+        {
+          "name": "firm_uei",
+          "type": "string"
+        },
+        {
+          "name": "firm_institution_sk",
+          "type": "string"
+        },
+        {
+          "name": "ri_name",
+          "type": "string"
+        },
+        {
+          "name": "ri_institution_sk",
+          "type": "string"
+        },
+        {
+          "name": "ri_canonical_name",
+          "type": "string"
+        },
+        {
+          "name": "pi_name",
+          "type": "string"
+        },
+        {
+          "name": "award_amount_nominal",
+          "type": "double"
+        },
+        {
+          "name": "award_amount_real_2024",
+          "type": "double"
+        },
+        {
+          "name": "award_title",
+          "type": "string"
+        },
+        {
+          "name": "solicitation_year",
+          "type": "int64"
+        },
+        {
+          "name": "solicitation_topic_code",
+          "type": "string"
+        },
+        {
+          "name": "date_contract_award",
+          "type": "string"
+        },
+        {
+          "name": "is_woman_owned",
+          "type": "string"
+        },
+        {
+          "name": "is_hubzone",
+          "type": "string"
+        },
+        {
+          "name": "is_socially_economically_disadvantaged",
+          "type": "string"
+        }
+      ]
+    },
+    "sheet_07_cross_source_reconciliation": {
+      "rows": 15950,
+      "size_bytes": 1284180,
+      "sha256": "039c42415973553d77df867e7a306cd656ecf9b8045e7b69f9330965b0b04575",
+      "columns": [
+        {
+          "name": "institution_sk",
+          "type": "string"
+        },
+        {
+          "name": "canonical_name",
+          "type": "string"
+        },
+        {
+          "name": "state_code",
+          "type": "string"
+        },
+        {
+          "name": "sector",
+          "type": "string"
+        },
+        {
+          "name": "fiscal_year",
+          "type": "int64"
+        },
+        {
+          "name": "herd_federal_rd_usd_nominal",
+          "type": "double"
+        },
+        {
+          "name": "nih_total_cost_usd_nominal",
+          "type": "double"
+        },
+        {
+          "name": "nsf_fy_obligation_usd_nominal",
+          "type": "double"
+        },
+        {
+          "name": "usaspending_assistance_usd_nominal",
+          "type": "double"
+        },
+        {
+          "name": "usaspending_contracts_usd_nominal",
+          "type": "double"
+        },
+        {
+          "name": "bottom_up_sum_usd_nominal",
+          "type": "double"
+        },
+        {
+          "name": "delta_usd",
+          "type": "double"
+        },
+        {
+          "name": "delta_pct",
+          "type": "double"
+        },
+        {
+          "name": "notes",
+          "type": "string"
+        },
+        {
+          "name": "n_child_entities_used",
+          "type": "int64"
+        },
+        {
+          "name": "child_entities_list",
+          "type": "null"
+        },
+        {
+          "name": "bottom_up_includes_children_flag",
+          "type": "bool"
+        },
+        {
+          "name": "name_bridge_sks_used",
+          "type": "int64"
+        },
+        {
+          "name": "name_bridge_sks_list",
+          "type": "string"
+        },
+        {
+          "name": "name_bridge_added_usd",
+          "type": "double"
+        },
+        {
+          "name": "er_override_sks_used",
+          "type": "int64"
+        },
+        {
+          "name": "er_override_sks_list",
+          "type": "string"
+        },
+        {
+          "name": "er_override_added_usd",
+          "type": "double"
+        },
+        {
+          "name": "herd_federal_rd_usd_nominal_3y_cumulative",
+          "type": "double"
+        },
+        {
+          "name": "bottom_up_sum_usd_nominal_3y_cumulative",
+          "type": "double"
+        },
+        {
+          "name": "delta_pct_3y",
+          "type": "double"
+        },
+        {
+          "name": "herd_federal_rd_usd_nominal_5y_cumulative",
+          "type": "double"
+        },
+        {
+          "name": "bottom_up_sum_usd_nominal_5y_cumulative",
+          "type": "double"
+        },
+        {
+          "name": "delta_pct_5y",
+          "type": "double"
+        },
+        {
+          "name": "total_herd_federal_rd_usd_nominal",
+          "type": "double"
+        },
+        {
+          "name": "is_tiny_anchor",
+          "type": "bool"
+        }
+      ]
+    },
+    "sheet_08_pi_cross_agency_portfolio": {
+      "rows": 2033,
+      "size_bytes": 144179,
+      "sha256": "cfc947ea2eb04c7aa5c9d54f6b3590d74e64706d48bd8c81519280743af9b421",
+      "columns": [
+        {
+          "name": "pi_sk",
+          "type": "string"
+        },
+        {
+          "name": "canonical_name",
+          "type": "string"
+        },
+        {
+          "name": "nsf_id",
+          "type": "string"
+        },
+        {
+          "name": "nih_pi_id",
+          "type": "int64"
+        },
+        {
+          "name": "n_nih_projects",
+          "type": "int64"
+        },
+        {
+          "name": "n_nsf_awards",
+          "type": "int64"
+        },
+        {
+          "name": "total_nih_funding_usd_nominal",
+          "type": "double"
+        },
+        {
+          "name": "total_nsf_funding_usd_nominal",
+          "type": "double"
+        },
+        {
+          "name": "total_combined_usd_nominal",
+          "type": "double"
+        },
+        {
+          "name": "total_combined_usd_real_2024",
+          "type": "double"
+        },
+        {
+          "name": "nih_share_pct",
+          "type": "double"
+        },
+        {
+          "name": "first_seen_fy",
+          "type": "int64"
+        },
+        {
+          "name": "last_seen_fy",
+          "type": "int64"
+        },
+        {
+          "name": "career_span_years",
+          "type": "int64"
+        },
+        {
+          "name": "primary_institution",
+          "type": "string"
+        },
+        {
+          "name": "primary_field",
+          "type": "string"
+        },
+        {
+          "name": "is_high_volume_pi",
+          "type": "bool"
+        }
+      ]
+    },
+    "sheet_09_data_quality": {
+      "rows": 41,
+      "size_bytes": 13282,
+      "sha256": "9db1ccab779c35aab91a585b2ee22e107d0ee2aeef16e9f3288c3ba467023ef6",
+      "columns": [
+        {
+          "name": "artifact_type",
+          "type": "string"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "row_count",
+          "type": "int64"
+        },
+        {
+          "name": "byte_size_mb",
+          "type": "double"
+        },
+        {
+          "name": "source_sha256",
+          "type": "string"
+        },
+        {
+          "name": "build_timestamp",
+          "type": "timestamp[ms, tz=UTC]"
+        },
+        {
+          "name": "known_issues",
+          "type": "string"
+        },
+        {
+          "name": "link_to_provenance",
+          "type": "string"
+        }
+      ]
+    },
+    "sheet_10_federal_rd_flow": {
+      "rows": 4134,
+      "size_bytes": 133014,
+      "sha256": "e67a4912761302a83bce78fddc8949dfea8e47a66e74e9a49204578472227c46",
+      "columns": [
+        {
+          "name": "fiscal_year",
+          "type": "int64"
+        },
+        {
+          "name": "level",
+          "type": "int64"
+        },
+        {
+          "name": "node_id",
+          "type": "string"
+        },
+        {
+          "name": "parent_node_id",
+          "type": "string"
+        },
+        {
+          "name": "agency_sk",
+          "type": "string"
+        },
+        {
+          "name": "agency_name",
+          "type": "string"
+        },
+        {
+          "name": "performer_category",
+          "type": "string"
+        },
+        {
+          "name": "amount_usd_nominal",
+          "type": "double"
+        },
+        {
+          "name": "amount_usd_real_2024",
+          "type": "double"
+        },
+        {
+          "name": "share_of_parent_pct",
+          "type": "double"
+        },
+        {
+          "name": "share_of_total_pct",
+          "type": "double"
+        },
+        {
+          "name": "share_of_parent_pct_raw",
+          "type": "double"
+        },
+        {
+          "name": "indent_level",
+          "type": "int64"
+        },
+        {
+          "name": "source_table_family",
+          "type": "string"
+        },
+        {
+          "name": "notes",
+          "type": "string"
+        }
+      ]
+    },
+    "sheet_11_federal_university_bridge": {
+      "rows": 20,
+      "size_bytes": 9283,
+      "sha256": "89478716d8dca32a44f32ebbf0174d122c21705b1440d00c426c4699fd9f4f5f",
+      "columns": [
+        {
+          "name": "fiscal_year",
+          "type": "int64"
+        },
+        {
+          "name": "ff_explicit_universities_obligations_usd",
+          "type": "double"
+        },
+        {
+          "name": "ff_universities_estimate_with_allocation_usd",
+          "type": "double"
+        },
+        {
+          "name": "herd_reported_universities_expenditures_usd",
+          "type": "double"
+        },
+        {
+          "name": "ff_explicit_universities_obligations_usd_real_2024",
+          "type": "double"
+        },
+        {
+          "name": "ff_universities_estimate_with_allocation_usd_real_2024",
+          "type": "double"
+        },
+        {
+          "name": "herd_reported_universities_expenditures_usd_real_2024",
+          "type": "double"
+        },
+        {
+          "name": "gap_ff_explicit_minus_herd_usd",
+          "type": "double"
+        },
+        {
+          "name": "gap_ff_estimate_minus_herd_usd",
+          "type": "double"
+        },
+        {
+          "name": "notes_methodology",
+          "type": "string"
+        },
+        {
+          "name": "notes_observations",
+          "type": "string"
+        }
+      ]
+    },
+    "sheet_12_nih_ic_breakdown": {
+      "rows": 12139,
+      "size_bytes": 1091321,
+      "sha256": "07cf9345d15cf909f40dcf6a11fb55a7a4378b45786cd0b8ab2a4881fa89a4c9",
+      "columns": [
+        {
+          "name": "institution_sk",
+          "type": "string"
+        },
+        {
+          "name": "canonical_name",
+          "type": "string"
+        },
+        {
+          "name": "state_code",
+          "type": "string"
+        },
+        {
+          "name": "sector",
+          "type": "string"
+        },
+        {
+          "name": "fiscal_year",
+          "type": "int64"
+        },
+        {
+          "name": "nih_total_usd_nominal",
+          "type": "int64"
+        },
+        {
+          "name": "n_distinct_projects",
+          "type": "int64"
+        },
+        {
+          "name": "nih_NCI_usd_nominal",
+          "type": "int64"
+        },
+        {
+          "name": "nih_NIAID_usd_nominal",
+          "type": "int64"
+        },
+        {
+          "name": "nih_NHLBI_usd_nominal",
+          "type": "int64"
+        },
+        {
+          "name": "nih_NIGMS_usd_nominal",
+          "type": "int64"
+        },
+        {
+          "name": "nih_NIA_usd_nominal",
+          "type": "int64"
+        },
+        {
+          "name": "nih_NIDDK_usd_nominal",
+          "type": "int64"
+        },
+        {
+          "name": "nih_NINDS_usd_nominal",
+          "type": "int64"
+        },
+        {
+          "name": "nih_NIMH_usd_nominal",
+          "type": "int64"
+        },
+        {
+          "name": "nih_NICHD_usd_nominal",
+          "type": "int64"
+        },
+        {
+          "name": "nih_NIDA_usd_nominal",
+          "type": "int64"
+        },
+        {
+          "name": "nih_NEI_usd_nominal",
+          "type": "int64"
+        },
+        {
+          "name": "nih_NIEHS_usd_nominal",
+          "type": "int64"
+        },
+        {
+          "name": "nih_other_ics_usd_nominal",
+          "type": "int64"
+        },
+        {
+          "name": "pct_NCI",
+          "type": "double"
+        },
+        {
+          "name": "pct_NIAID",
+          "type": "double"
+        },
+        {
+          "name": "pct_NHLBI",
+          "type": "double"
+        },
+        {
+          "name": "pct_NIGMS",
+          "type": "double"
+        },
+        {
+          "name": "pct_NIA",
+          "type": "double"
+        },
+        {
+          "name": "pct_NIDDK",
+          "type": "double"
+        },
+        {
+          "name": "pct_NINDS",
+          "type": "double"
+        },
+        {
+          "name": "pct_NIMH",
+          "type": "double"
+        },
+        {
+          "name": "pct_NICHD",
+          "type": "double"
+        },
+        {
+          "name": "pct_NIDA",
+          "type": "double"
+        },
+        {
+          "name": "pct_NEI",
+          "type": "double"
+        },
+        {
+          "name": "pct_NIEHS",
+          "type": "double"
+        }
+      ]
+    },
+    "dim_institution": {
+      "rows": 75204,
+      "size_bytes": 4075614,
+      "sha256": "589684a5f43eba273c9bbebe870eeb2ad4e37e2f2cb2edc97555dc7183437284",
+      "columns": [
+        {
+          "name": "institution_sk",
+          "type": "string"
+        },
+        {
+          "name": "canonical_name",
+          "type": "string"
+        },
+        {
+          "name": "canonical_name_v4",
+          "type": "string"
+        },
+        {
+          "name": "ipeds_unitid",
+          "type": "string"
+        },
+        {
+          "name": "primary_uei",
+          "type": "string"
+        },
+        {
+          "name": "primary_duns",
+          "type": "string"
+        },
+        {
+          "name": "ncses_inst_id",
+          "type": "string"
+        },
+        {
+          "name": "parent_uei",
+          "type": "string"
+        },
+        {
+          "name": "parent_name",
+          "type": "string"
+        },
+        {
+          "name": "state_code",
+          "type": "string"
+        },
+        {
+          "name": "country_code",
+          "type": "string"
+        },
+        {
+          "name": "city",
+          "type": "string"
+        },
+        {
+          "name": "sector",
+          "type": "string"
+        },
+        {
+          "name": "is_hbcu",
+          "type": "bool"
+        },
+        {
+          "name": "is_hsi",
+          "type": "bool"
+        },
+        {
+          "name": "is_msi",
+          "type": "bool"
+        },
+        {
+          "name": "first_seen_fy",
+          "type": "double"
+        },
+        {
+          "name": "last_seen_fy",
+          "type": "double"
+        },
+        {
+          "name": "resolution_method",
+          "type": "string"
+        },
+        {
+          "name": "resolution_confidence",
+          "type": "string"
+        },
+        {
+          "name": "n_observations",
+          "type": "int64"
+        },
+        {
+          "name": "n_sources",
+          "type": "int64"
+        },
+        {
+          "name": "er_audit_parent_child",
+          "type": "string"
+        }
+      ]
+    },
+    "dim_agency": {
+      "rows": 1898,
+      "size_bytes": 71884,
+      "sha256": "13405cdbaee41010d9423cab1707386e4a3d30bb7391fca252a55ee2e5062427",
+      "columns": [
+        {
+          "name": "agency_sk",
+          "type": "string"
+        },
+        {
+          "name": "level",
+          "type": "int64"
+        },
+        {
+          "name": "parent_agency_sk",
+          "type": "string"
+        },
+        {
+          "name": "code",
+          "type": "string"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "abbreviation",
+          "type": "string"
+        },
+        {
+          "name": "aliases",
+          "type": "string"
+        },
+        {
+          "name": "treasury_cgac",
+          "type": "string"
+        },
+        {
+          "name": "sources",
+          "type": "string"
+        },
+        {
+          "name": "notes",
+          "type": "string"
+        }
+      ]
+    },
+    "cpi_u_annual": {
+      "rows": 21,
+      "size_bytes": 1876,
+      "sha256": "59b280a8af56b16202d1ff012de0f718e835e7f122a24859eac8c5c6ee4c9447",
+      "columns": [
+        {
+          "name": "fy",
+          "type": "int64"
+        },
+        {
+          "name": "cpi_u_annual_avg",
+          "type": "double"
+        },
+        {
+          "name": "cpi_u_real_2024_factor",
+          "type": "double"
+        }
+      ]
+    }
+  },
+  "kpis": {
+    "fy2024_federal_obligations_usd": 199460000000.0,
+    "fy2024_bottom_up_usd": 31500069790.05935,
+    "n_universities": 1014,
+    "n_agencies": 32,
+    "fy_min": 2005,
+    "fy_max": 2024
+  }
+}
