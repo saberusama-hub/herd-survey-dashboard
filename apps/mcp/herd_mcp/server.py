@@ -15,6 +15,7 @@ import argparse
 import logging
 
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 
 from .data import open_connection
 from .tools import describe_table, get_methodology, list_tables, query_duckdb, search_institutions
@@ -23,6 +24,9 @@ logger = logging.getLogger("herd_mcp")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 
 
+# DNS rebinding protection is intended for localhost-bound MCP servers.
+# We're publicly accessible over HTTPS behind HF Spaces' reverse proxy, so
+# disable it here — the threat model it protects against doesn't apply.
 mcp = FastMCP(
     name="herd-survey",
     instructions=(
@@ -33,6 +37,9 @@ mcp = FastMCP(
         "`search_institutions` to resolve fuzzy university names to institution_sk. "
         "Use `get_methodology` for source attribution and caveats — always reference "
         "these when discussing reconciliation gaps or tiny anchors."
+    ),
+    transport_security=TransportSecuritySettings(
+        enable_dns_rebinding_protection=False,
     ),
 )
 
