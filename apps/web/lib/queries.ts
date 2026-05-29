@@ -236,3 +236,141 @@ export async function topInstitutionsInState(
     LIMIT ${n}
   `);
 }
+
+/** All HERD-tracked institutions (for the typeahead). */
+export interface InstitutionListItem extends Row {
+  institution_sk: string;
+  canonical_name: string;
+  state_code: string | null;
+  sector: string | null;
+  total_herd_federal_rd_usd_nominal: number | null;
+}
+
+export async function allInstitutions(): Promise<InstitutionListItem[]> {
+  return query<InstitutionListItem>(`
+    SELECT
+      institution_sk,
+      ANY_VALUE(canonical_name) AS canonical_name,
+      ANY_VALUE(state_code) AS state_code,
+      ANY_VALUE(sector) AS sector,
+      SUM(herd_federal_rd_usd_nominal) AS total_herd_federal_rd_usd_nominal
+    FROM sheet_07_cross_source_reconciliation
+    GROUP BY institution_sk
+    ORDER BY total_herd_federal_rd_usd_nominal DESC NULLS LAST
+  `);
+}
+
+/** Full time series for one institution across all reconciliation metrics. */
+export interface InstitutionRow extends Row {
+  fiscal_year: number;
+  herd_federal_rd_usd_nominal: number | null;
+  nih_total_cost_usd_nominal: number | null;
+  nsf_fy_obligation_usd_nominal: number | null;
+  usaspending_assistance_usd_nominal: number | null;
+  usaspending_contracts_usd_nominal: number | null;
+  bottom_up_sum_usd_nominal: number | null;
+  delta_usd: number | null;
+  delta_pct: number | null;
+  is_tiny_anchor: boolean | null;
+}
+
+export async function institutionTimeseries(sk: string): Promise<InstitutionRow[]> {
+  return query<InstitutionRow>(`
+    SELECT
+      fiscal_year,
+      herd_federal_rd_usd_nominal,
+      nih_total_cost_usd_nominal,
+      nsf_fy_obligation_usd_nominal,
+      usaspending_assistance_usd_nominal,
+      usaspending_contracts_usd_nominal,
+      bottom_up_sum_usd_nominal,
+      delta_usd,
+      delta_pct,
+      is_tiny_anchor
+    FROM sheet_07_cross_source_reconciliation
+    WHERE institution_sk = '${sk.replace(/'/g, "''")}'
+    ORDER BY fiscal_year
+  `);
+}
+
+export interface InstitutionMeta extends Row {
+  institution_sk: string;
+  canonical_name: string;
+  state_code: string | null;
+  sector: string | null;
+}
+
+export async function institutionMeta(sk: string): Promise<InstitutionMeta | null> {
+  return queryOne<InstitutionMeta>(`
+    SELECT
+      institution_sk,
+      ANY_VALUE(canonical_name) AS canonical_name,
+      ANY_VALUE(state_code) AS state_code,
+      ANY_VALUE(sector) AS sector
+    FROM sheet_07_cross_source_reconciliation
+    WHERE institution_sk = '${sk.replace(/'/g, "''")}'
+    GROUP BY institution_sk
+  `);
+}
+
+/** Per-institution per-FY agency mix (from sheet_02_institution_agency). */
+export interface InstAgencyRow extends Row {
+  fiscal_year: number;
+  NSF: number | null;
+  DOD: number | null;
+  DOE: number | null;
+  NASA: number | null;
+  USDA: number | null;
+  ED: number | null;
+  EPA: number | null;
+  HHS: number | null;
+  DOC: number | null;
+  Other: number | null;
+}
+
+export async function institutionAgencyMix(sk: string): Promise<InstAgencyRow[]> {
+  return query<InstAgencyRow>(`
+    SELECT
+      fiscal_year,
+      NSF, DOD, DOE, NASA, USDA, ED, EPA, HHS, DOC, "Other"
+    FROM sheet_02_institution_agency
+    WHERE institution_sk = '${sk.replace(/'/g, "''")}'
+    ORDER BY fiscal_year
+  `);
+}
+
+/** Per-institution NIH IC breakdown (FY2024 latest, from sheet_12). */
+export interface InstNihIcRow extends Row {
+  fiscal_year: number;
+  nih_total_usd_nominal: number | null;
+  n_distinct_projects: number | null;
+  nih_NCI_usd_nominal: number | null;
+  nih_NIAID_usd_nominal: number | null;
+  nih_NHLBI_usd_nominal: number | null;
+  nih_NIGMS_usd_nominal: number | null;
+  nih_NIA_usd_nominal: number | null;
+  nih_NIDDK_usd_nominal: number | null;
+  nih_NINDS_usd_nominal: number | null;
+  nih_NIMH_usd_nominal: number | null;
+}
+
+export async function institutionNihIcLatest(sk: string): Promise<InstNihIcRow | null> {
+  return queryOne<InstNihIcRow>(`
+    SELECT
+      fiscal_year,
+      nih_total_usd_nominal,
+      n_distinct_projects,
+      nih_NCI_usd_nominal,
+      nih_NIAID_usd_nominal,
+      nih_NHLBI_usd_nominal,
+      nih_NIGMS_usd_nominal,
+      nih_NIA_usd_nominal,
+      nih_NIDDK_usd_nominal,
+      nih_NINDS_usd_nominal,
+      nih_NIMH_usd_nominal
+    FROM sheet_12_nih_ic_breakdown
+    WHERE institution_sk = '${sk.replace(/'/g, "''")}'
+    ORDER BY fiscal_year DESC
+    LIMIT 1
+  `);
+}
