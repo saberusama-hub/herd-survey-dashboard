@@ -28,9 +28,9 @@ jobs:
       # to refresh the deployment.
       - name: Build web (static export)
         run: pnpm build
-      - name: Publish to Cloudflare Pages
+      - name: Publish to Cloudflare Workers (Static Assets)
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: pages deploy apps/web/out --project-name=herd-survey-dashboard --branch=main
+          command: deploy
