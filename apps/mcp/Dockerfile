@@ -31,6 +31,6 @@ ENV PORT=7860
 EXPOSE 7860
 
 # Default to remote data source (Cloudflare Pages). Override with HERD_DATA_DIR for local-bound testing.
-ENV HERD_DATA_URL=https://herd-survey-dashboard.pages.dev
+ENV HERD_DATA_URL=https://herd-survey-dashboard.saber-usama.workers.dev
 
 CMD ["uvicorn", "herd_mcp.server:asgi", "--host", "0.0.0.0", "--port", "7860", "--log-level", "info"]

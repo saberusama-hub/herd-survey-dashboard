@@ -45,7 +45,7 @@ def _resolve_source() -> tuple[str, str]:
         if not path.exists():
             raise FileNotFoundError(f"HERD_DATA_DIR does not exist: {path}")
         return "local", str(path)
-    data_url = os.environ.get("HERD_DATA_URL", "https://herd-survey-dashboard.pages.dev")
+    data_url = os.environ.get("HERD_DATA_URL", "https://herd-survey-dashboard.saber-usama.workers.dev")
     return "remote", data_url.rstrip("/")
 
 
