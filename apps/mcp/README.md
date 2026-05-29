@@ -7,7 +7,7 @@ sdk: docker
 app_port: 7860
 pinned: false
 license: mit
-short_description: MCP server exposing Herd Survey federal R&D data to claude.ai
+short_description: Herd Survey federal R&D MCP server for claude.ai
 ---
 
 # Herd Survey MCP Server
