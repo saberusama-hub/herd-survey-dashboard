@@ -31,4 +31,6 @@ jobs:
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          wranglerVersion: "3.90.0"
+          packageManager: npm
           command: deploy
