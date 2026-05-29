@@ -20,7 +20,7 @@ export function Footer() {
             Downloads
           </Link>
           <a
-            href="https://github.com/samsiddy/herd-survey-dashboard"
+            href="https://github.com/saberusama-hub/herd-survey-dashboard"
             className="block text-text-secondary hover:text-text-primary"
           >
             GitHub

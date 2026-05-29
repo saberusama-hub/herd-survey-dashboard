@@ -4,14 +4,14 @@ This dashboard runs entirely on free tiers. First-time setup takes ~15 minutes.
 
 ## Accounts you need (all free, no credit card)
 
-1. **GitHub** — you already have this (`samsiddy`)
+1. **GitHub** — you already have this (`saberusama-hub`)
 2. **Cloudflare** — sign up at https://dash.cloudflare.com/sign-up
 3. **Hugging Face** — sign up at https://huggingface.co/join (only needed for the MCP server, Plan 03)
 
 ## Cloudflare Pages setup
 
 1. Log in to the [Cloudflare dashboard](https://dash.cloudflare.com).
-2. Workers & Pages → Create → Pages → Connect to Git → Authorize GitHub → pick `samsiddy/herd-survey-dashboard`.
+2. Workers & Pages → Create → Pages → Connect to Git → Authorize GitHub → pick `saberusama-hub/herd-survey-dashboard`.
 3. Build settings:
    - **Framework preset**: Next.js (Static HTML Export)
    - **Build command**: `pnpm install --frozen-lockfile && pnpm build`
@@ -66,7 +66,7 @@ Plan 02 will add an upload script that pushes raw fact-table parquet to R2 and r
 3. In GitHub repo Settings → Secrets:
    - `HF_TOKEN` = (paste token)
 4. Push triggers a GitHub Action that mirrors `apps/mcp/` to the Space.
-5. In claude.ai → Settings → Connectors → Add → URL = `https://huggingface.co/spaces/samsiddy/herd-survey-mcp/` (or the SSE endpoint when ready).
+5. In claude.ai → Settings → Connectors → Add → URL = `https://huggingface.co/spaces/saberusama-hub/herd-survey-mcp/` (or the SSE endpoint when ready).
 
 (Details fleshed out in Plan 03.)
 

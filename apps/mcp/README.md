@@ -69,19 +69,19 @@ Restart Claude Desktop. The server appears in the connectors list.
 2. Mirror this directory to the Space repo:
    ```bash
    cd apps/mcp
-   git remote add hf https://huggingface.co/spaces/<your-username>/herd-survey-mcp
+   git remote add hf https://huggingface.co/spaces/saberusama-hub/herd-survey-mcp
    git push hf main
    ```
    Or use the HF Hub UI to drag-and-drop the files.
 3. Set the `HERD_DATA_URL` env var in the Space settings to your dashboard URL (e.g., `https://herd-survey-dashboard.pages.dev`).
 4. Wait ~3 min for the build.
-5. Verify: `curl https://<your-username>-herd-survey-mcp.hf.space/sse` should respond.
+5. Verify: `curl https://saberusama-hub-herd-survey-mcp.hf.space/sse` should respond.
 
 ### Connecting from claude.ai
 
 1. claude.ai → Settings → Connectors → "Add custom connector"
 2. Name: `Herd Survey`
-3. URL: `https://<your-username>-herd-survey-mcp.hf.space/sse`
+3. URL: `https://saberusama-hub-herd-survey-mcp.hf.space/sse`
 4. Save. The connector appears in your conversation tools.
 
 Try asking:
