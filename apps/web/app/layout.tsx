@@ -1,7 +1,7 @@
 import { Footer } from '@/components/layout/Footer';
 import { Nav } from '@/components/layout/Nav';
 import type { Metadata } from 'next';
-import { fontMono, fontSans } from './fonts';
+import { fontMono, fontSans, fontSerif } from './fonts';
 import './globals.css';
 import { Providers } from './providers';
 
@@ -21,7 +21,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${fontSans.variable} ${fontMono.variable}`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${fontSerif.variable} ${fontSans.variable} ${fontMono.variable}`}
+    >
       <body className="min-h-screen">
         <Providers>
           <Nav />

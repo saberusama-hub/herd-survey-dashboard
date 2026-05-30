@@ -1,6 +1,7 @@
 'use client';
 
 import { getConnection } from '@/lib/duckdb';
+import { ThemeProvider } from 'next-themes';
 import { type ReactNode, createContext, useContext, useEffect, useState } from 'react';
 
 interface DuckCtx {
@@ -28,7 +29,16 @@ export function Providers({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  return <Ctx.Provider value={{ ready, error }}>{children}</Ctx.Provider>;
+  return (
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="light"
+      enableSystem
+      disableTransitionOnChange
+    >
+      <Ctx.Provider value={{ ready, error }}>{children}</Ctx.Provider>
+    </ThemeProvider>
+  );
 }
 
 export function useDuckDB() {

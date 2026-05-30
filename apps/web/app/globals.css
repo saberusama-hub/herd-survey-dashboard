@@ -4,70 +4,147 @@
 
 @layer base {
   :root {
-    /* surfaces (warm off-white) */
-    --surface: 60 9% 98%;
+    /* ===== Surfaces (warm off-white) ===== */
+    --surface: 36 30% 98%;
     --surface-elevated: 0 0% 100%;
-    --border: 30 7% 90%;
-    --ring: 173 80% 26%;
+    --border: 30 8% 89%;
+    --rule: 30 6% 85%;
+    --ring: 191 88% 28%;
 
-    /* text */
-    --text-primary: 24 10% 4%;
-    --text-secondary: 25 5% 33%;
-    --text-tertiary: 24 6% 64%;
+    /* ===== Text ===== */
+    --text-primary: 24 12% 8%;
+    --text-secondary: 25 7% 33%;
+    --text-tertiary: 24 6% 56%;
+    --text-quaternary: 24 5% 72%;
 
-    /* accent: deep teal */
-    --accent: 173 80% 26%;
-    --accent-muted: 167 85% 89%;
+    /* ===== Accent (deep editorial teal) ===== */
+    --accent: 191 88% 28%;
+    --accent-soft: 191 50% 92%;
+    --accent-strong: 191 95% 22%;
 
-    --positive: 142 71% 30%;
+    /* ===== Semantic ===== */
+    --positive: 142 60% 32%;
     --negative: 0 73% 41%;
     --warning: 40 86% 32%;
+    --highlight: 354 78% 51%;
 
-    /* chart sequence — desaturated, accessible */
-    --chart-1: 173 80% 26%;
-    --chart-2: 226 71% 40%;
-    --chart-3: 30 90% 35%;
-    --chart-4: 333 71% 42%;
-    --chart-5: 80 60% 30%;
-    --chart-6: 263 70% 50%;
-    --chart-7: 215 19% 35%;
+    /* ===== Categorical palette (7 colors mapped to agencies) ===== */
+    --cat-1: 191 88% 28%;  /* NSF teal */
+    --cat-2: 348 53% 47%;  /* NIH/HHS rose */
+    --cat-3: 214 36% 47%;  /* DOD blue */
+    --cat-4: 28 67% 47%;   /* DOE amber */
+    --cat-5: 81 39% 41%;   /* NASA olive */
+    --cat-6: 268 27% 56%;  /* USDA violet */
+    --cat-7: 213 10% 41%;  /* Other slate */
+
+    /* ===== Sequential ramp (single-hue teal, 7 stops, colorblind-safe) ===== */
+    --seq-1: 192 56% 96%;
+    --seq-2: 192 42% 85%;
+    --seq-3: 191 36% 71%;
+    --seq-4: 191 41% 55%;
+    --seq-5: 191 53% 43%;
+    --seq-6: 191 71% 32%;
+    --seq-7: 191 90% 22%;
+
+    /* ===== Diverging (PiYG-derived) ===== */
+    --div-neg-3: 311 38% 28%;
+    --div-neg-2: 310 31% 43%;
+    --div-neg-1: 322 21% 65%;
+    --div-zero:  44 26% 91%;
+    --div-pos-1: 88 23% 64%;
+    --div-pos-2: 102 32% 38%;
+    --div-pos-3: 102 53% 25%;
+
+    /* ===== Back-compat: chart-N CSS aliases (removed in U-2) ===== */
+    --chart-1: 191 88% 28%;
+    --chart-2: 348 53% 47%;
+    --chart-3: 214 36% 47%;
+    --chart-4: 28 67% 47%;
+    --chart-5: 81 39% 41%;
+    --chart-6: 268 27% 56%;
+    --chart-7: 213 10% 41%;
   }
 
   .dark {
-    --surface: 25 7% 4%;
-    --surface-elevated: 24 8% 7%;
-    --border: 25 5% 18%;
-    --ring: 173 67% 53%;
+    /* ===== Surfaces ===== */
+    --surface: 220 14% 7%;
+    --surface-elevated: 220 12% 10%;
+    --border: 220 9% 18%;
+    --rule: 220 9% 22%;
+    --ring: 191 67% 53%;
 
-    --text-primary: 60 9% 98%;
+    /* ===== Text ===== */
+    --text-primary: 36 30% 96%;
     --text-secondary: 30 5% 70%;
-    --text-tertiary: 25 5% 50%;
+    --text-tertiary: 30 5% 52%;
+    --text-quaternary: 30 5% 40%;
 
-    --accent: 173 67% 53%;
-    --accent-muted: 173 50% 18%;
+    /* ===== Accent ===== */
+    --accent: 191 67% 53%;
+    --accent-soft: 191 50% 18%;
+    --accent-strong: 191 75% 62%;
 
+    /* ===== Semantic ===== */
     --positive: 142 60% 50%;
     --negative: 0 70% 60%;
     --warning: 40 80% 55%;
+    --highlight: 354 78% 60%;
+
+    /* ===== Categorical (shifted lighter for dark mode) ===== */
+    --cat-1: 191 67% 53%;
+    --cat-2: 348 60% 62%;
+    --cat-3: 214 50% 67%;
+    --cat-4: 28 75% 60%;
+    --cat-5: 81 45% 58%;
+    --cat-6: 268 40% 70%;
+    --cat-7: 213 15% 65%;
+
+    /* ===== Sequential reverses direction (dark base → bright tip) ===== */
+    --seq-1: 191 90% 12%;
+    --seq-2: 191 71% 18%;
+    --seq-3: 191 53% 28%;
+    --seq-4: 191 41% 40%;
+    --seq-5: 191 36% 53%;
+    --seq-6: 192 42% 68%;
+    --seq-7: 192 56% 85%;
+
+    /* ===== Diverging (slight desaturation) ===== */
+    --div-neg-3: 311 38% 42%;
+    --div-neg-2: 310 31% 55%;
+    --div-neg-1: 322 21% 70%;
+    --div-zero:  44 18% 32%;
+    --div-pos-1: 88 23% 70%;
+    --div-pos-2: 102 32% 52%;
+    --div-pos-3: 102 53% 40%;
+
+    /* ===== Back-compat: chart-N aliases ===== */
+    --chart-1: 191 67% 53%;
+    --chart-2: 348 60% 62%;
+    --chart-3: 214 50% 67%;
+    --chart-4: 28 75% 60%;
+    --chart-5: 81 45% 58%;
+    --chart-6: 268 40% 70%;
+    --chart-7: 213 15% 65%;
   }
 
   * {
     @apply border-border;
   }
+
   html {
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
+    font-feature-settings: "tnum", "ss01", "cv02", "cv11";
   }
+
   body {
     @apply bg-surface text-text-primary font-sans antialiased;
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
-  }
-  .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
+
   ::selection {
-    background: hsl(var(--accent-muted));
+    background: hsl(var(--accent-soft));
     color: hsl(var(--text-primary));
   }
 }
@@ -79,13 +156,55 @@
   .container-wide {
     @apply max-w-[1440px] mx-auto px-6 sm:px-8;
   }
+
+  /* ===== Type scale utilities (spec section 3.1) ===== */
+  .h-hero {
+    @apply font-serif text-hero font-semibold tracking-tight text-text-primary;
+  }
   .h-display {
-    @apply text-4xl md:text-5xl font-medium tracking-tight;
+    @apply font-serif text-display font-semibold tracking-tight text-text-primary;
   }
   .h-section {
-    @apply text-2xl md:text-3xl font-medium tracking-tight;
+    @apply font-sans text-2xl md:text-[1.5rem] font-medium tracking-tight text-text-primary;
   }
   .h-card {
-    @apply text-base font-medium text-text-secondary uppercase tracking-wide text-2xs;
+    @apply font-sans text-[0.875rem] font-medium text-text-secondary;
+  }
+  .h-eyebrow {
+    @apply font-sans text-2xs font-medium uppercase tracking-[0.08em] text-text-tertiary;
+  }
+
+  .t-body-lg {
+    @apply font-serif text-[1.125rem] leading-[1.6] text-text-primary;
+  }
+  .t-body {
+    @apply font-sans text-[0.9375rem] leading-[1.5] text-text-primary;
+  }
+  .t-small {
+    @apply font-sans text-[0.8125rem] leading-[1.45] text-text-secondary;
+  }
+  .t-caption {
+    @apply font-sans text-2xs text-text-tertiary;
+  }
+
+  .t-num-hero {
+    @apply font-mono text-num-hero font-medium tabular-nums text-text-primary;
+  }
+  .t-num {
+    @apply font-mono text-num tabular-nums text-text-primary;
+  }
+
+  /* ===== Rules + dividers ===== */
+  .rule {
+    @apply border-t border-rule;
+  }
+}
+
+@layer utilities {
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+  .font-italic-serif {
+    @apply font-serif italic;
   }
 }

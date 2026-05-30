@@ -17,7 +17,7 @@ export function colorFor(index: number): string {
 export const AXIS_STYLE = {
   stroke: 'hsl(var(--text-tertiary))',
   fontSize: 11,
-  fontFamily: 'var(--font-geist-mono), monospace',
+  fontFamily: 'var(--font-mono), ui-monospace, monospace',
 };
 
 export const GRID_STYLE = {
