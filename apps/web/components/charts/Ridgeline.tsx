@@ -1,5 +1,6 @@
 'use client';
 
+import { resolveCssVarColor } from '@/components/charts/colors';
 import dynamic from 'next/dynamic';
 
 const EChartsBase = dynamic(() => import('./EChartsBase'), { ssr: false });
@@ -30,6 +31,13 @@ export function Ridgeline({ xBins, rows, height = 360, globalMax, xFormat }: Pro
   const cap = globalMax ?? Math.max(...rows.flatMap((r) => r.values));
   const rowSpacing = 1.4;
 
+  const accent = resolveCssVarColor('hsl(var(--accent))');
+  const accentStrong = resolveCssVarColor('hsl(var(--accent-strong))');
+  const border = resolveCssVarColor('hsl(var(--border))');
+  const rule = resolveCssVarColor('hsl(var(--rule))');
+  const textTertiary = resolveCssVarColor('hsl(var(--text-tertiary))');
+  const textSecondary = resolveCssVarColor('hsl(var(--text-secondary))');
+
   const series = rows.map((r, i) => {
     const offset = (rows.length - 1 - i) * rowSpacing;
     return {
@@ -38,8 +46,8 @@ export function Ridgeline({ xBins, rows, height = 360, globalMax, xFormat }: Pro
       data: r.values.map((v, j) => [xBins[j], offset + (v / cap) * 1.2]),
       smooth: true,
       symbol: 'none',
-      areaStyle: { opacity: 0.55, color: 'hsl(var(--accent))' },
-      lineStyle: { width: 1, color: 'hsl(var(--accent-strong))' },
+      areaStyle: { opacity: 0.55, color: accent },
+      lineStyle: { width: 1, color: accentStrong },
       z: rows.length - i,
     };
   });
@@ -49,20 +57,20 @@ export function Ridgeline({ xBins, rows, height = 360, globalMax, xFormat }: Pro
     grid: { left: 80, right: 16, top: 8, bottom: 32 },
     xAxis: {
       type: 'value',
-      axisLine: { lineStyle: { color: 'hsl(var(--border))' } },
+      axisLine: { lineStyle: { color: border } },
       axisLabel: {
-        color: 'hsl(var(--text-tertiary))',
+        color: textTertiary,
         formatter: xFormat ? (v: number) => xFormat(v) : undefined,
-        fontFamily: 'var(--font-mono), monospace',
+        fontFamily: 'Calibri, Carlito, monospace',
       },
-      splitLine: { lineStyle: { color: 'hsl(var(--rule))' } },
+      splitLine: { lineStyle: { color: rule } },
     },
     yAxis: {
       type: 'category',
       data: rows.map((r) => r.label).reverse(),
       axisLine: { show: false },
       axisTick: { show: false },
-      axisLabel: { color: 'hsl(var(--text-secondary))', fontFamily: 'var(--font-mono), monospace' },
+      axisLabel: { color: textSecondary, fontFamily: 'Calibri, Carlito, monospace' },
     },
     series,
   };

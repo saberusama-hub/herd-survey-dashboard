@@ -139,6 +139,23 @@ export function highlightSeries(highlightIndex: number | null, n: number): strin
   );
 }
 
+/* ───────────────── CSS variable resolver ─────────────────
+ *
+ * Canvas-based libraries (ECharts, Visx with canvas renderer) can't parse
+ * strings like `hsl(var(--cat-1))` — `var(...)` is only meaningful in CSS.
+ * This helper reads the computed value from the document root and substitutes
+ * it in so the canvas gets a real color (e.g., `hsl(191 88% 28%)`).
+ *
+ * No-op on the server (returns input unchanged).
+ */
+export function resolveCssVarColor(value: string): string {
+  if (typeof window === 'undefined') return value;
+  return value.replace(/var\(--([\w-]+)\)/g, (match, name) => {
+    const v = getComputedStyle(document.documentElement).getPropertyValue(`--${name}`).trim();
+    return v || match;
+  });
+}
+
 /* ───────────────── Recharts shared styling ───────────────── */
 export const AXIS_STYLE = {
   stroke: 'hsl(var(--text-tertiary))',

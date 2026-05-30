@@ -67,10 +67,32 @@ export async function getConnection(): Promise<duckdb.AsyncDuckDBConnection> {
   return initPromise;
 }
 
+/**
+ * Convert DuckDB int64 / hugeint columns (returned as JS BigInt) into regular
+ * Number. JS BigInt does not arithmetic-mix with Number (Array.sort comparators
+ * crash; `a - b` throws), so we normalize at the query boundary.
+ *
+ * Values outside Number.MAX_SAFE_INTEGER would lose precision in this
+ * conversion, but our domain (fiscal years, dollar amounts up to ~$1T) is
+ * comfortably inside the 2^53 safe integer range.
+ */
+function normalizeBigInt(value: unknown): unknown {
+  if (typeof value === 'bigint') return Number(value);
+  if (Array.isArray(value)) return value.map(normalizeBigInt);
+  if (value !== null && typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      out[k] = normalizeBigInt(v);
+    }
+    return out;
+  }
+  return value;
+}
+
 export async function query<T extends Row = Row>(sql: string): Promise<T[]> {
   const c = await getConnection();
   const result = await c.query(sql);
-  return result.toArray().map((row) => row.toJSON() as T);
+  return result.toArray().map((row) => normalizeBigInt(row.toJSON()) as T);
 }
 
 export async function queryOne<T extends Row = Row>(sql: string): Promise<T | null> {

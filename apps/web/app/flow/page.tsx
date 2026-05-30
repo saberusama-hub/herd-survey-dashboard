@@ -40,9 +40,13 @@ export default function FlowPage() {
       if (r.parent_node_id) nodeIds.add(r.parent_node_id);
     }
 
+    // Use node_id (always unique within FY) as the Sankey node name; the
+    // friendly text goes in `label`. This avoids the "duplicate name" crash in
+    // ECharts when display labels collide (e.g., "Other" performer under
+    // multiple agencies).
     const builtNodes: SankeyNode[] = Array.from(nodeIds).map((id) => {
       const row = byNode.get(id);
-      const display =
+      const friendly =
         row?.level === 0
           ? 'Federal R&D total'
           : row?.level === 1
@@ -54,36 +58,18 @@ export default function FlowPage() {
           : row?.level === 0
             ? 'hsl(var(--text-secondary))'
             : 'hsl(var(--seq-5))';
-      return { name: display, itemStyle: { color } };
+      return { name: id, label: friendly, itemStyle: { color } };
     });
 
-    // Links: for each row with a parent, create a link from parent → self
+    // Links: each row with a parent_node_id contributes one link.
     const builtLinks: SankeyLink[] = [];
-    const idToDisplay = new Map<string, string>();
-    for (const n of builtNodes) idToDisplay.set(n.name, n.name); // identity; ensure name is unique
-
-    // Construct linkable display names by id
-    const nameById = new Map<string, string>();
-    for (const id of nodeIds) {
-      const row = byNode.get(id);
-      const name =
-        row?.level === 0
-          ? 'Federal R&D total'
-          : row?.level === 1
-            ? row.agency_name ?? id
-            : row?.performer_category ?? id;
-      nameById.set(id, name);
-    }
-
     for (const r of rows) {
       if (!r.parent_node_id) continue;
       if (r.level > maxLevel) continue;
       const v = (r as Record<string, unknown>)[valueKey] as number | null | undefined;
       if (!v || v <= 0) continue;
-      const sourceName = nameById.get(r.parent_node_id);
-      const targetName = nameById.get(r.node_id);
-      if (!sourceName || !targetName) continue;
-      builtLinks.push({ source: sourceName, target: targetName, value: v });
+      if (!nodeIds.has(r.parent_node_id) || !nodeIds.has(r.node_id)) continue;
+      builtLinks.push({ source: r.parent_node_id, target: r.node_id, value: v });
     }
 
     const totalAmount = rows

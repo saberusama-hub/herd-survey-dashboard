@@ -1,6 +1,6 @@
 'use client';
 
-import { CATEGORICAL } from '@/components/charts/colors';
+import { CATEGORICAL, resolveCssVarColor } from '@/components/charts/colors';
 import { formatDollars } from '@/lib/format';
 import dynamic from 'next/dynamic';
 
@@ -22,10 +22,13 @@ interface Props {
 
 /** ECharts Sunburst — hierarchical drilldown (spec section 5.4 agency tabs). */
 export function Sunburst({ data, height = 480, currency = true, onClick }: Props) {
-  // Recursively assign categorical colors to root-level nodes
+  // Recursively assign categorical colors to root-level nodes and resolve
+  // CSS variables (canvas can't parse `var(--...)`).
   const colored = data.map((d, i) => ({
     ...d,
-    itemStyle: d.itemStyle ?? { color: CATEGORICAL[i % CATEGORICAL.length] },
+    itemStyle: {
+      color: resolveCssVarColor(d.itemStyle?.color ?? CATEGORICAL[i % CATEGORICAL.length]),
+    },
   }));
 
   const option = {
@@ -46,9 +49,9 @@ export function Sunburst({ data, height = 480, currency = true, onClick }: Props
         emphasis: { focus: 'ancestor' },
         label: {
           rotate: 'radial',
-          fontFamily: 'var(--font-sans), system-ui',
+          fontFamily: 'Calibri, Carlito, system-ui',
           fontSize: 11,
-          color: 'hsl(var(--text-secondary))',
+          color: resolveCssVarColor('hsl(var(--text-secondary))'),
         },
         levels: [
           {},
