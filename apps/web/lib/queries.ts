@@ -29,10 +29,79 @@ export async function headlineKpis(): Promise<HeadlineKpis | null> {
   `);
 }
 
+/**
+ * Single scalar: cumulative federal R&D obligations FY2005-FY2024 from sheet_04.
+ * Used as the Home hero stat ("$X.XT cumulative").
+ */
+export async function cumulativeFederalRd(): Promise<number | null> {
+  const r = await queryOne<{ total: number }>(`
+    SELECT SUM(total_obligations_usd_nominal) AS total
+    FROM sheet_04_federal_rd_by_agency
+    WHERE agency_parent IS NULL OR agency_parent = ''
+  `);
+  return r?.total ?? null;
+}
+
+/**
+ * National bottom-up coverage over time: sum(bottom_up) / sum(HERD-federal)
+ * per FY. Spec data-insight: "80% → 49% collapse" — this is the data behind it.
+ */
+export interface CoverageRow extends Row {
+  fiscal_year: number;
+  herd_federal_total: number;
+  bottom_up_total: number;
+  coverage_pct: number;
+}
+
+export async function bottomUpCoverageByFy(): Promise<CoverageRow[]> {
+  return query<CoverageRow>(`
+    SELECT
+      fiscal_year,
+      SUM(herd_federal_rd_usd_nominal) AS herd_federal_total,
+      SUM(bottom_up_sum_usd_nominal) AS bottom_up_total,
+      CASE WHEN SUM(herd_federal_rd_usd_nominal) > 0
+           THEN SUM(bottom_up_sum_usd_nominal) / SUM(herd_federal_rd_usd_nominal)
+           ELSE NULL END AS coverage_pct
+    FROM sheet_07_cross_source_reconciliation
+    WHERE herd_federal_rd_usd_nominal IS NOT NULL
+    GROUP BY fiscal_year
+    ORDER BY fiscal_year
+  `);
+}
+
 export interface TopRecipient extends Row {
   institution_sk: string;
   canonical_name: string;
   herd_federal_rd_usd_nominal: number;
+}
+
+/**
+ * Per-institution per-FY HERD federal series (long format).
+ * Used to render the sparkline column in the Home leaderboard.
+ */
+export interface InstFySpark extends Row {
+  institution_sk: string;
+  fiscal_year: number;
+  value: number | null;
+}
+
+export async function sparklinesForCohort(
+  institutionSks: string[],
+  fyMin: number,
+  fyMax: number,
+): Promise<InstFySpark[]> {
+  if (institutionSks.length === 0) return [];
+  const sksList = institutionSks.map((s) => `'${s.replace(/'/g, "''")}'`).join(',');
+  return query<InstFySpark>(`
+    SELECT
+      institution_sk,
+      fiscal_year,
+      herd_federal_rd_usd_nominal AS value
+    FROM sheet_07_cross_source_reconciliation
+    WHERE institution_sk IN (${sksList})
+      AND fiscal_year BETWEEN ${fyMin} AND ${fyMax}
+    ORDER BY institution_sk, fiscal_year
+  `);
 }
 
 /** Top-N HERD-anchored universities by FY federal R&D (from Sheet 7). */
