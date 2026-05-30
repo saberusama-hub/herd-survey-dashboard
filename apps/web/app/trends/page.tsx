@@ -7,7 +7,9 @@ import { FYRangeSlider } from '@/components/filters/FYRangeSlider';
 import { MetricSelect } from '@/components/filters/MetricSelect';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { ChartTitle } from '@/components/ui/ChartTitle';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
+import { KEY_EVENTS_BANDS } from '@/lib/annotations';
 import { formatFy, formatUsd } from '@/lib/formatters';
 import {
   METRICS,
@@ -113,18 +115,29 @@ export default function TrendsPage() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>
-            {METRICS.find((m) => m.key === metric)?.label} · Top {cohortSize} · FY{fyRange[0]}–FY{fyRange[1]}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6 space-y-4">
+          <ChartTitle
+            eyebrow={`Top ${cohortSize} · FY${fyRange[0]}–FY${fyRange[1]}`}
+            title={METRICS.find((m) => m.key === metric)?.label ?? 'Trend'}
+            subtitle="Annual values for the top cohort of universities. Shaded bands mark the four major policy windows that move these series."
+            source={`Sheet 07 · USD nominal · FY${fyRange[0]}–FY${fyRange[1]}`}
+          />
           {!ready ? (
             <SkeletonChart />
           ) : topN.length === 0 ? (
             <div className="h-80 flex items-center justify-center text-text-secondary text-sm">No data.</div>
           ) : (
-            <LineChart data={chartData} xKey="fiscal_year" series={lineSeries} height={420} showLegend />
+            <LineChart
+              data={chartData}
+              xKey="fiscal_year"
+              series={lineSeries}
+              height={420}
+              directLabels
+              showLegend={false}
+              referenceBands={KEY_EVENTS_BANDS.filter(
+                (e) => e.to >= fyRange[0] && e.from <= fyRange[1],
+              )}
+            />
           )}
         </CardContent>
       </Card>
