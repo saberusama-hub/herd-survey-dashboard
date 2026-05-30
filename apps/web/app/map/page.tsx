@@ -6,7 +6,7 @@ import { MetricSelect } from '@/components/filters/MetricSelect';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/Card';
 import { ChartTitle } from '@/components/ui/ChartTitle';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
+import { Slider } from '@/components/ui/Slider';
 import { formatCount, formatDollars } from '@/lib/format';
 import {
   type InstitutionTotal,
@@ -17,9 +17,12 @@ import {
   topInstitutionsInState,
 } from '@/lib/queries';
 import { nameFromAbbr } from '@/lib/us-states';
-import { useEffect, useMemo, useState } from 'react';
+import { Pause, Play } from 'lucide-react';
+import Link from 'next/link';
+import { useEffect, useRef, useState } from 'react';
 
-const YEARS = Array.from({ length: 20 }, (_, i) => 2005 + i);
+const FY_MIN = 2005;
+const FY_MAX = 2024;
 
 export default function MapPage() {
   const { ready } = useDuckDB();
@@ -28,6 +31,8 @@ export default function MapPage() {
   const [selectedState, setSelectedState] = useState<string | null>(null);
   const [rollup, setRollup] = useState<StateRollup[]>([]);
   const [stateInstitutions, setStateInstitutions] = useState<InstitutionTotal[]>([]);
+  const [playing, setPlaying] = useState(false);
+  const playRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!ready) return;
@@ -46,12 +51,31 @@ export default function MapPage() {
       .catch(() => setStateInstitutions([]));
   }, [ready, selectedState, metric, fy]);
 
-  const valuesMap = useMemo(() => {
-    const m: Record<string, number> = {};
-    for (const r of rollup) m[r.state_code] = r.total;
-    return m;
-  }, [rollup]);
+  // Animation playback — advances FY every ~900ms until reaching FY_MAX
+  useEffect(() => {
+    if (!playing) {
+      if (playRef.current) {
+        window.clearInterval(playRef.current);
+        playRef.current = null;
+      }
+      return;
+    }
+    playRef.current = window.setInterval(() => {
+      setFy((current) => {
+        if (current >= FY_MAX) {
+          setPlaying(false);
+          return current;
+        }
+        return current + 1;
+      });
+    }, 900);
+    return () => {
+      if (playRef.current) window.clearInterval(playRef.current);
+    };
+  }, [playing]);
 
+  const valuesMap: Record<string, number> = {};
+  for (const r of rollup) valuesMap[r.state_code] = r.total;
   const selectedRollup = selectedState ? rollup.find((r) => r.state_code === selectedState) : null;
   const metricLabel = METRICS.find((m) => m.key === metric)?.label ?? '';
 
@@ -63,29 +87,61 @@ export default function MapPage() {
         description="Choropleth of state-level federal research funding for any year and any metric. Click a state for a ranked list of the universities driving the total."
       />
 
-      <div className="flex flex-wrap items-end gap-6 border border-rule bg-surface-elevated rounded-md p-4">
+      {/* ── Story callout ── */}
+      <div className="rounded-lg border border-rule bg-accent-soft/30 p-4 flex flex-wrap items-center gap-4">
+        <span className="h-eyebrow text-accent">Story 3</span>
+        <div className="flex-1 min-w-[200px]">
+          <p className="t-body">
+            <strong className="font-serif italic text-text-primary">The geography of American science.</strong>{' '}
+            Federal research dollars moved on the map over 20 years. Maryland tripled. South Atlantic surged.
+          </p>
+        </div>
+        <Link
+          href="/story/geography"
+          className="px-3 py-1.5 rounded-md text-sm font-medium bg-accent text-surface-elevated hover:bg-accent-strong transition-colors"
+        >
+          Read the scrolly →
+        </Link>
+      </div>
+
+      {/* ── Controls ── */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end border border-rule bg-surface-elevated rounded-md p-4">
         <MetricSelect
           options={METRICS.map((m) => ({ value: m.key, label: m.label }))}
           value={metric}
           onChange={(v) => setMetric(v as MetricKey)}
           label="Metric"
         />
-        <div className="space-y-2 min-w-[160px]">
-          <div className="text-xs text-text-secondary font-medium">Fiscal Year</div>
-          <Select value={String(fy)} onValueChange={(v) => setFy(Number(v))}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {YEARS.slice()
-                .reverse()
-                .map((y) => (
-                  <SelectItem key={y} value={String(y)}>
-                    FY{y}
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
+        <div className="space-y-2 md:col-span-2">
+          <div className="flex items-center justify-between text-xs text-text-secondary">
+            <span className="font-medium">Fiscal year</span>
+            <span className="tabular-nums font-mono">FY{fy}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                if (fy >= FY_MAX) setFy(FY_MIN);
+                setPlaying((p) => !p);
+              }}
+              aria-label={playing ? 'Pause animation' : 'Play animation through fiscal years'}
+              className="shrink-0 inline-flex h-8 w-8 items-center justify-center rounded-md border border-rule text-text-secondary hover:bg-accent-soft hover:text-accent"
+            >
+              {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+            </button>
+            <Slider
+              min={FY_MIN}
+              max={FY_MAX}
+              step={1}
+              value={[fy]}
+              onValueChange={(v) => setFy(v[0])}
+              aria-label="Fiscal year"
+            />
+          </div>
+          <div className="flex justify-between text-2xs text-text-tertiary">
+            <span>FY{FY_MIN}</span>
+            <span>FY{FY_MAX}</span>
+          </div>
         </div>
       </div>
 
@@ -106,7 +162,7 @@ export default function MapPage() {
           <CardContent className="pt-6 space-y-4">
             <ChartTitle
               eyebrow="Selection"
-              title={selectedState ? (nameFromAbbr(selectedState) ?? selectedState) : 'State details'}
+              title={selectedState ? nameFromAbbr(selectedState) ?? selectedState : 'State details'}
               source={selectedState ? `FY${fy} · ${metricLabel}` : 'Click a state on the map'}
             />
             {selectedState && selectedRollup ? (
@@ -129,7 +185,9 @@ export default function MapPage() {
                     {stateInstitutions.slice(0, 12).map((inst) => (
                       <li key={inst.institution_sk} className="flex items-center justify-between gap-3">
                         <span className="truncate">{inst.canonical_name}</span>
-                        <span className="font-mono text-text-secondary tabular-nums">{formatDollars(inst.total)}</span>
+                        <span className="font-mono text-text-secondary tabular-nums">
+                          {formatDollars(inst.total)}
+                        </span>
                       </li>
                     ))}
                   </ul>
@@ -145,11 +203,7 @@ export default function MapPage() {
       <Card>
         <CardContent className="p-0">
           <div className="border-b border-rule px-6 py-4">
-            <ChartTitle
-              eyebrow="All states"
-              title="Ranked by FY total"
-              source={`FY${fy} · ${metricLabel}`}
-            />
+            <ChartTitle eyebrow="All states" title="Ranked by FY total" source={`FY${fy} · ${metricLabel}`} />
           </div>
           <table className="w-full text-sm">
             <thead>
@@ -164,7 +218,7 @@ export default function MapPage() {
               {rollup.map((r, i) => (
                 <tr
                   key={r.state_code}
-                  className="border-b border-rule/60 last:border-0 hover:bg-accent-soft/40 cursor-pointer focus-within:bg-accent-soft/60"
+                  className="border-b border-rule/60 last:border-0 hover:bg-accent-soft/40"
                 >
                   <td className="px-6 py-2 text-text-tertiary tabular-nums font-mono text-xs">{i + 1}</td>
                   <td className="px-6 py-2 font-medium">
