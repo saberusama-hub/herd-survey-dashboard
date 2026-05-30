@@ -1,5 +1,5 @@
 import { Footer } from '@/components/layout/Footer';
-import { Nav } from '@/components/layout/Nav';
+import { MegaNav } from '@/components/layout/MegaNav';
 import type { Metadata } from 'next';
 import { fontMono, fontSans, fontSerif } from './fonts';
 import './globals.css';
@@ -28,7 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body className="min-h-screen">
         <Providers>
-          <Nav />
+          <MegaNav />
           <main>{children}</main>
           <Footer />
         </Providers>

@@ -1,0 +1,191 @@
+'use client';
+
+import { useDuckDB } from '@/app/providers';
+import { USStateMap } from '@/components/charts/USStateMap';
+import { MetricSelect } from '@/components/filters/MetricSelect';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { Card, CardContent } from '@/components/ui/Card';
+import { ChartTitle } from '@/components/ui/ChartTitle';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
+import { formatCount, formatDollars } from '@/lib/format';
+import {
+  type InstitutionTotal,
+  METRICS,
+  type MetricKey,
+  type StateRollup,
+  stateRollup,
+  topInstitutionsInState,
+} from '@/lib/queries';
+import { nameFromAbbr } from '@/lib/us-states';
+import { useEffect, useMemo, useState } from 'react';
+
+const YEARS = Array.from({ length: 20 }, (_, i) => 2005 + i);
+
+export default function MapPage() {
+  const { ready } = useDuckDB();
+  const [metric, setMetric] = useState<MetricKey>('herd_federal');
+  const [fy, setFy] = useState(2024);
+  const [selectedState, setSelectedState] = useState<string | null>(null);
+  const [rollup, setRollup] = useState<StateRollup[]>([]);
+  const [stateInstitutions, setStateInstitutions] = useState<InstitutionTotal[]>([]);
+
+  useEffect(() => {
+    if (!ready) return;
+    stateRollup(metric, fy)
+      .then(setRollup)
+      .catch(() => setRollup([]));
+  }, [ready, metric, fy]);
+
+  useEffect(() => {
+    if (!ready || !selectedState) {
+      setStateInstitutions([]);
+      return;
+    }
+    topInstitutionsInState(selectedState, metric, fy)
+      .then(setStateInstitutions)
+      .catch(() => setStateInstitutions([]));
+  }, [ready, selectedState, metric, fy]);
+
+  const valuesMap = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const r of rollup) m[r.state_code] = r.total;
+    return m;
+  }, [rollup]);
+
+  const selectedRollup = selectedState ? rollup.find((r) => r.state_code === selectedState) : null;
+  const metricLabel = METRICS.find((m) => m.key === metric)?.label ?? '';
+
+  return (
+    <div className="container-wide py-10 md:py-14 space-y-8">
+      <PageHeader
+        eyebrow="Geography"
+        title="Federal R&D by State"
+        description="Choropleth of state-level federal research funding for any year and any metric. Click a state for a ranked list of the universities driving the total."
+      />
+
+      <div className="flex flex-wrap items-end gap-6 border border-rule bg-surface-elevated rounded-md p-4">
+        <MetricSelect
+          options={METRICS.map((m) => ({ value: m.key, label: m.label }))}
+          value={metric}
+          onChange={(v) => setMetric(v as MetricKey)}
+          label="Metric"
+        />
+        <div className="space-y-2 min-w-[160px]">
+          <div className="text-xs text-text-secondary font-medium">Fiscal Year</div>
+          <Select value={String(fy)} onValueChange={(v) => setFy(Number(v))}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {YEARS.slice()
+                .reverse()
+                .map((y) => (
+                  <SelectItem key={y} value={String(y)}>
+                    FY{y}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2">
+          <CardContent className="pt-6 space-y-4">
+            <ChartTitle
+              eyebrow={`FY${fy}`}
+              title={metricLabel}
+              subtitle="State totals shaded by quintile of the chosen metric. Click a state for its top universities and FY composition."
+              source="Sheet 07 · USD nominal"
+            />
+            <USStateMap values={valuesMap} selected={selectedState} onSelect={setSelectedState} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6 space-y-4">
+            <ChartTitle
+              eyebrow="Selection"
+              title={selectedState ? (nameFromAbbr(selectedState) ?? selectedState) : 'State details'}
+              source={selectedState ? `FY${fy} · ${metricLabel}` : 'Click a state on the map'}
+            />
+            {selectedState && selectedRollup ? (
+              <div className="space-y-4">
+                <div>
+                  <div className="h-eyebrow text-text-tertiary mb-1">FY{fy} total</div>
+                  <div className="font-mono text-2xl font-medium tabular-nums">
+                    {formatDollars(selectedRollup.total)}
+                  </div>
+                </div>
+                <div>
+                  <div className="h-eyebrow text-text-tertiary mb-1">Institutions</div>
+                  <div className="font-mono text-2xl font-medium tabular-nums">
+                    {formatCount(selectedRollup.n_institutions)}
+                  </div>
+                </div>
+                <div>
+                  <div className="h-eyebrow text-text-tertiary mb-2">Top universities in {selectedState}</div>
+                  <ul className="space-y-1.5 text-sm">
+                    {stateInstitutions.slice(0, 12).map((inst) => (
+                      <li key={inst.institution_sk} className="flex items-center justify-between gap-3">
+                        <span className="truncate">{inst.canonical_name}</span>
+                        <span className="font-mono text-text-secondary tabular-nums">{formatDollars(inst.total)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ) : (
+              <p className="text-text-secondary text-sm">Click a state on the map to see its top universities.</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardContent className="p-0">
+          <div className="border-b border-rule px-6 py-4">
+            <ChartTitle
+              eyebrow="All states"
+              title="Ranked by FY total"
+              source={`FY${fy} · ${metricLabel}`}
+            />
+          </div>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-rule text-text-secondary">
+                <th className="text-left font-medium px-6 py-3 w-12">#</th>
+                <th className="text-left font-medium px-6 py-3">State</th>
+                <th className="text-right font-medium px-6 py-3">FY{fy} total</th>
+                <th className="text-right font-medium px-6 py-3"># institutions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rollup.map((r, i) => (
+                <tr
+                  key={r.state_code}
+                  className="border-b border-rule/60 last:border-0 hover:bg-accent-soft/40 cursor-pointer focus-within:bg-accent-soft/60"
+                >
+                  <td className="px-6 py-2 text-text-tertiary tabular-nums font-mono text-xs">{i + 1}</td>
+                  <td className="px-6 py-2 font-medium">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedState(r.state_code)}
+                      className="text-left hover:underline focus:outline-none focus:underline"
+                    >
+                      {r.state_code} <span className="text-text-tertiary">· {nameFromAbbr(r.state_code) ?? ''}</span>
+                    </button>
+                  </td>
+                  <td className="px-6 py-2 text-right font-mono tabular-nums">{formatDollars(r.total)}</td>
+                  <td className="px-6 py-2 text-right tabular-nums text-text-secondary">
+                    {formatCount(r.n_institutions)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
