@@ -61,10 +61,11 @@ const config: Config = {
 
       },
       fontFamily: {
-        serif: ['var(--font-serif)', 'Georgia', 'serif'],
-        sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
-        mono: ['var(--font-mono)', 'ui-monospace', 'monospace'],
-        display: ['var(--font-serif)', 'Georgia', 'serif'],
+        /* Calibri stack — Carlito is the metric-compatible open fallback (from @fontsource/carlito). */
+        sans: ['Calibri', 'Carlito', 'system-ui', 'sans-serif'],
+        serif: ['Calibri', 'Carlito', 'system-ui', 'sans-serif'],
+        mono: ['Calibri', 'Carlito', 'system-ui', 'sans-serif'],
+        display: ['Calibri', 'Carlito', 'system-ui', 'sans-serif'],
       },
       fontSize: {
         '2xs': ['0.6875rem', { lineHeight: '1rem' }],

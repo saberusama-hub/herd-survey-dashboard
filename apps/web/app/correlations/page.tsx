@@ -178,20 +178,22 @@ export default function CorrelationsPage() {
             <ChartTitle
               eyebrow={`FY${fy} · ${valid.length} institutions`}
               title={`${METRIC_LABELS[yMetric]} vs ${METRIC_LABELS[xMetric]}`}
-              subtitle={`Pearson r = ${Number.isFinite(r) ? r.toFixed(3) : '—'}, Spearman ρ = ${Number.isFinite(rho) ? rho.toFixed(3) : '—'}. Both metrics shown in USD nominal.`}
+              subtitle={`Pearson r = ${Number.isFinite(r) ? r.toFixed(3) : '—'}, Spearman ρ = ${Number.isFinite(rho) ? rho.toFixed(3) : '—'}. Both axes use log10 scale so institutions spread across the chart instead of clustering at the origin.`}
               source="Sheet 07 cross-source reconciliation · institutions with HERD federal ≥ $10M"
             />
             {scatterPoints.length > 0 ? (
               <ConnectedScatter
                 points={scatterPoints}
-                xLabel={METRIC_LABELS[xMetric]}
-                yLabel={METRIC_LABELS[yMetric]}
+                xLabel={`${METRIC_LABELS[xMetric]} (log)`}
+                yLabel={`${METRIC_LABELS[yMetric]} (log)`}
                 xFormat={formatDollars}
                 yFormat={formatDollars}
-                height={460}
+                height={500}
+                xLog
+                yLog
               />
             ) : (
-              <div className="h-[460px] animate-pulse bg-border/15 rounded-md" />
+              <div className="h-[500px] animate-pulse bg-border/15 rounded-md" />
             )}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
               <StatBlock label="Pearson r" value={Number.isFinite(r) ? r.toFixed(3) : '—'} />

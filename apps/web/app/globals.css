@@ -114,7 +114,7 @@
   }
 
   html {
-    font-feature-settings: "tnum", "ss01", "cv02", "cv11";
+    font-feature-settings: "tnum", "lnum";
   }
 
   body {

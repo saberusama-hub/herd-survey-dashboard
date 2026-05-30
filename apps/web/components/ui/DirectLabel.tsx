@@ -69,8 +69,8 @@ interface LineEndProps {
  */
 export function LineEndLabel({ x, y, index, total, label, color }: LineEndProps) {
   if (
-    x === undefined ||
-    y === undefined ||
+    !Number.isFinite(x) ||
+    !Number.isFinite(y) ||
     index === undefined ||
     total === undefined ||
     index !== total - 1
@@ -80,7 +80,7 @@ export function LineEndLabel({ x, y, index, total, label, color }: LineEndProps)
   if (!label) return null;
   const display = label.length > 22 ? `${label.slice(0, 21)}…` : label;
   return (
-    <g transform={`translate(${x + 6}, ${y})`}>
+    <g transform={`translate(${(x as number) + 6}, ${y as number})`}>
       <circle cx={0} cy={0} r={2} fill={color ?? 'hsl(var(--text-secondary))'} />
       <text
         x={6}

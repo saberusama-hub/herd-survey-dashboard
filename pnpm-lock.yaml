@@ -13,6 +13,9 @@ importers:
       '@duckdb/duckdb-wasm':
         specifier: 1.29.0
         version: 1.29.0
+      '@fontsource/carlito':
+        specifier: ^5.2.8
+        version: 5.2.8
       '@observablehq/plot':
         specifier: ^0.6.17
         version: 0.6.17
@@ -389,6 +392,9 @@ packages:
 
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
+
+  '@fontsource/carlito@5.2.8':
+    resolution: {integrity: sha512-EbsNaWvGUWiuSAv/9+n9lHMi2hfPabhw5rY7r+B84XDb0fvkw+3bCksrcEBE3sQDIKgAsIjDzzSbb0+GYJlvEQ==}
 
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
@@ -2454,6 +2460,8 @@ snapshots:
       react-dom: 18.3.1(react@18.3.1)
 
   '@floating-ui/utils@0.2.11': {}
+
+  '@fontsource/carlito@5.2.8': {}
 
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:

@@ -1,7 +1,10 @@
 import { Footer } from '@/components/layout/Footer';
 import { MegaNav } from '@/components/layout/MegaNav';
+import '@fontsource/carlito/400.css';
+import '@fontsource/carlito/400-italic.css';
+import '@fontsource/carlito/700.css';
+import '@fontsource/carlito/700-italic.css';
 import type { Metadata } from 'next';
-import { fontMono, fontSans, fontSerif } from './fonts';
 import './globals.css';
 import { Providers } from './providers';
 
@@ -24,7 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${fontSerif.variable} ${fontSans.variable} ${fontMono.variable}`}
+      className=""
     >
       <body className="min-h-screen">
         <a

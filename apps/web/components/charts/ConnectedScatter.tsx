@@ -3,7 +3,7 @@
 import { AXIS_STYLE } from '@/components/charts/colors';
 import { AxisBottom, AxisLeft } from '@visx/axis';
 import { Group } from '@visx/group';
-import { scaleLinear } from '@visx/scale';
+import { scaleLinear, scaleLog } from '@visx/scale';
 import { Circle, Line } from '@visx/shape';
 
 export interface ScatterPoint {
@@ -23,11 +23,28 @@ interface Props {
   yFormat?: (v: number) => string;
   /** Draw the y=x identity reference line. */
   showIdentityLine?: boolean;
+  /** Use log10 scale on the x-axis (great for dollar metrics). */
+  xLog?: boolean;
+  /** Use log10 scale on the y-axis. */
+  yLog?: boolean;
+}
+
+/** Pad a domain by 5% on each side; for log scale, pad multiplicatively. */
+function paddedDomain(min: number, max: number, log: boolean): [number, number] {
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return [0, 1];
+  if (log) {
+    const lo = Math.max(min, 1); // log scale cannot include 0/negative
+    const hi = Math.max(max, lo * 10);
+    return [lo / 1.4, hi * 1.4];
+  }
+  if (min === max) return [min - 1, max + 1];
+  const span = max - min;
+  return [min - span * 0.06, max + span * 0.06];
 }
 
 /**
  * Scatter with optional y=x reference line. Used by /reconciliation
- * (FY20 BU% vs FY24 BU% — below-diagonal points are losing capture).
+ * (FY20 BU% vs FY24 BU%) and /correlations.
  */
 export function ConnectedScatter({
   points,
@@ -38,26 +55,51 @@ export function ConnectedScatter({
   xFormat = (v) => v.toString(),
   yFormat = (v) => v.toString(),
   showIdentityLine = false,
+  xLog = false,
+  yLog = false,
 }: Props) {
-  const margin = { top: 16, right: 16, bottom: 44, left: 56 };
+  const margin = { top: 16, right: 20, bottom: 48, left: 64 };
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
-  const xs = points.map((p) => p.x);
-  const ys = points.map((p) => p.y);
-  const xDomain: [number, number] = [Math.min(...xs, 0), Math.max(...xs, 1)];
-  const yDomain: [number, number] = [Math.min(...ys, 0), Math.max(...ys, 1)];
+  // Filter to renderable points (no NaN, no log-incompatible values)
+  const valid = points.filter((p) => {
+    if (!Number.isFinite(p.x) || !Number.isFinite(p.y)) return false;
+    if (xLog && p.x <= 0) return false;
+    if (yLog && p.y <= 0) return false;
+    return true;
+  });
 
-  const x = scaleLinear<number>({ domain: xDomain, range: [0, innerWidth], nice: true });
-  const y = scaleLinear<number>({ domain: yDomain, range: [innerHeight, 0], nice: true });
+  if (valid.length === 0) {
+    return (
+      <div
+        style={{ height }}
+        className="flex items-center justify-center text-text-tertiary text-sm rounded-md border border-rule bg-surface-elevated"
+      >
+        No data points to plot.
+      </div>
+    );
+  }
 
-  // Identity line: from (max(xMin,yMin)) to (min(xMax,yMax))
+  const xs = valid.map((p) => p.x);
+  const ys = valid.map((p) => p.y);
+  const xDomain = paddedDomain(Math.min(...xs), Math.max(...xs), xLog);
+  const yDomain = paddedDomain(Math.min(...ys), Math.max(...ys), yLog);
+
+  const x = xLog
+    ? scaleLog<number>({ domain: xDomain, range: [0, innerWidth], base: 10 })
+    : scaleLinear<number>({ domain: xDomain, range: [0, innerWidth], nice: true });
+  const y = yLog
+    ? scaleLog<number>({ domain: yDomain, range: [innerHeight, 0], base: 10 })
+    : scaleLinear<number>({ domain: yDomain, range: [innerHeight, 0], nice: true });
+
+  // Identity line endpoints: intersection of x and y domains
   const identStart = Math.max(xDomain[0], yDomain[0]);
   const identEnd = Math.min(xDomain[1], yDomain[1]);
 
   return (
     <svg width="100%" viewBox={`0 0 ${width} ${height}`} role="img">
-      <title>Connected scatter</title>
+      <title>{`${yLabel} vs ${xLabel}`}</title>
       <Group left={margin.left} top={margin.top}>
         {showIdentityLine && identEnd > identStart && (
           <Line
@@ -68,29 +110,29 @@ export function ConnectedScatter({
             strokeWidth={1}
           />
         )}
-        {points.map((p, i) => (
+        {valid.map((p, i) => (
           <Circle
             // biome-ignore lint/suspicious/noArrayIndexKey: scatter points are positionally meaningful
             key={i}
             cx={x(p.x)}
             cy={y(p.y)}
-            r={p.highlight ? 6 : 4}
+            r={p.highlight ? 6 : 3.5}
             fill={p.highlight ? 'hsl(var(--highlight))' : 'hsl(var(--accent))'}
-            fillOpacity={p.highlight ? 0.95 : 0.55}
+            fillOpacity={p.highlight ? 0.95 : 0.5}
             stroke={p.highlight ? 'hsl(var(--surface-elevated))' : undefined}
             strokeWidth={p.highlight ? 1.5 : 0}
           >
             {p.label ? <title>{`${p.label}: (${xFormat(p.x)}, ${yFormat(p.y)})`}</title> : null}
           </Circle>
         ))}
-        {/* labels for highlighted points */}
-        {points
+        {/* Annotated labels for highlighted points */}
+        {valid
           .filter((p) => p.highlight && p.label)
           .map((p, i) => (
             <text
               // biome-ignore lint/suspicious/noArrayIndexKey: small subset; positionally meaningful
               key={`hl-${i}`}
-              x={x(p.x) + 8}
+              x={x(p.x) + 9}
               y={y(p.y) + 3}
               fontSize={11}
               fontFamily="var(--font-sans), system-ui"
@@ -103,7 +145,7 @@ export function ConnectedScatter({
         <AxisLeft
           scale={y}
           tickFormat={(v) => yFormat(Number(v))}
-          numTicks={5}
+          numTicks={6}
           stroke="hsl(var(--border))"
           tickStroke="hsl(var(--text-tertiary))"
           tickLabelProps={() => ({
@@ -119,7 +161,7 @@ export function ConnectedScatter({
           top={innerHeight}
           scale={x}
           tickFormat={(v) => xFormat(Number(v))}
-          numTicks={5}
+          numTicks={6}
           stroke="hsl(var(--border))"
           tickStroke="hsl(var(--text-tertiary))"
           tickLabelProps={() => ({
@@ -131,8 +173,8 @@ export function ConnectedScatter({
         />
         <text
           x={-innerHeight / 2}
-          y={-40}
-          transform={`rotate(-90)`}
+          y={-48}
+          transform={'rotate(-90)'}
           fontSize={11}
           fontFamily="var(--font-sans), system-ui"
           fill="hsl(var(--text-secondary))"
@@ -142,7 +184,7 @@ export function ConnectedScatter({
         </text>
         <text
           x={innerWidth / 2}
-          y={innerHeight + 36}
+          y={innerHeight + 40}
           fontSize={11}
           fontFamily="var(--font-sans), system-ui"
           fill="hsl(var(--text-secondary))"
