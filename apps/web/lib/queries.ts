@@ -53,6 +53,117 @@ export interface CoverageRow extends Row {
   coverage_pct: number;
 }
 
+/**
+ * Sheet 11: 3-line national bridge by FY (HERD vs FF-explicit vs FF-with-allocation).
+ * Spec section 5.7 — central chart of /reconciliation.
+ */
+export interface BridgeRow extends Row {
+  fiscal_year: number;
+  ff_explicit_universities_obligations_usd: number | null;
+  ff_universities_estimate_with_allocation_usd: number | null;
+  herd_reported_universities_expenditures_usd: number | null;
+  gap_ff_explicit_minus_herd_usd: number | null;
+  gap_ff_estimate_minus_herd_usd: number | null;
+}
+
+export async function federalUniversityBridge(): Promise<BridgeRow[]> {
+  return query<BridgeRow>(`
+    SELECT
+      fiscal_year,
+      ff_explicit_universities_obligations_usd,
+      ff_universities_estimate_with_allocation_usd,
+      herd_reported_universities_expenditures_usd,
+      gap_ff_explicit_minus_herd_usd,
+      gap_ff_estimate_minus_herd_usd
+    FROM sheet_11_federal_university_bridge
+    ORDER BY fiscal_year
+  `);
+}
+
+/**
+ * Per-institution HERD vs BU gap for a single FY (used by the Reconciliation dumbbell).
+ * Returns top-N by HERD federal R&D with both anchors populated.
+ */
+export interface ReconcileGap extends Row {
+  institution_sk: string;
+  canonical_name: string;
+  state_code: string | null;
+  fiscal_year: number;
+  herd: number;
+  bu: number;
+  gap_usd: number;
+  gap_pct: number;
+}
+
+export async function reconciliationGap(fy: number, topN = 50): Promise<ReconcileGap[]> {
+  return query<ReconcileGap>(`
+    SELECT
+      institution_sk,
+      canonical_name,
+      state_code,
+      fiscal_year,
+      herd_federal_rd_usd_nominal AS herd,
+      bottom_up_sum_usd_nominal AS bu,
+      (bottom_up_sum_usd_nominal - herd_federal_rd_usd_nominal) AS gap_usd,
+      CASE WHEN herd_federal_rd_usd_nominal > 0
+           THEN ((bottom_up_sum_usd_nominal - herd_federal_rd_usd_nominal) / herd_federal_rd_usd_nominal)
+           ELSE NULL END AS gap_pct
+    FROM sheet_07_cross_source_reconciliation
+    WHERE fiscal_year = ${fy}
+      AND herd_federal_rd_usd_nominal IS NOT NULL
+      AND bottom_up_sum_usd_nominal IS NOT NULL
+      AND is_tiny_anchor = false
+    ORDER BY herd_federal_rd_usd_nominal DESC
+    LIMIT ${topN}
+  `);
+}
+
+/**
+ * Pair-row used for the FY20-vs-FY24 BU% connected scatter.
+ * BU% = bottom_up_sum / herd_federal_rd.
+ */
+export interface BuCoveragePair extends Row {
+  institution_sk: string;
+  canonical_name: string;
+  bu_pct_fy_a: number;
+  bu_pct_fy_b: number;
+  herd_fy_b: number;
+}
+
+export async function bottomUpCoveragePair(fyA: number, fyB: number): Promise<BuCoveragePair[]> {
+  return query<BuCoveragePair>(`
+    WITH coverage AS (
+      SELECT
+        institution_sk,
+        canonical_name,
+        fiscal_year,
+        herd_federal_rd_usd_nominal AS herd,
+        bottom_up_sum_usd_nominal AS bu
+      FROM sheet_07_cross_source_reconciliation
+      WHERE fiscal_year IN (${fyA}, ${fyB})
+        AND herd_federal_rd_usd_nominal > 0
+        AND bottom_up_sum_usd_nominal IS NOT NULL
+        AND is_tiny_anchor = false
+    ),
+    pivot AS (
+      SELECT
+        institution_sk,
+        ANY_VALUE(canonical_name) AS canonical_name,
+        MAX(CASE WHEN fiscal_year = ${fyA} THEN bu/herd END) AS bu_pct_fy_a,
+        MAX(CASE WHEN fiscal_year = ${fyB} THEN bu/herd END) AS bu_pct_fy_b,
+        MAX(CASE WHEN fiscal_year = ${fyB} THEN herd END) AS herd_fy_b
+      FROM coverage
+      GROUP BY institution_sk
+    )
+    SELECT *
+    FROM pivot
+    WHERE bu_pct_fy_a IS NOT NULL
+      AND bu_pct_fy_b IS NOT NULL
+      AND herd_fy_b > 50000000
+    ORDER BY herd_fy_b DESC
+  `);
+}
+
 export async function bottomUpCoverageByFy(): Promise<CoverageRow[]> {
   return query<CoverageRow>(`
     SELECT
