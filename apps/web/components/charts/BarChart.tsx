@@ -75,7 +75,7 @@ export function BarChart({
           </>
         )}
         <Tooltip
-          cursor={{ fill: 'hsl(var(--accent-muted) / 0.3)' }}
+          cursor={{ fill: 'hsl(var(--accent-soft) / 0.4)' }}
           contentStyle={{
             background: 'hsl(var(--surface-elevated))',
             border: '1px solid hsl(var(--border))',

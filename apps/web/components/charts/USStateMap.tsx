@@ -16,8 +16,14 @@ interface Props {
 
 const TOPO_URL = '/us-states-10m.json';
 
-/** Log-scale 5-step color ramp (light → deep teal). */
-const RAMP = ['hsl(167 70% 96%)', 'hsl(170 60% 86%)', 'hsl(172 65% 70%)', 'hsl(173 75% 50%)', 'hsl(173 80% 30%)'];
+/** Log-scale 5-step color ramp (light → deep teal). Subset of the design system's sequential teal. */
+const RAMP = [
+  'hsl(var(--seq-1))',
+  'hsl(var(--seq-3))',
+  'hsl(var(--seq-4))',
+  'hsl(var(--seq-6))',
+  'hsl(var(--seq-7))',
+];
 
 function bucketize(values: number[]): (v: number) => number {
   const positive = values.filter((v) => v > 0).sort((a, b) => a - b);

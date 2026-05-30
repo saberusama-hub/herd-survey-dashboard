@@ -59,14 +59,6 @@ const config: Config = {
         'div-pos-2': 'hsl(var(--div-pos-2))',
         'div-pos-3': 'hsl(var(--div-pos-3))',
 
-        /* Legacy chart-1..7 — alias to categorical for back-compat */
-        'chart-1': 'hsl(var(--cat-1))',
-        'chart-2': 'hsl(var(--cat-2))',
-        'chart-3': 'hsl(var(--cat-3))',
-        'chart-4': 'hsl(var(--cat-4))',
-        'chart-5': 'hsl(var(--cat-5))',
-        'chart-6': 'hsl(var(--cat-6))',
-        'chart-7': 'hsl(var(--cat-7))',
       },
       fontFamily: {
         serif: ['var(--font-serif)', 'Georgia', 'serif'],
