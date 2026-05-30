@@ -364,6 +364,36 @@ export async function topInstitutionsByHerdFederal(n: number, fyMin: number, fyM
   `);
 }
 
+/**
+ * Sheet 10 — federal R&D flow rows for a single FY, used to build the /flow Sankey.
+ * Sheet structure is hierarchical: level=0 is the Federal total, 1 is agency, 2 is performer.
+ * Each row knows its parent_node_id so we can build nodes + links directly.
+ */
+export interface FlowRow extends Row {
+  fiscal_year: number;
+  level: number;
+  node_id: string;
+  parent_node_id: string | null;
+  agency_sk: string | null;
+  agency_name: string | null;
+  performer_category: string | null;
+  amount_usd_nominal: number;
+  amount_usd_real_2024: number;
+}
+
+export async function federalRdFlow(fy: number): Promise<FlowRow[]> {
+  return query<FlowRow>(`
+    SELECT
+      fiscal_year, level, node_id, parent_node_id,
+      agency_sk, agency_name, performer_category,
+      amount_usd_nominal, amount_usd_real_2024
+    FROM sheet_10_federal_rd_flow
+    WHERE fiscal_year = ${fy}
+      AND amount_usd_nominal IS NOT NULL
+      AND amount_usd_nominal > 0
+  `);
+}
+
 export interface StateRollup extends Row {
   state_code: string;
   total: number;
