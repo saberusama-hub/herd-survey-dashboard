@@ -63,6 +63,7 @@ export function Section9StateContext({ profile }: Props) {
         eyebrow="Section 9 · State context"
         title="In its state and among its peers"
         dek="Share of state R&D over time, similar-size peer institutions, and patent productivity (currently a stub — USPTO ingestion is out of scope for this build)."
+        color="hsl(var(--agency-nasa))"
       />
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">

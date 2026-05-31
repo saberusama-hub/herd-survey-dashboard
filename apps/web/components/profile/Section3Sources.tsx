@@ -92,6 +92,7 @@ export function Section3Sources({ profile }: Props) {
           eyebrow="Section 3 · Sources"
           title="Where the money came from"
           dek="No HERD source-of-funds data was reported for this institution."
+          color="hsl(var(--agency-doe))"
         />
       </section>
     );
@@ -103,6 +104,7 @@ export function Section3Sources({ profile }: Props) {
         eyebrow="Section 3 · Sources"
         title="Where the money came from"
         dek="Composition of total R&D across six funding sources, every year of the reported window. Federal funding gets the accent color."
+        color="hsl(var(--agency-doe))"
       />
 
       <ChartFrame

@@ -84,7 +84,7 @@ export function Section5Reconciliation({ profile }: Props) {
           eyebrow="Section 5 · Reconciliation"
           title="HERD vs bottom-up federal streams"
           dek="Neither HERD federal R&D nor bottom-up streams were reported for this institution."
-          color="hsl(var(--agency-doe))"
+          color="hsl(var(--accent))"
         />
       </section>
     );
@@ -101,7 +101,7 @@ export function Section5Reconciliation({ profile }: Props) {
         eyebrow="Section 5 · Reconciliation"
         title="HERD vs bottom-up federal streams"
         dek="Institution-reported HERD federal R&D (accent) side-by-side with the sum of NIH RePORTER + NSF Awards + USASpending. Gaps are expected — the methodology footnote below explains why."
-        color="hsl(var(--agency-doe))"
+        color="hsl(var(--accent))"
       />
 
       {latestCoverage !== null && latestFy !== null && (

@@ -102,6 +102,7 @@ export function Section6PIs({ profile }: Props) {
           eyebrow="Section 6 · Principal investigators"
           title="The PI footprint"
           dek="No PI-level grant data was found for this institution in the top-20K NIH/NSF ledger."
+          color="hsl(var(--agency-nih))"
         />
       </section>
     );
@@ -113,6 +114,7 @@ export function Section6PIs({ profile }: Props) {
         eyebrow="Section 6 · Principal investigators"
         title="The PI footprint"
         dek="Based on top-20K NIH + NSF grants — actual full-universe PI counts are higher. The chart shows how many distinct PIs the institution carried, year over year."
+        color="hsl(var(--agency-nih))"
       />
 
       <KpiStrip tiles={tiles} cols={3} />

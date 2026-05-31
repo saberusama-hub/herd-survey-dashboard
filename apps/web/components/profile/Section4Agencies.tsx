@@ -101,6 +101,7 @@ export function Section4Agencies({ profile }: Props) {
           eyebrow="Section 4 · Federal agencies"
           title="Which federal agencies funded this university"
           dek="No HERD Q09 agency split was reported for this institution."
+          color="hsl(var(--agency-nih))"
         />
       </section>
     );
@@ -114,6 +115,7 @@ export function Section4Agencies({ profile }: Props) {
         eyebrow="Section 4 · Federal agencies"
         title="Which federal agencies funded this university"
         dek="HERD Q09 institution-reported federal funding by agency. Fixed agency-color lockup — NIH navy, NSF cherry, DOD forest, DOE goldenrod, NASA plum, USDA sienna."
+        color="hsl(var(--agency-nih))"
       />
 
       <ChartFrame

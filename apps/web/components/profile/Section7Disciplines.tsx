@@ -134,6 +134,7 @@ export function Section7Disciplines({ profile }: Props) {
           eyebrow="Section 7 · Disciplines"
           title="What research the money funded"
           dek="No HERD field-of-science breakdown was reported for this institution."
+          color="hsl(var(--agency-dod))"
         />
       </section>
     );
@@ -145,6 +146,7 @@ export function Section7Disciplines({ profile }: Props) {
         eyebrow="Section 7 · Disciplines"
         title="What research the money funded"
         dek="STEM share, the 8 HERD field-of-science categories, and emerging-subject keyword tags. Subjects are title-tagged (no abstract text in source data)."
+        color="hsl(var(--agency-dod))"
       />
 
       <KpiStrip tiles={tiles} cols={3} />
