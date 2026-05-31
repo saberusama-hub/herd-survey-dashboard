@@ -30,7 +30,7 @@ interface Props {
 export function Section6PIs({ profile }: Props) {
   const { piMetrics, piDistribution } = profile;
 
-  const { tiles, lineData, distLatestFy, distRows, latestPi } = useMemo(() => {
+  const { tiles, lineData, distLatestFy, distRows, latestPi, peakPiNote } = useMemo(() => {
     if (piMetrics.length === 0) {
       return {
         tiles: [],
@@ -38,6 +38,7 @@ export function Section6PIs({ profile }: Props) {
         distLatestFy: null,
         distRows: [],
         latestPi: null,
+        peakPiNote: null as string | null,
       };
     }
     const latestPi = piMetrics[piMetrics.length - 1];
@@ -78,7 +79,20 @@ export function Section6PIs({ profile }: Props) {
         ),
       },
     ];
-    return { tiles, lineData, distLatestFy, distRows, latestPi };
+    // Peak PI year footnote.
+    let peakFy = lineData[0].fiscal_year;
+    let peakCount = lineData[0].pi_count;
+    for (const r of lineData) {
+      if (r.pi_count > peakCount) {
+        peakCount = r.pi_count;
+        peakFy = r.fiscal_year;
+      }
+    }
+    const peakPiNote = peakCount > 0
+      ? `PI count peaked at ${formatCount(peakCount)} in FY${peakFy}. Numbers reflect the top-20K NIH+NSF grants floor — the true distinct-PI count is higher.`
+      : null;
+
+    return { tiles, lineData, distLatestFy, distRows, latestPi, peakPiNote };
   }, [piMetrics, piDistribution]);
 
   if (piMetrics.length === 0) {
@@ -140,6 +154,10 @@ export function Section6PIs({ profile }: Props) {
           </ResponsiveSvg>
         </ChartFrame>
       </div>
+
+      {peakPiNote && (
+        <p className="mt-3 text-[11px] italic text-text-tertiary">{peakPiNote}</p>
+      )}
     </section>
   );
 }

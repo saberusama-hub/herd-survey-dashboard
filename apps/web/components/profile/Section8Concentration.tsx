@@ -26,9 +26,9 @@ interface Props {
 export function Section8Concentration({ profile }: Props) {
   const { concentration } = profile;
 
-  const { latest, tiles, lineData } = useMemo(() => {
+  const { latest, tiles, lineData, hhiTrendNote } = useMemo(() => {
     if (concentration.length === 0) {
-      return { latest: null, tiles: [] as KpiTile[], lineData: [] };
+      return { latest: null, tiles: [] as KpiTile[], lineData: [], hhiTrendNote: null as string | null };
     }
     const sorted = [...concentration].sort((a, b) => a.fiscal_year - b.fiscal_year);
     const latest = sorted[sorted.length - 1];
@@ -66,7 +66,22 @@ export function Section8Concentration({ profile }: Props) {
       fiscal_year: r.fiscal_year,
       hhi: Number.isFinite(r.hhi) ? Number(r.hhi) : null,
     }));
-    return { latest, tiles, lineData };
+
+    // HHI direction note: compare first to last finite value.
+    const finite = sorted.filter((r) => Number.isFinite(r.hhi));
+    let hhiTrendNote: string | null = null;
+    if (finite.length >= 2) {
+      const first = finite[0];
+      const last = finite[finite.length - 1];
+      const dir = Number(last.hhi) > Number(first.hhi)
+        ? 'rising concentration'
+        : Number(last.hhi) < Number(first.hhi)
+          ? 'falling concentration (more diversified)'
+          : 'flat concentration';
+      hhiTrendNote = `HHI moved from ${Math.round(Number(first.hhi)).toLocaleString('en-US')} in FY${first.fiscal_year} to ${Math.round(Number(last.hhi)).toLocaleString('en-US')} in FY${last.fiscal_year} — ${dir}.`;
+    }
+
+    return { latest, tiles, lineData, hhiTrendNote };
   }, [concentration]);
 
   if (!latest) {
@@ -111,6 +126,10 @@ export function Section8Concentration({ profile }: Props) {
           />
         </ChartFrame>
       </div>
+
+      {hhiTrendNote && (
+        <p className="mt-3 text-[11px] italic text-text-tertiary">{hhiTrendNote}</p>
+      )}
     </section>
   );
 }

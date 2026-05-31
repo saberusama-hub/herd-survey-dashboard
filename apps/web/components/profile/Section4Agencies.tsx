@@ -46,9 +46,14 @@ const AGENCY_LABEL: Record<AgencyKey, string> = {
  * sparkline of that agency's funding trajectory.
  */
 export function Section4Agencies({ profile }: Props) {
-  const { latestFy, bars, sparkData } = useMemo(() => {
+  const { latestFy, bars, sparkData, dominantNote } = useMemo(() => {
     if (profile.agencies.length === 0) {
-      return { latestFy: null, bars: [], sparkData: {} as Record<string, Array<{ x: number; y: number }>> };
+      return {
+        latestFy: null,
+        bars: [],
+        sparkData: {} as Record<string, Array<{ x: number; y: number }>>,
+        dominantNote: null as string | null,
+      };
     }
     const latest = profile.agencies.reduce(
       (m, r) => (r.fiscal_year > m ? r.fiscal_year : m),
@@ -81,7 +86,12 @@ export function Section4Agencies({ profile }: Props) {
         .map((r) => ({ x: r.fiscal_year, y: Number(r.amount_nominal) || 0 }));
     }
 
-    return { latestFy: latest, bars, sparkData };
+    const top = bars[0];
+    const dominantNote = top
+      ? `${top.label} was the dominant federal funder in FY${latest} at ${formatDollars(top.amount, { decimals: 2 })} — ${formatPercent(top.share)} of this institution's federal R&D.`
+      : null;
+
+    return { latestFy: latest, bars, sparkData, dominantNote };
   }, [profile]);
 
   if (bars.length === 0 || latestFy === null) {
@@ -116,6 +126,10 @@ export function Section4Agencies({ profile }: Props) {
           {(w, h) => <AgencyBars width={w} height={h} bars={bars} />}
         </ResponsiveSvg>
       </ChartFrame>
+
+      {dominantNote && (
+        <p className="mt-2 text-[11px] italic text-text-tertiary">{dominantNote}</p>
+      )}
 
       {/* 20-year sparkline grid */}
       <div className="mt-6">

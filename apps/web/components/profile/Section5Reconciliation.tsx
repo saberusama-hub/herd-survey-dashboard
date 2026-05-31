@@ -28,7 +28,7 @@ interface Props {
  * coverage gaps appear as the bottom-up bar falling short of HERD.
  */
 export function Section5Reconciliation({ profile }: Props) {
-  const { rows, latestCoverage, latestFy, hasData } = useMemo(() => {
+  const { rows, latestCoverage, latestFy, hasData, gapNote } = useMemo(() => {
     // Aggregate HERD federal per FY.
     const herdByFy = new Map<number, number>();
     for (const r of profile.agencies) {
@@ -57,11 +57,23 @@ export function Section5Reconciliation({ profile }: Props) {
     const latestRow = rows[rows.length - 1];
     const latestCoverage =
       latestRow && latestRow.herd > 0 ? latestRow.bottom_up / latestRow.herd : null;
+    // Largest absolute coverage gap (HERD - bottom-up) across the years.
+    let maxGap = { fy: 0, gap: 0 };
+    for (const r of rows) {
+      const g = r.herd - r.bottom_up;
+      if (Math.abs(g) > Math.abs(maxGap.gap)) maxGap = { fy: r.fiscal_year, gap: g };
+    }
+    const gapNote =
+      maxGap.fy && maxGap.gap !== 0
+        ? `Largest reconciliation gap landed in FY${maxGap.fy} — HERD reported ${formatDollars(Math.abs(maxGap.gap), { decimals: 2 })} ${maxGap.gap > 0 ? 'more' : 'less'} than the bottom-up streams.`
+        : null;
+
     return {
       rows,
       latestCoverage,
       latestFy,
       hasData: rows.some((r) => r.herd > 0 || r.bottom_up > 0),
+      gapNote,
     };
   }, [profile]);
 
@@ -144,7 +156,11 @@ export function Section5Reconciliation({ profile }: Props) {
         </ul>
       </ChartFrame>
 
-      <p className="mt-2 text-[11px] italic text-text-tertiary">
+      {gapNote && (
+        <p className="mt-2 text-[11px] italic text-text-tertiary">{gapNote}</p>
+      )}
+
+      <p className="mt-1 text-[11px] italic text-text-tertiary">
         Note: the Federal Funds Vol&nbsp;70→71 taxonomy break (FY2015–FY2016) is not
         re-applied at the per-institution level here — only NSF national totals
         carry that flag.
