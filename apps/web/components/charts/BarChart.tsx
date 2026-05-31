@@ -4,7 +4,6 @@ import {
   Bar,
   CartesianGrid,
   Cell,
-  Customized,
   Legend,
   BarChart as RechartsBarChart,
   ResponsiveContainer,
@@ -65,6 +64,7 @@ export function BarChart({
   const muteColor = 'hsl(var(--mute-1))';
 
   return (
+    <div className="relative">
     <ResponsiveContainer width="100%" height={height}>
       <RechartsBarChart
         data={data}
@@ -135,18 +135,17 @@ export function BarChart({
           );
           return bar;
         })}
-        {annotations && annotations.length > 0 && (
-          <Customized
-            component={() => (
-              <g>
-                {annotations.map((a, ai) => (
-                  <Annotation key={ai} x={a.x} y={a.y} label={a.label} />
-                ))}
-              </g>
-            )}
-          />
-        )}
       </RechartsBarChart>
     </ResponsiveContainer>
+    {annotations && annotations.length > 0 && (
+      <div className="pointer-events-none absolute inset-0">
+        <svg className="h-full w-full" role="presentation">
+          {annotations.map((a, ai) => (
+            <Annotation key={ai} x={a.x} y={a.y} label={a.label} />
+          ))}
+        </svg>
+      </div>
+    )}
+    </div>
   );
 }

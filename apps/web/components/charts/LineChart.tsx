@@ -1,7 +1,5 @@
 'use client';
 
-import { type TimelineEvent, colorForTone } from '@/lib/annotations';
-import { formatFy, formatUsd } from '@/lib/formatters';
 import {
   CartesianGrid,
   Legend,
@@ -14,6 +12,11 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+
+import { Annotation } from '@/components/editorial/Annotation';
+import { type TimelineEvent, colorForTone } from '@/lib/annotations';
+import { formatFy, formatUsd } from '@/lib/formatters';
+
 import { AXIS_STYLE, GRID_STYLE, colorFor } from './colors';
 
 export interface LineSeries {
@@ -46,6 +49,13 @@ interface Props {
   rightMargin?: number;
   /** Index of highlighted series; non-highlighted go to text-tertiary. */
   highlightIndex?: number | null;
+  /**
+   * SVG-coordinate editorial annotations rendered on top of the chart. The
+   * (x, y) values are in the inner plot area (i.e., the same space the line
+   * paths are drawn in). Use the heuristic helpers in `lib/annotations.ts`
+   * to compute coordinates from a SeriesPoint[].
+   */
+  annotations?: Array<{ x: number; y: number; label: string }>;
 }
 
 export function LineChart({
@@ -61,6 +71,7 @@ export function LineChart({
   referenceLines,
   rightMargin,
   highlightIndex = null,
+  annotations,
 }: Props) {
   const computedRightMargin = rightMargin ?? 16;
   const hasMultiSeries = series.length > 1;
@@ -69,6 +80,7 @@ export function LineChart({
   return (
     <div className="space-y-3">
       {renderChips && <SeriesChipRow series={series} highlightIndex={highlightIndex} />}
+      <div className="relative">
       <ResponsiveContainer width="100%" height={height}>
         <RechartsLineChart data={data} margin={{ top: 8, right: computedRightMargin, bottom: 8, left: 8 }}>
           <CartesianGrid {...GRID_STYLE} />
@@ -166,6 +178,16 @@ export function LineChart({
           })}
         </RechartsLineChart>
       </ResponsiveContainer>
+      {annotations && annotations.length > 0 && (
+        <div className="pointer-events-none absolute inset-0">
+          <svg className="h-full w-full" role="presentation">
+            {annotations.map((a, ai) => (
+              <Annotation key={ai} x={a.x} y={a.y} label={a.label} />
+            ))}
+          </svg>
+        </div>
+      )}
+      </div>
     </div>
   );
 }
