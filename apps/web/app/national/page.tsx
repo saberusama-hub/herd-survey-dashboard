@@ -3,18 +3,28 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { useDuckDB } from '@/app/providers';
+import { DistributionPlot } from '@/components/charts/DistributionPlot';
 import { LineChart } from '@/components/charts/LineChart';
 import { ResponsiveSvg } from '@/components/charts/ResponsiveSvg';
 import { StackedBar } from '@/components/charts/StackedBar';
+import { USStateMap } from '@/components/charts/USStateMap';
 import { ChartFrame } from '@/components/editorial/ChartFrame';
 import { SectionDivider } from '@/components/editorial/SectionDivider';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { largestYoY, peakYear } from '@/lib/annotations';
-import { formatDollars } from '@/lib/format';
+import { formatCount, formatDollars, formatPercent } from '@/lib/format';
 import {
   getNationalAgencyTrend,
   getNationalConcentration,
+  getNationalFieldMix,
   getNationalOverview,
+  getNationalPiDistribution,
+  getNationalStateRollup,
+  getNationalTrends,
+  type NationalFieldMixRow,
+  type NationalPiDistributionRow,
+  type NationalStateRollupRow,
+  type NationalTrendRow,
 } from '@/lib/queries';
 
 const SECTIONS = [
@@ -83,6 +93,13 @@ const CONC_COLOR: Record<ConcBucket, string> = {
   top_100: 'hsl(var(--mute-1))',
 };
 
+const TREND_METRICS = [
+  { key: 'total_rd_nominal', label: 'Total R&D', kind: 'dollars' as const },
+  { key: 'federal_share', label: 'Federal share', kind: 'percent' as const },
+  { key: 'pi_count', label: '# PIs', kind: 'count' as const },
+] as const;
+type TrendMetricKey = (typeof TREND_METRICS)[number]['key'];
+
 type OverviewRow = {
   fiscal_year: number;
   source_category: string;
@@ -106,8 +123,15 @@ export default function NationalPage() {
   const [overview, setOverview] = useState<OverviewRow[]>([]);
   const [agencies, setAgencies] = useState<AgencyRow[]>([]);
   const [concentration, setConcentration] = useState<ConcentrationRow[]>([]);
+  const [stateRollup, setStateRollup] = useState<NationalStateRollupRow[]>([]);
+  const [fieldMix, setFieldMix] = useState<NationalFieldMixRow[]>([]);
+  const [piDist, setPiDist] = useState<NationalPiDistributionRow[]>([]);
+  const [trends, setTrends] = useState<NationalTrendRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // §5 trends explorer: which national metric to plot
+  const [trendMetric, setTrendMetric] = useState<TrendMetricKey>('total_rd_nominal');
 
   useEffect(() => {
     if (!ready) return;
@@ -117,12 +141,20 @@ export default function NationalPage() {
       getNationalOverview(),
       getNationalAgencyTrend(),
       getNationalConcentration(),
+      getNationalStateRollup(),
+      getNationalFieldMix(),
+      getNationalPiDistribution(),
+      getNationalTrends(),
     ])
-      .then(([o, a, c]) => {
+      .then(([o, a, c, s, f, p, t]) => {
         if (cancelled) return;
         setOverview(o as OverviewRow[]);
         setAgencies(a as AgencyRow[]);
         setConcentration(c as ConcentrationRow[]);
+        setStateRollup(s);
+        setFieldMix(f);
+        setPiDist(p);
+        setTrends(t);
         setLoading(false);
       })
       .catch((e: Error) => {
@@ -246,6 +278,93 @@ export default function NationalPage() {
       top100Last: Number(last.top_100),
     };
   }, [concentrationWide]);
+
+  /* ─── §4 Geography: state -> total $ map, plus top-5 leaderboard ─── */
+  const stateValues = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const r of stateRollup) {
+      if (r.state_code) m[r.state_code] = Number(r.total_rd_nominal) || 0;
+    }
+    return m;
+  }, [stateRollup]);
+
+  const stateSummary = useMemo(() => {
+    if (stateRollup.length === 0) return null;
+    const fy = Number(stateRollup[0].fiscal_year);
+    const sorted = [...stateRollup].sort(
+      (a, b) => Number(b.total_rd_nominal) - Number(a.total_rd_nominal),
+    );
+    return {
+      fy,
+      top5: sorted.slice(0, 5),
+      nStates: sorted.length,
+      total: sorted.reduce((s, r) => s + (Number(r.total_rd_nominal) || 0), 0),
+    };
+  }, [stateRollup]);
+
+  /* ─── §5 Trends: pivot national trend rollup, format Y per metric ─── */
+  const trendsForChart = useMemo(
+    () =>
+      trends.map((r) => ({
+        fiscal_year: r.fiscal_year,
+        total_rd_nominal: Number(r.total_rd_nominal) || 0,
+        // federal_share comes back as a 0..1 fraction; render as % (0..100).
+        federal_share: (Number(r.federal_share) || 0) * 100,
+        pi_count: Number(r.pi_count) || 0,
+      })),
+    [trends],
+  );
+
+  const trendYFormat = useMemo(() => {
+    const m = TREND_METRICS.find((x) => x.key === trendMetric);
+    if (!m) return (v: number) => String(v);
+    if (m.kind === 'dollars') return (v: number) => formatDollars(v);
+    if (m.kind === 'percent') return (v: number) => `${v.toFixed(1)}%`;
+    return (v: number) => formatCount(v);
+  }, [trendMetric]);
+
+  /* ─── §6 Disciplines: pivot national field mix to STEM vs non-STEM stack ─── */
+  const stemStackWide = useMemo(() => {
+    const byFy = new Map<number, { stem: number; non_stem: number }>();
+    for (const r of fieldMix) {
+      const cur = byFy.get(r.fiscal_year) ?? { stem: 0, non_stem: 0 };
+      const amt = Number(r.amount_nominal) || 0;
+      if (r.is_stem) cur.stem += amt;
+      else cur.non_stem += amt;
+      byFy.set(r.fiscal_year, cur);
+    }
+    return Array.from(byFy.keys())
+      .sort((a, b) => a - b)
+      .map((fy) => ({
+        fiscal_year: fy,
+        stem: byFy.get(fy)?.stem ?? 0,
+        non_stem: byFy.get(fy)?.non_stem ?? 0,
+      }));
+  }, [fieldMix]);
+
+  const stemSummary = useMemo(() => {
+    if (stemStackWide.length === 0) return null;
+    const last = stemStackWide[stemStackWide.length - 1];
+    const total = last.stem + last.non_stem;
+    return {
+      fy: Number(last.fiscal_year),
+      stemShare: total > 0 ? last.stem / total : null,
+    };
+  }, [stemStackWide]);
+
+  /* ─── §7 PI distribution: latest-FY decile averages ─── */
+  const piDistLatest = useMemo(() => {
+    if (piDist.length === 0) return { fy: null as number | null, rows: [] as { decile: number; avg_amount: number }[] };
+    const latestFy = piDist.reduce(
+      (m, r) => (r.fiscal_year > m ? r.fiscal_year : m),
+      piDist[0].fiscal_year,
+    );
+    const rows = piDist
+      .filter((r) => r.fiscal_year === latestFy)
+      .sort((a, b) => a.decile - b.decile)
+      .map((r) => ({ decile: r.decile, avg_amount: Number(r.avg_amount) || 0 }));
+    return { fy: latestFy, rows };
+  }, [piDist]);
 
   return (
     <div className="container-wide pt-10 pb-24 md:pt-14 md:pb-32 space-y-6">
@@ -398,7 +517,7 @@ export default function NationalPage() {
         </ChartFrame>
       </section>
 
-      {/* ─── §4 Geography (filled in P5.2) ─── */}
+      {/* ─── §4 Geography ─── */}
       <section
         id="geography"
         aria-labelledby="national-section-geography"
@@ -407,16 +526,55 @@ export default function NationalPage() {
         <SectionDivider
           eyebrow="National · Geography"
           title="State-level rollups"
-          dek="Choropleth of latest-FY total R&D by state — coming in P5.2."
+          dek="Total HERD R&D by state in the most recent fiscal year. Darker fill = more research $."
           color="hsl(var(--agency-nasa))"
         />
-        <p className="text-text-secondary text-sm">
-          State choropleth and rankings &mdash; implemented via existing
-          <code className="px-1">USStateMap</code> in P5.2.
-        </p>
+        <ChartFrame
+          eyebrow={stateSummary ? `FY${stateSummary.fy} totals` : 'State totals'}
+          title="HERD R&D by state"
+          dek="Choropleth of the latest available fiscal year. Hover a state for its total; the leaderboard at right shows the top 5."
+          source="agg_uni_total_rd × dim_institution"
+          note={
+            stateSummary
+              ? `${stateSummary.nStates} states reported R&D in FY${stateSummary.fy}, totalling ${formatDollars(stateSummary.total)}.`
+              : undefined
+          }
+        >
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
+            <div className="min-h-[360px]">
+              <USStateMap values={stateValues} height={400} />
+            </div>
+            {stateSummary && stateSummary.top5.length > 0 && (
+              <div>
+                <p className="mb-2 text-[11px] uppercase tracking-wider text-text-tertiary">
+                  Top 5 states · FY{stateSummary.fy}
+                </p>
+                <ol className="space-y-1 text-sm tnum">
+                  {stateSummary.top5.map((r, i) => (
+                    <li
+                      key={r.state_code}
+                      className="flex justify-between border-b border-rule/60 py-1.5"
+                    >
+                      <span>
+                        <span className="mr-2 text-text-tertiary">
+                          {String(i + 1).padStart(2, '0')}
+                        </span>
+                        <span className="font-medium">{r.state_code}</span>
+                        <span className="ml-2 text-text-tertiary">
+                          {r.n_institutions} {r.n_institutions === 1 ? 'inst.' : 'insts.'}
+                        </span>
+                      </span>
+                      <span className="text-accent">{formatDollars(r.total_rd_nominal)}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+          </div>
+        </ChartFrame>
       </section>
 
-      {/* ─── §5 Trends (filled in P5.2) ─── */}
+      {/* ─── §5 Trends — multi-metric explorer ─── */}
       <section
         id="trends"
         aria-labelledby="national-section-trends"
@@ -425,15 +583,55 @@ export default function NationalPage() {
         <SectionDivider
           eyebrow="National · Trends"
           title="Multi-metric explorer"
-          dek="Switch the national rollup between total R&D, federal share, and PI counts."
+          dek="Switch the national rollup between total R&D, federal share, and distinct PI counts."
           color="hsl(var(--agency-dod))"
         />
-        <p className="text-text-secondary text-sm">
-          Use the controls to overlay any two national metrics &mdash; coming in P5.2.
-        </p>
+        <ChartFrame
+          eyebrow="Pick a metric"
+          title="National trend, FY2005 – FY2024"
+          dek="One line, one national rollup. Use the selector to flip between dollar totals, the federal $ share of all R&D, and the distinct-PI count behind NIH+NSF top grants."
+          source="agg_uni_total_rd · agg_uni_source_split · agg_uni_pi_metrics"
+        >
+          <div className="mb-3 flex flex-wrap gap-2" role="tablist" aria-label="National metric">
+            {TREND_METRICS.map((m) => {
+              const active = m.key === trendMetric;
+              return (
+                <button
+                  key={m.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setTrendMetric(m.key)}
+                  className={
+                    'rounded border px-3 py-1.5 text-xs ' +
+                    (active
+                      ? 'border-accent bg-accent text-paper'
+                      : 'border-border text-text-secondary hover:border-accent hover:text-accent')
+                  }
+                >
+                  {m.label}
+                </button>
+              );
+            })}
+          </div>
+          <LineChart
+            data={trendsForChart as unknown as Array<Record<string, unknown>>}
+            xKey="fiscal_year"
+            series={[
+              {
+                key: trendMetric,
+                label: TREND_METRICS.find((m) => m.key === trendMetric)?.label ?? trendMetric,
+                color: 'hsl(var(--accent))',
+              },
+            ]}
+            yFormat={trendYFormat}
+            height={320}
+            showLegend={false}
+          />
+        </ChartFrame>
       </section>
 
-      {/* ─── §6 Disciplines (filled in P5.2) ─── */}
+      {/* ─── §6 Disciplines ─── */}
       <section
         id="disciplines"
         aria-labelledby="national-section-disciplines"
@@ -442,15 +640,58 @@ export default function NationalPage() {
         <SectionDivider
           eyebrow="National · Disciplines"
           title="STEM vs non-STEM nationally"
-          dek="National rollup of the eight HERD field-of-science categories."
+          dek="National rollup of the eight HERD field-of-science categories, collapsed to STEM and non-STEM."
           color="hsl(var(--agency-dod))"
         />
-        <p className="text-text-secondary text-sm">
-          Discipline rollup &mdash; coming in P5.2.
-        </p>
+        <ChartFrame
+          eyebrow="HERD Q03 field of science"
+          title="National STEM vs non-STEM R&D, by fiscal year"
+          dek="Each bar is one fiscal year. STEM (S&E) is the accent color; humanities + social sciences sit on top."
+          source="HERD Q03 · agg_uni_field_mix"
+          note={
+            stemSummary && stemSummary.stemShare !== null
+              ? `STEM share in FY${stemSummary.fy}: ${formatPercent(stemSummary.stemShare)} of national HERD R&D.`
+              : undefined
+          }
+        >
+          <ResponsiveSvg height={340}>
+            {(w, h) => (
+              <StackedBar
+                data={stemStackWide}
+                keys={['stem', 'non_stem']}
+                xKey="fiscal_year"
+                colors={{
+                  stem: 'hsl(var(--accent))',
+                  non_stem: 'hsl(var(--mute-1))',
+                }}
+                width={w}
+                height={h}
+                orientation="vertical"
+              />
+            )}
+          </ResponsiveSvg>
+          <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] text-text-secondary">
+            <li className="inline-flex items-center gap-1.5">
+              <span
+                aria-hidden
+                className="h-2.5 w-2.5 rounded-full"
+                style={{ background: 'hsl(var(--accent))' }}
+              />
+              <span>STEM (S&amp;E)</span>
+            </li>
+            <li className="inline-flex items-center gap-1.5">
+              <span
+                aria-hidden
+                className="h-2.5 w-2.5 rounded-full"
+                style={{ background: 'hsl(var(--mute-1))' }}
+              />
+              <span>Non-STEM</span>
+            </li>
+          </ul>
+        </ChartFrame>
       </section>
 
-      {/* ─── §7 PI distribution (filled in P5.2) ─── */}
+      {/* ─── §7 PI distribution ─── */}
       <section
         id="pi-distribution"
         aria-labelledby="national-section-pis"
@@ -459,12 +700,26 @@ export default function NationalPage() {
         <SectionDivider
           eyebrow="National · PIs"
           title="PI count + $/PI distribution"
-          dek="Nationwide distinct-PI count over time, plus the national $/PI decile distribution."
+          dek="National-level decile distribution of $/PI from the top-20K NIH+NSF grants ledger. Decile 1 = lowest-funded PIs, decile 10 = highest-funded."
           color="hsl(var(--agency-nih))"
         />
-        <p className="text-text-secondary text-sm">
-          National PI count &mdash; coming in P5.2.
-        </p>
+        <ChartFrame
+          eyebrow={piDistLatest.fy ? `FY${piDistLatest.fy} distribution` : 'PI $ distribution'}
+          title="How federal $ spreads across PIs nationally"
+          dek="Average dollar amount per PI in each decile of the latest-year roster, averaged across institutions (decile-of-deciles)."
+          source="agg_uni_pi_distribution (top-20K NIH+NSF ledger)"
+          note={
+            piDistLatest.rows.length > 0
+              ? `Top decile averages ${formatDollars(piDistLatest.rows[piDistLatest.rows.length - 1].avg_amount)} per PI, vs. ${formatDollars(piDistLatest.rows[0].avg_amount)} in the bottom decile.`
+              : 'Coverage floor — full-universe PI distributions are higher because the ledger truncates at the top 20K grants.'
+          }
+        >
+          <ResponsiveSvg height={280}>
+            {(w, h) => (
+              <DistributionPlot data={piDistLatest.rows} width={w} height={h} />
+            )}
+          </ResponsiveSvg>
+        </ChartFrame>
       </section>
     </div>
   );

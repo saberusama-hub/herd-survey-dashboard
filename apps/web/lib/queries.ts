@@ -695,6 +695,140 @@ export async function getNationalConcentration() {
   );
 }
 
+// ─────────── /national §4 Geography (P5.2) ───────────
+//
+// Aggregate `agg_uni_total_rd` × `dim_institution` to per-state nominal $.
+// Returns one row per state for the given FY. Defaults to latest FY in the
+// agg table if `fy` is null.
+
+export interface NationalStateRollupRow extends Row {
+  state_code: string;
+  fiscal_year: number;
+  total_rd_nominal: number;
+  n_institutions: number;
+}
+
+export async function getNationalStateRollup(fy?: number): Promise<NationalStateRollupRow[]> {
+  // Latest FY fallback: subquery picks MAX(fiscal_year) from agg_uni_total_rd.
+  const fyClause =
+    fy !== undefined && fy !== null
+      ? `${fy}`
+      : `(SELECT MAX(fiscal_year) FROM agg_uni_total_rd)`;
+  return query<NationalStateRollupRow>(`
+    SELECT
+      i.state_code,
+      t.fiscal_year,
+      SUM(t.total_rd_nominal) AS total_rd_nominal,
+      COUNT(DISTINCT t.institution_sk) AS n_institutions
+    FROM agg_uni_total_rd t
+    JOIN dim_institution i USING (institution_sk)
+    WHERE t.fiscal_year = ${fyClause}
+      AND t.total_rd_nominal IS NOT NULL
+      AND i.state_code IS NOT NULL
+    GROUP BY i.state_code, t.fiscal_year
+    ORDER BY total_rd_nominal DESC
+  `);
+}
+
+// ─────────── /national §6 Disciplines (P5.2) ───────────
+//
+// National rollup of `agg_uni_field_mix`. One row per FY × field_category ×
+// is_stem; sums amount_nominal across all institutions.
+
+export interface NationalFieldMixRow extends Row {
+  fiscal_year: number;
+  field_category: string;
+  is_stem: boolean;
+  amount_nominal: number;
+}
+
+export async function getNationalFieldMix(): Promise<NationalFieldMixRow[]> {
+  return query<NationalFieldMixRow>(`
+    SELECT
+      fiscal_year,
+      field_category,
+      is_stem,
+      SUM(amount_nominal) AS amount_nominal
+    FROM agg_uni_field_mix
+    WHERE amount_nominal IS NOT NULL
+    GROUP BY fiscal_year, field_category, is_stem
+    ORDER BY fiscal_year, field_category
+  `);
+}
+
+// ─────────── /national §7 PI distribution (P5.2) ───────────
+//
+// National decile distribution of $/PI. Averages per-decile averages across
+// all institutions (decile-of-deciles); a coarse but defensible national
+// view of how federal $ spreads across PIs.
+
+export interface NationalPiDistributionRow extends Row {
+  fiscal_year: number;
+  decile: number;
+  avg_amount: number;
+  pi_count: number;
+}
+
+export async function getNationalPiDistribution(): Promise<NationalPiDistributionRow[]> {
+  return query<NationalPiDistributionRow>(`
+    SELECT
+      fiscal_year,
+      decile,
+      AVG(avg_amount) AS avg_amount,
+      SUM(pi_count) AS pi_count
+    FROM agg_uni_pi_distribution
+    WHERE avg_amount IS NOT NULL
+    GROUP BY fiscal_year, decile
+    ORDER BY fiscal_year, decile
+  `);
+}
+
+// ─────────── /national §5 Trends (P5.2) — multi-metric explorer ───────────
+//
+// National rollups of total_rd, federal_share, and pi_count by FY.
+
+export interface NationalTrendRow extends Row {
+  fiscal_year: number;
+  total_rd_nominal: number;
+  federal_share: number;
+  pi_count: number;
+}
+
+export async function getNationalTrends(): Promise<NationalTrendRow[]> {
+  return query<NationalTrendRow>(`
+    WITH totals AS (
+      SELECT fiscal_year, SUM(total_rd_nominal) AS total_rd_nominal
+      FROM agg_uni_total_rd
+      WHERE total_rd_nominal IS NOT NULL
+      GROUP BY fiscal_year
+    ),
+    sources AS (
+      SELECT
+        fiscal_year,
+        SUM(CASE WHEN source_category = 'federal' THEN amount_nominal ELSE 0 END)
+          / NULLIF(SUM(amount_nominal), 0) AS federal_share
+      FROM agg_uni_source_split
+      WHERE amount_nominal IS NOT NULL
+      GROUP BY fiscal_year
+    ),
+    pis AS (
+      SELECT fiscal_year, SUM(pi_count) AS pi_count
+      FROM agg_uni_pi_metrics
+      WHERE pi_count IS NOT NULL
+      GROUP BY fiscal_year
+    )
+    SELECT
+      t.fiscal_year,
+      t.total_rd_nominal,
+      s.federal_share,
+      COALESCE(p.pi_count, 0) AS pi_count
+    FROM totals t
+    LEFT JOIN sources s USING (fiscal_year)
+    LEFT JOIN pis p USING (fiscal_year)
+    ORDER BY t.fiscal_year
+  `);
+}
+
 // ─────────── /universities index table ───────────
 export interface UniversityIndexRow extends Row {
   institution_sk: string;
