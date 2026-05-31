@@ -1,0 +1,212 @@
+[
+  {
+    "id": "total_us_rd_fy2024",
+    "description": "Total US university R&D FY2024 = sum across all source categories in agg_national_overview",
+    "sql": "SELECT CAST(SUM(amount_nominal) AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_national_overview.parquet') WHERE fiscal_year = 2024",
+    "expected": 117661158000,
+    "tolerance_pct": 5.0
+  },
+  {
+    "id": "federal_rd_fy2024",
+    "description": "Federal source R&D FY2024",
+    "sql": "SELECT CAST(SUM(amount_nominal) AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_national_overview.parquet') WHERE fiscal_year = 2024 AND source_category = 'federal'",
+    "expected": 64698348000,
+    "tolerance_pct": 5.0
+  },
+  {
+    "id": "institutional_rd_fy2024",
+    "description": "Institutional funds FY2024 (second-largest source)",
+    "sql": "SELECT CAST(SUM(amount_nominal) AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_national_overview.parquet') WHERE fiscal_year = 2024 AND source_category = 'institutional'",
+    "expected": 30180831000,
+    "tolerance_pct": 8.0
+  },
+  {
+    "id": "nonprofit_rd_fy2024",
+    "description": "Nonprofit source R&D FY2024 (~$6.7B)",
+    "sql": "SELECT CAST(SUM(amount_nominal) AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_national_overview.parquet') WHERE fiscal_year = 2024 AND source_category = 'nonprofit'",
+    "expected": 6686505000,
+    "tolerance_pct": 10.0
+  },
+  {
+    "id": "industry_rd_fy2024",
+    "description": "Industry source R&D FY2024 (~$6.4B)",
+    "sql": "SELECT CAST(SUM(amount_nominal) AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_national_overview.parquet') WHERE fiscal_year = 2024 AND source_category = 'industry'",
+    "expected": 6360623000,
+    "tolerance_pct": 10.0
+  },
+  {
+    "id": "state_rd_fy2024",
+    "description": "State + local government source R&D FY2024 (~$6.1B)",
+    "sql": "SELECT CAST(SUM(amount_nominal) AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_national_overview.parquet') WHERE fiscal_year = 2024 AND source_category = 'state'",
+    "expected": 6082523000,
+    "tolerance_pct": 10.0
+  },
+  {
+    "id": "federal_share_fy2024",
+    "description": "Federal share of total R&D FY2024 (~55%)",
+    "sql": "WITH t AS (SELECT source_category, SUM(amount_nominal) AS amt FROM read_parquet('apps/web/public/data/agg_national_overview.parquet') WHERE fiscal_year = 2024 GROUP BY source_category) SELECT (SELECT amt FROM t WHERE source_category = 'federal') / (SELECT SUM(amt) FROM t)",
+    "expected": 0.55,
+    "tolerance_pct": 5.0
+  },
+  {
+    "id": "hhs_share_federal_fy2023",
+    "description": "HHS (incl. NIH) share of federal R&D FY2023 (~58% per agg_uni_agency_split)",
+    "sql": "WITH t AS (SELECT agency_bucket, SUM(amount_nominal) AS amt FROM read_parquet('apps/web/public/data/agg_uni_agency_split.parquet') WHERE fiscal_year = 2023 GROUP BY agency_bucket) SELECT (SELECT amt FROM t WHERE agency_bucket = 'HHS') / (SELECT SUM(amt) FROM t)",
+    "expected": 0.58,
+    "tolerance_pct": 10.0
+  },
+  {
+    "id": "hhs_total_fy2023",
+    "description": "HHS federal R&D FY2023 national total (~$28B)",
+    "sql": "SELECT CAST(SUM(amount_nominal) AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_uni_agency_split.parquet') WHERE fiscal_year = 2023 AND agency_bucket = 'HHS'",
+    "expected": 28079115000,
+    "tolerance_pct": 10.0
+  },
+  {
+    "id": "nsf_total_fy2023",
+    "description": "NSF federal R&D FY2023 national total (~$7B)",
+    "sql": "SELECT CAST(SUM(amount_nominal) AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_uni_agency_split.parquet') WHERE fiscal_year = 2023 AND agency_bucket = 'NSF'",
+    "expected": 7007108000,
+    "tolerance_pct": 10.0
+  },
+  {
+    "id": "dod_total_fy2023",
+    "description": "DOD federal R&D FY2023 national total (~$5.7B)",
+    "sql": "SELECT CAST(SUM(amount_nominal) AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_uni_agency_split.parquet') WHERE fiscal_year = 2023 AND agency_bucket = 'DOD'",
+    "expected": 5730273000,
+    "tolerance_pct": 10.0
+  },
+  {
+    "id": "doe_total_fy2023",
+    "description": "DOE federal R&D FY2023 national total (~$2.1B)",
+    "sql": "SELECT CAST(SUM(amount_nominal) AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_uni_agency_split.parquet') WHERE fiscal_year = 2023 AND agency_bucket = 'DOE'",
+    "expected": 2107165000,
+    "tolerance_pct": 10.0
+  },
+  {
+    "id": "nasa_total_fy2023",
+    "description": "NASA federal R&D FY2023 national total (~$1.9B)",
+    "sql": "SELECT CAST(SUM(amount_nominal) AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_uni_agency_split.parquet') WHERE fiscal_year = 2023 AND agency_bucket = 'NASA'",
+    "expected": 1895452000,
+    "tolerance_pct": 10.0
+  },
+  {
+    "id": "usda_total_fy2023",
+    "description": "USDA federal R&D FY2023 national total (~$2.1B)",
+    "sql": "SELECT CAST(SUM(amount_nominal) AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_uni_agency_split.parquet') WHERE fiscal_year = 2023 AND agency_bucket = 'USDA'",
+    "expected": 2067771000,
+    "tolerance_pct": 10.0
+  },
+  {
+    "id": "johns_hopkins_fy2024_total",
+    "description": "Johns Hopkins total R&D FY2024 ~$4.1B — #1 in US",
+    "sql": "SELECT CAST(t.total_rd_nominal AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_uni_total_rd.parquet') t JOIN read_parquet('apps/web/public/data/dim_institution.parquet') i USING (institution_sk) WHERE i.canonical_name = 'Johns Hopkins University' AND t.fiscal_year = 2024",
+    "expected": 4129264000,
+    "tolerance_pct": 8.0
+  },
+  {
+    "id": "michigan_fy2024_total",
+    "description": "University of Michigan, Ann Arbor total R&D FY2024 (~$2.1B)",
+    "sql": "SELECT CAST(t.total_rd_nominal AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_uni_total_rd.parquet') t JOIN read_parquet('apps/web/public/data/dim_institution.parquet') i USING (institution_sk) WHERE i.canonical_name = 'University of Michigan, Ann Arbor' AND t.fiscal_year = 2024",
+    "expected": 2110961000,
+    "tolerance_pct": 10.0
+  },
+  {
+    "id": "stanford_fy2024_total",
+    "description": "Stanford University total R&D FY2024 (~$1.6B)",
+    "sql": "SELECT CAST(t.total_rd_nominal AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_uni_total_rd.parquet') t JOIN read_parquet('apps/web/public/data/dim_institution.parquet') i USING (institution_sk) WHERE i.canonical_name = 'Stanford University' AND t.fiscal_year = 2024",
+    "expected": 1641961000,
+    "tolerance_pct": 10.0
+  },
+  {
+    "id": "harvard_fy2024_total",
+    "description": "Harvard University total R&D FY2024 (~$1.5B)",
+    "sql": "SELECT CAST(t.total_rd_nominal AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_uni_total_rd.parquet') t JOIN read_parquet('apps/web/public/data/dim_institution.parquet') i USING (institution_sk) WHERE i.canonical_name = 'Harvard University' AND t.fiscal_year = 2024",
+    "expected": 1494527000,
+    "tolerance_pct": 10.0
+  },
+  {
+    "id": "mit_fy2024_total",
+    "description": "MIT total R&D FY2024 (~$1.07B)",
+    "sql": "SELECT CAST(t.total_rd_nominal AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_uni_total_rd.parquet') t JOIN read_parquet('apps/web/public/data/dim_institution.parquet') i USING (institution_sk) WHERE i.canonical_name = 'Massachusetts Institute of Technology' AND t.fiscal_year = 2024",
+    "expected": 1065554000,
+    "tolerance_pct": 10.0
+  },
+  {
+    "id": "ardes_nonprofit_fy2008_is_zero",
+    "description": "ARDES era (pre-FY2010) reports zero nonprofit dollars — landmine #2",
+    "sql": "SELECT COALESCE((SELECT CAST(SUM(amount_nominal) AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_uni_source_split.parquet') WHERE fiscal_year = 2008 AND source_category = 'nonprofit'), 0)",
+    "expected": 0,
+    "tolerance_pct": 100.0
+  },
+  {
+    "id": "nonprofit_fy2010_nonzero",
+    "description": "FY2010 (first post-ARDES year) has nonprofit dollars — ~$3.7B",
+    "sql": "SELECT CAST(SUM(amount_nominal) AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_uni_source_split.parquet') WHERE fiscal_year = 2010 AND source_category = 'nonprofit'",
+    "expected": 3729655000,
+    "tolerance_pct": 15.0
+  },
+  {
+    "id": "pi_count_floor_fy2024",
+    "description": "PI count national FY2024 from agg_uni_pi_metrics (top-20K NIH+NSF floor) — should be > 500",
+    "sql": "SELECT CAST(SUM(pi_count) AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_uni_pi_metrics.parquet') WHERE fiscal_year = 2024",
+    "expected": 831,
+    "tolerance_pct": 15.0
+  },
+  {
+    "id": "hhi_sanity_fy2023_high",
+    "description": "HHI sanity FY2023 — at least one institution highly concentrated (>4000)",
+    "sql": "SELECT CAST(COUNT(*) AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_uni_concentration.parquet') WHERE fiscal_year = 2023 AND hhi > 4000",
+    "expected": 930,
+    "tolerance_pct": 15.0
+  },
+  {
+    "id": "hhi_sanity_fy2023_low",
+    "description": "HHI sanity FY2023 — many institutions diversified (<2500)",
+    "sql": "SELECT CAST(COUNT(*) AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_uni_concentration.parquet') WHERE fiscal_year = 2023 AND hhi < 2500",
+    "expected": 39,
+    "tolerance_pct": 15.0
+  },
+  {
+    "id": "stem_share_fy2024",
+    "description": "STEM share of HERD R&D FY2024 (~93%)",
+    "sql": "WITH t AS (SELECT SUM(amount_nominal) FILTER (WHERE is_stem) AS stem, SUM(amount_nominal) AS total FROM read_parquet('apps/web/public/data/agg_uni_field_mix.parquet') WHERE fiscal_year = 2024) SELECT stem / total FROM t",
+    "expected": 0.935,
+    "tolerance_pct": 5.0
+  },
+  {
+    "id": "vol70_vol71_boundary_growth",
+    "description": "Vol70→71 boundary (FY2014→FY2015) growth — total US R&D should grow not crash",
+    "sql": "WITH y AS (SELECT fiscal_year, SUM(amount_nominal) AS amt FROM read_parquet('apps/web/public/data/agg_national_overview.parquet') WHERE fiscal_year IN (2014, 2015) GROUP BY fiscal_year) SELECT (SELECT amt FROM y WHERE fiscal_year = 2015) / (SELECT amt FROM y WHERE fiscal_year = 2014)",
+    "expected": 1.02,
+    "tolerance_pct": 5.0
+  },
+  {
+    "id": "hopkins_federal_share_fy2024",
+    "description": "Johns Hopkins federal share of own R&D FY2024 (~88%, defense-heavy)",
+    "sql": "WITH h AS (SELECT institution_sk FROM read_parquet('apps/web/public/data/dim_institution.parquet') WHERE canonical_name = 'Johns Hopkins University') SELECT (SELECT herd_federal_rd_usd_nominal FROM read_parquet('apps/web/public/data/sheet_07_cross_source_reconciliation.parquet') WHERE fiscal_year=2024 AND institution_sk IN (SELECT institution_sk FROM h)) / (SELECT total_rd_nominal FROM read_parquet('apps/web/public/data/agg_uni_total_rd.parquet') WHERE fiscal_year=2024 AND institution_sk IN (SELECT institution_sk FROM h))",
+    "expected": 0.876,
+    "tolerance_pct": 8.0
+  },
+  {
+    "id": "sheet11_fy2024_herd_universities",
+    "description": "Sheet 11 federal-university-bridge: HERD-reported FY2024 universities expenditure (~$64.7B)",
+    "sql": "SELECT CAST(herd_reported_universities_expenditures_usd AS DOUBLE) FROM read_parquet('apps/web/public/data/sheet_11_federal_university_bridge.parquet') WHERE fiscal_year = 2024",
+    "expected": 64717632000,
+    "tolerance_pct": 5.0
+  },
+  {
+    "id": "sheet11_fy2024_gap_negative",
+    "description": "Sheet 11 FY2024 gap FF_explicit − HERD is negative post-FY2018 (~-$20B)",
+    "sql": "SELECT CAST(gap_ff_explicit_minus_herd_usd AS DOUBLE) FROM read_parquet('apps/web/public/data/sheet_11_federal_university_bridge.parquet') WHERE fiscal_year = 2024",
+    "expected": -20311632000,
+    "tolerance_pct": 15.0
+  },
+  {
+    "id": "herd_institution_count",
+    "description": "HERD institution count in dim_institution observed by agg_uni_total_rd (~1014)",
+    "sql": "SELECT CAST(COUNT(DISTINCT institution_sk) AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_uni_total_rd.parquet')",
+    "expected": 1014,
+    "tolerance_pct": 5.0
+  }
+]
