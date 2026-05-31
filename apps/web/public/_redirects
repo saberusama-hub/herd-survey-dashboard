@@ -1,0 +1,14 @@
+/institution            /universities                301
+/institution/*          /universities                301
+/agency                 /national#agencies           301
+/trends                 /national#trends             301
+/map                    /national#geography          301
+/flow                   /national#agencies           301
+/correlations           /national                    301
+/reconciliation         /universities                301
+/three-crises           /                            301
+/self-funding           /                            301
+/geography              /                            301
+/story/*                /                            301
+/nih                    /national#agencies           301
+/states                 /national#geography          301
