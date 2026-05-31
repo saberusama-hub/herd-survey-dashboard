@@ -13,18 +13,18 @@
     --accent-strong: 351 76% 31%;
     --accent-soft: 351 60% 92%;            /* legacy alias — light cherry wash */
     --surface-elevated: 0 0% 100%;         /* legacy alias */
-    --mute-1: 220 9% 65%;                  /* #9CA3AF */
-    --mute-2: 220 13% 82%;                 /* #D1D5DB */
-    --mute-3: 220 13% 91%;                 /* #E5E7EB */
-    --border: 220 13% 91%;
-    --rule: 220 13% 91%;
+    --mute-1: 220 12% 42%;                 /* #5D6470 — WCAG AA on paper */
+    --mute-2: 220 13% 72%;                 /* #B1B7C0 */
+    --mute-3: 220 13% 88%;                 /* #DCDFE5 */
+    --border: 220 13% 88%;
+    --rule: 220 13% 88%;
     --ring: 351 76% 41%;
 
     /* ===== Text ===== */
     --text-primary: 222 14% 5%;
-    --text-secondary: 220 9% 35%;
-    --text-tertiary: 220 9% 65%;
-    --text-quaternary: 220 13% 82%;        /* legacy alias → mute-2 */
+    --text-secondary: 220 9% 28%;
+    --text-tertiary: 220 12% 42%;          /* WCAG AA: #5D6470 on paper ≥ 4.5:1 */
+    --text-quaternary: 220 13% 72%;        /* legacy alias → mute-2 */
 
     /* ===== Semantic ===== */
     --positive: 142 60% 32%;
@@ -79,7 +79,7 @@
     --accent-strong: 352 71% 65%;
     --accent-soft: 352 50% 22%;
     --surface-elevated: 222 16% 12%;
-    --mute-1: 220 9% 55%;
+    --mute-1: 220 9% 70%;                  /* lighter for AA on dark paper */
     --mute-2: 220 13% 30%;
     --mute-3: 220 13% 22%;
     --border: 220 13% 22%;
@@ -88,8 +88,8 @@
 
     /* ===== Text ===== */
     --text-primary: 220 14% 91%;
-    --text-secondary: 220 9% 75%;
-    --text-tertiary: 220 9% 55%;
+    --text-secondary: 220 9% 78%;
+    --text-tertiary: 220 9% 70%;           /* WCAG AA on #13161C */
     --text-quaternary: 220 13% 30%;
 
     /* ===== Semantic ===== */
