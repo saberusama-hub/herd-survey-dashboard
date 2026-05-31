@@ -4,109 +4,135 @@
 
 @layer base {
   :root {
-    /* ===== Surfaces (warm off-white) ===== */
-    --surface: 36 30% 98%;
-    --surface-elevated: 0 0% 100%;
-    --border: 30 8% 89%;
-    --rule: 30 6% 85%;
-    --ring: 191 88% 28%;
+    /* ===== Editorial palette (Economist-style cherry + warm paper) ===== */
+    --ink: 222 14% 5%;                     /* #0D1117 */
+    --paper: 42 33% 96%;                   /* #F7F5EF warm off-white */
+    --surface: 0 0% 100%;
+    --background: 42 33% 96%;
+    --accent: 351 76% 41%;                 /* #C8102E cherry */
+    --accent-strong: 351 76% 31%;
+    --accent-soft: 351 60% 92%;            /* legacy alias — light cherry wash */
+    --surface-elevated: 0 0% 100%;         /* legacy alias */
+    --mute-1: 220 9% 65%;                  /* #9CA3AF */
+    --mute-2: 220 13% 82%;                 /* #D1D5DB */
+    --mute-3: 220 13% 91%;                 /* #E5E7EB */
+    --border: 220 13% 91%;
+    --rule: 220 13% 91%;
+    --ring: 351 76% 41%;
 
     /* ===== Text ===== */
-    --text-primary: 24 12% 8%;
-    --text-secondary: 25 7% 33%;
-    --text-tertiary: 24 6% 56%;
-    --text-quaternary: 24 5% 72%;
-
-    /* ===== Accent (deep editorial teal) ===== */
-    --accent: 191 88% 28%;
-    --accent-soft: 191 50% 92%;
-    --accent-strong: 191 95% 22%;
+    --text-primary: 222 14% 5%;
+    --text-secondary: 220 9% 35%;
+    --text-tertiary: 220 9% 65%;
+    --text-quaternary: 220 13% 82%;        /* legacy alias → mute-2 */
 
     /* ===== Semantic ===== */
     --positive: 142 60% 32%;
     --negative: 0 73% 41%;
     --warning: 40 86% 32%;
-    --highlight: 354 78% 51%;
+    --highlight: 351 76% 41%;              /* highlight === accent (cherry) */
 
-    /* ===== Categorical palette (7 colors mapped to agencies) ===== */
-    --cat-1: 191 88% 28%;  /* NSF teal */
-    --cat-2: 348 53% 47%;  /* NIH/HHS rose */
-    --cat-3: 214 36% 47%;  /* DOD blue */
-    --cat-4: 28 67% 47%;   /* DOE amber */
-    --cat-5: 81 39% 41%;   /* NASA olive */
-    --cat-6: 268 27% 56%;  /* USDA violet */
-    --cat-7: 213 10% 41%;  /* Other slate */
+    /* ===== Agency-categorical (fixed assignment per spec §4.1) ===== */
+    --agency-nih: 213 53% 27%;             /* #1F3A68 navy */
+    --agency-nsf: 351 76% 41%;             /* #C8102E cherry — same as accent */
+    --agency-dod: 91 56% 17%;              /* #2D5016 forest */
+    --agency-doe: 43 90% 38%;              /* #B8860B goldenrod */
+    --agency-nasa: 315 38% 28%;            /* #6B2E5E plum */
+    --agency-usda: 25 53% 35%;             /* #8B5A2B sienna */
+    --agency-other: 220 9% 46%;            /* #6B7280 slate */
 
-    /* ===== Sequential ramp (single-hue teal, 7 stops, colorblind-safe) ===== */
-    --seq-1: 192 56% 96%;
-    --seq-2: 192 42% 85%;
-    --seq-3: 191 36% 71%;
-    --seq-4: 191 41% 55%;
-    --seq-5: 191 53% 43%;
-    --seq-6: 191 71% 32%;
-    --seq-7: 191 90% 22%;
+    /* ===== Legacy categorical aliases (mapped to fixed agency colors) ===== */
+    --cat-1: 351 76% 41%;                  /* NSF cherry */
+    --cat-2: 213 53% 27%;                  /* NIH navy */
+    --cat-3: 91 56% 17%;                   /* DOD forest */
+    --cat-4: 43 90% 38%;                   /* DOE goldenrod */
+    --cat-5: 315 38% 28%;                  /* NASA plum */
+    --cat-6: 25 53% 35%;                   /* USDA sienna */
+    --cat-7: 220 9% 46%;                   /* Other slate */
 
-    /* ===== Diverging (PiYG-derived) ===== */
-    --div-neg-3: 311 38% 28%;
-    --div-neg-2: 310 31% 43%;
-    --div-neg-1: 322 21% 65%;
-    --div-zero:  44 26% 91%;
-    --div-pos-1: 88 23% 64%;
-    --div-pos-2: 102 32% 38%;
-    --div-pos-3: 102 53% 25%;
+    /* ===== Sequential blues (choropleth) ===== */
+    --seq-1: 214 100% 96%;
+    --seq-2: 214 95% 87%;
+    --seq-3: 213 94% 78%;
+    --seq-4: 217 91% 60%;
+    --seq-5: 221 83% 53%;
+    --seq-6: 224 76% 48%;
+    --seq-7: 226 71% 33%;                  /* #1E3A8A */
+
+    /* ===== Diverging (reconciliation gap — pink / green) ===== */
+    --div-neg-3: 322 78% 35%;
+    --div-neg-2: 322 70% 50%;
+    --div-neg-1: 322 60% 70%;
+    --div-zero:  0 0% 95%;
+    --div-pos-1: 134 50% 70%;
+    --div-pos-2: 134 60% 45%;
+    --div-pos-3: 134 70% 25%;
   }
 
   .dark {
     /* ===== Surfaces ===== */
-    --surface: 220 14% 7%;
-    --surface-elevated: 220 12% 10%;
-    --border: 220 9% 18%;
-    --rule: 220 9% 22%;
-    --ring: 191 67% 53%;
+    --ink: 220 14% 91%;                    /* #E8EAED */
+    --paper: 218 18% 9%;                   /* #13161C */
+    --surface: 222 16% 12%;                /* #1A1E26 */
+    --background: 218 18% 9%;
+    --accent: 352 71% 55%;                 /* #E03A50 — desaturated 20% */
+    --accent-strong: 352 71% 65%;
+    --accent-soft: 352 50% 22%;
+    --surface-elevated: 222 16% 12%;
+    --mute-1: 220 9% 55%;
+    --mute-2: 220 13% 30%;
+    --mute-3: 220 13% 22%;
+    --border: 220 13% 22%;
+    --rule: 220 13% 22%;
+    --ring: 352 71% 55%;
 
     /* ===== Text ===== */
-    --text-primary: 36 30% 96%;
-    --text-secondary: 30 5% 70%;
-    --text-tertiary: 30 5% 52%;
-    --text-quaternary: 30 5% 40%;
-
-    /* ===== Accent ===== */
-    --accent: 191 67% 53%;
-    --accent-soft: 191 50% 18%;
-    --accent-strong: 191 75% 62%;
+    --text-primary: 220 14% 91%;
+    --text-secondary: 220 9% 75%;
+    --text-tertiary: 220 9% 55%;
+    --text-quaternary: 220 13% 30%;
 
     /* ===== Semantic ===== */
     --positive: 142 60% 50%;
     --negative: 0 70% 60%;
     --warning: 40 80% 55%;
-    --highlight: 354 78% 60%;
+    --highlight: 352 71% 55%;
 
-    /* ===== Categorical (shifted lighter for dark mode) ===== */
-    --cat-1: 191 67% 53%;
-    --cat-2: 348 60% 62%;
-    --cat-3: 214 50% 67%;
-    --cat-4: 28 75% 60%;
-    --cat-5: 81 45% 58%;
-    --cat-6: 268 40% 70%;
-    --cat-7: 213 15% 65%;
+    /* ===== Agency-categorical (dark-mode shifted) ===== */
+    --agency-nih: 213 53% 60%;
+    --agency-nsf: 352 71% 55%;
+    --agency-dod: 91 40% 45%;
+    --agency-doe: 43 75% 55%;
+    --agency-nasa: 315 38% 55%;
+    --agency-usda: 25 53% 55%;
+    --agency-other: 220 9% 65%;
 
-    /* ===== Sequential reverses direction (dark base → bright tip) ===== */
-    --seq-1: 191 90% 12%;
-    --seq-2: 191 71% 18%;
-    --seq-3: 191 53% 28%;
-    --seq-4: 191 41% 40%;
-    --seq-5: 191 36% 53%;
-    --seq-6: 192 42% 68%;
-    --seq-7: 192 56% 85%;
+    /* ===== Legacy categorical aliases (dark) ===== */
+    --cat-1: 352 71% 55%;
+    --cat-2: 213 53% 60%;
+    --cat-3: 91 40% 45%;
+    --cat-4: 43 75% 55%;
+    --cat-5: 315 38% 55%;
+    --cat-6: 25 53% 55%;
+    --cat-7: 220 9% 65%;
 
-    /* ===== Diverging (slight desaturation) ===== */
-    --div-neg-3: 311 38% 42%;
-    --div-neg-2: 310 31% 55%;
-    --div-neg-1: 322 21% 70%;
-    --div-zero:  44 18% 32%;
-    --div-pos-1: 88 23% 70%;
-    --div-pos-2: 102 32% 52%;
-    --div-pos-3: 102 53% 40%;
+    /* ===== Sequential blues (dark, inverted ramp) ===== */
+    --seq-1: 226 71% 12%;
+    --seq-2: 224 76% 20%;
+    --seq-3: 221 83% 30%;
+    --seq-4: 217 91% 45%;
+    --seq-5: 213 94% 62%;
+    --seq-6: 214 95% 78%;
+    --seq-7: 214 100% 90%;
+
+    /* ===== Diverging (dark variants) ===== */
+    --div-neg-3: 322 60% 60%;
+    --div-neg-2: 322 55% 50%;
+    --div-neg-1: 322 45% 40%;
+    --div-zero:  0 0% 20%;
+    --div-pos-1: 134 40% 35%;
+    --div-pos-2: 134 55% 50%;
+    --div-pos-3: 134 65% 65%;
   }
 
   * {
