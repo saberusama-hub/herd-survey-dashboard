@@ -424,8 +424,10 @@ function SearchTypeahead({
         onFocus={() => setOpen(true)}
         placeholder={placeholder}
         disabled={disabled}
+        role="combobox"
         aria-label="Search universities to add"
         aria-autocomplete="list"
+        aria-haspopup="listbox"
         aria-controls={listboxId}
         aria-expanded={showDropdown}
         className="h-10 w-full rounded-md border border-rule bg-surface-elevated pl-10 pr-3 text-sm placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"

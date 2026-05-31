@@ -45,7 +45,12 @@ export function SlopeChart({
   const y = scaleLinear<number>({ domain: [min, max], range: [innerHeight, 0], nice: true });
 
   return (
-    <svg width="100%" viewBox={`0 0 ${width} ${height}`} role="img">
+    <svg
+      width="100%"
+      viewBox={`0 0 ${width} ${height}`}
+      role="img"
+      aria-label="Slope chart connecting left and right values per row"
+    >
       <title>Slope chart</title>
       <Group left={margin.left} top={margin.top}>
         {/* column headers */}

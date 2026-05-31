@@ -75,7 +75,12 @@ export function Dumbbell({
   });
 
   return (
-    <svg width="100%" viewBox={`0 0 ${width} ${height}`} role="img">
+    <svg
+      width="100%"
+      viewBox={`0 0 ${width} ${height}`}
+      role="img"
+      aria-label="Dumbbell chart comparing start and end values per row"
+    >
       <title>Dumbbell chart</title>
       <Group top={4} left={0}>
         {/* row labels */}

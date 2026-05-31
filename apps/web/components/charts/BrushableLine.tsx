@@ -88,7 +88,12 @@ export function BrushableLine({
   );
 
   return (
-    <svg width="100%" viewBox={`0 0 ${width} ${height}`} role="img">
+    <svg
+      width="100%"
+      viewBox={`0 0 ${width} ${height}`}
+      role="img"
+      aria-label="Brushable line chart with draggable focus range"
+    >
       <title>Brushable line chart</title>
       <Group left={margin.left} top={margin.top}>
         {series.map((s, i) => {

@@ -24,6 +24,8 @@ interface Props {
   height: number;
   /** Vertical (default desktop) or horizontal (auto on mobile). */
   orientation?: 'vertical' | 'horizontal';
+  /** Accessible label for the SVG root (axe svg-img-alt). */
+  ariaLabel?: string;
 }
 
 /**
@@ -39,9 +41,11 @@ export function StackedBar({
   width,
   height,
   orientation = 'vertical',
+  ariaLabel,
 }: Props) {
   const isMobile = useIsMobile();
   const o = isMobile ? 'horizontal' : orientation;
+  const label = ariaLabel ?? `Stacked bar chart of ${keys.join(', ')} by ${xKey}`;
 
   const margin = { top: 16, right: 24, bottom: 32, left: 80 };
   const innerW = Math.max(0, width - margin.left - margin.right);
@@ -60,7 +64,7 @@ export function StackedBar({
     const yScale = scaleBand({ domain: categories, range: [0, innerH], padding: 0.2 });
     const xScale = scaleLinear({ domain: [0, maxTotal], range: [0, innerW], nice: true });
     return (
-      <svg width={width} height={height} role="img">
+      <svg width={width} height={height} role="img" aria-label={label}>
         <Group left={margin.left} top={margin.top}>
           <BarStackHorizontal<StackedBarDatum, string>
             data={data}
@@ -112,7 +116,7 @@ export function StackedBar({
   const xScale = scaleBand({ domain: categories, range: [0, innerW], padding: 0.2 });
   const yScale = scaleLinear({ domain: [0, maxTotal], range: [innerH, 0], nice: true });
   return (
-    <svg width={width} height={height} role="img">
+    <svg width={width} height={height} role="img" aria-label={label}>
       <Group left={margin.left} top={margin.top}>
         <BarStack<StackedBarDatum, string>
           data={data}

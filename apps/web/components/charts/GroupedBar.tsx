@@ -44,7 +44,12 @@ export function GroupedBar({ data, groupKey, seriesKeys, colors, width, height }
   });
 
   return (
-    <svg width={width} height={height} role="img">
+    <svg
+      width={width}
+      height={height}
+      role="img"
+      aria-label={`Grouped bar chart of ${seriesKeys.join(' vs ')} by ${groupKey}`}
+    >
       <Group left={margin.left} top={margin.top}>
         <BarGroup
           data={data}

@@ -85,8 +85,10 @@ export function UniversitySearchBox({
         }}
         onFocus={() => setOpen(true)}
         placeholder={placeholder}
+        role="combobox"
         aria-label="Search universities"
         aria-autocomplete="list"
+        aria-haspopup="listbox"
         aria-controls={listboxId}
         aria-expanded={showDropdown}
         className="w-full px-4 py-3 text-base border border-border rounded bg-surface text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent"

@@ -11,6 +11,8 @@ interface Props {
   data: Array<{ decile: number; avg_amount: number }>;
   width: number;
   height: number;
+  /** Accessible label for the SVG root (axe svg-img-alt). */
+  ariaLabel?: string;
 }
 
 /**
@@ -18,7 +20,8 @@ interface Props {
  * dollar-denominated metric) distributes across the population — typical
  * inputs come from a pre-aggregated decile table.
  */
-export function DistributionPlot({ data, width, height }: Props) {
+export function DistributionPlot({ data, width, height, ariaLabel }: Props) {
+  const label = ariaLabel ?? 'Decile distribution of average amount per bucket';
   const margin = { top: 16, right: 16, bottom: 36, left: 80 };
   const innerW = Math.max(0, width - margin.left - margin.right);
   const innerH = Math.max(0, height - margin.top - margin.bottom);
@@ -35,7 +38,7 @@ export function DistributionPlot({ data, width, height }: Props) {
   });
 
   return (
-    <svg width={width} height={height} role="img">
+    <svg width={width} height={height} role="img" aria-label={label}>
       <Group left={margin.left} top={margin.top}>
         {data.map((d) => {
           const bw = x.bandwidth();
