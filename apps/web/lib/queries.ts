@@ -584,3 +584,193 @@ export async function institutionNihIcLatest(sk: string): Promise<InstNihIcRow |
     LIMIT 1
   `);
 }
+
+// ─────────── Phase P1.18: aggregation-backed helpers ────────────────────────
+//
+// `institution_sk` is a STRING ('INST0000001') in the dim_institution real
+// schema — NOT a number. All new helpers below honor that. The 15 agg_*
+// parquets registered in `lib/duckdb.ts` back these queries.
+
+const sq = (s: string) => s.replace(/'/g, "''");
+
+export interface UniversityProfile extends Row {
+  institution_sk: string;
+  name: string;
+  state: string;
+  totalRd: Array<{ fiscal_year: number; total_rd_nominal: number; total_rd_real: number }>;
+  sources: Array<{ fiscal_year: number; source_category: string; amount_nominal: number }>;
+  agencies: Array<{ fiscal_year: number; agency_bucket: string; amount_nominal: number }>;
+  federalFunds: Array<{ fiscal_year: number; agency_bucket: string; amount_nominal: number; taxonomy_version: string }>;
+  piMetrics: Array<{ fiscal_year: number; pi_count: number; amount_per_pi: number; federal_amount: number }>;
+  piDistribution: Array<{ fiscal_year: number; decile: number; min_amount: number; max_amount: number; avg_amount: number; pi_count: number }>;
+  fieldMix: Array<{ fiscal_year: number; field_category: string; is_stem: boolean; amount_nominal: number }>;
+  subjectTags: Array<{ fiscal_year: number; subject_tag: string; tagged_amount: number }>;
+  concentration: Array<{ fiscal_year: number; hhi: number; shannon_entropy: number; cov_5yr: number | null }>;
+  stateContext: Array<{ fiscal_year: number; uni_total: number; state_total: number; share_of_state: number }>;
+  peers: Array<{ peer_sk: string; peer_rank: number }>;
+  patents: Array<{ fiscal_year: number; award_count: number; patent_count: number | null; patents_per_award: number | null }>;
+}
+
+export async function getUniversityProfile(sk: string): Promise<UniversityProfile> {
+  const safe = sq(sk);
+  const [name, totalRd, sources, agencies, federalFunds, piMetrics, piDistribution, fieldMix, subjectTags, concentration, stateContext, peers, patents] = await Promise.all([
+    query<{ canonical_name: string; state_code: string }>(
+      `SELECT canonical_name, state_code FROM dim_institution WHERE institution_sk = '${safe}'`,
+    ),
+    query<UniversityProfile['totalRd'][number]>(
+      `SELECT fiscal_year, total_rd_nominal, total_rd_real FROM agg_uni_total_rd WHERE institution_sk = '${safe}' ORDER BY fiscal_year`,
+    ),
+    query<UniversityProfile['sources'][number]>(
+      `SELECT fiscal_year, source_category, amount_nominal FROM agg_uni_source_split WHERE institution_sk = '${safe}' ORDER BY fiscal_year, source_category`,
+    ),
+    query<UniversityProfile['agencies'][number]>(
+      `SELECT fiscal_year, agency_bucket, amount_nominal FROM agg_uni_agency_split WHERE institution_sk = '${safe}' ORDER BY fiscal_year, agency_bucket`,
+    ),
+    query<UniversityProfile['federalFunds'][number]>(
+      `SELECT fiscal_year, agency_bucket, amount_nominal, taxonomy_version FROM agg_uni_federal_funds WHERE institution_sk = '${safe}' ORDER BY fiscal_year, agency_bucket`,
+    ),
+    query<UniversityProfile['piMetrics'][number]>(
+      `SELECT fiscal_year, pi_count, amount_per_pi, federal_amount FROM agg_uni_pi_metrics WHERE institution_sk = '${safe}' ORDER BY fiscal_year`,
+    ),
+    query<UniversityProfile['piDistribution'][number]>(
+      `SELECT fiscal_year, decile, min_amount, max_amount, avg_amount, pi_count FROM agg_uni_pi_distribution WHERE institution_sk = '${safe}' ORDER BY fiscal_year, decile`,
+    ),
+    query<UniversityProfile['fieldMix'][number]>(
+      `SELECT fiscal_year, field_category, is_stem, amount_nominal FROM agg_uni_field_mix WHERE institution_sk = '${safe}' ORDER BY fiscal_year, field_category`,
+    ),
+    query<UniversityProfile['subjectTags'][number]>(
+      `SELECT fiscal_year, subject_tag, tagged_amount FROM agg_uni_subject_tag WHERE institution_sk = '${safe}' ORDER BY fiscal_year, subject_tag`,
+    ),
+    query<UniversityProfile['concentration'][number]>(
+      `SELECT fiscal_year, hhi, shannon_entropy, cov_5yr FROM agg_uni_concentration WHERE institution_sk = '${safe}' ORDER BY fiscal_year`,
+    ),
+    query<UniversityProfile['stateContext'][number]>(
+      `SELECT fiscal_year, uni_total, state_total, share_of_state FROM agg_uni_state_context WHERE institution_sk = '${safe}' ORDER BY fiscal_year`,
+    ),
+    query<UniversityProfile['peers'][number]>(
+      `SELECT peer_sk, peer_rank FROM agg_uni_peers WHERE uni_sk = '${safe}' ORDER BY peer_rank`,
+    ),
+    query<UniversityProfile['patents'][number]>(
+      `SELECT fiscal_year, award_count, patent_count, patents_per_award FROM agg_uni_patents WHERE institution_sk = '${safe}' ORDER BY fiscal_year`,
+    ),
+  ]);
+
+  if (name.length === 0) throw new Error(`Institution ${sk} not found`);
+
+  return {
+    institution_sk: sk,
+    name: name[0].canonical_name,
+    state: name[0].state_code,
+    totalRd,
+    sources,
+    agencies,
+    federalFunds,
+    piMetrics,
+    piDistribution,
+    fieldMix,
+    subjectTags,
+    concentration,
+    stateContext,
+    peers,
+    patents,
+  };
+}
+
+// ─────────── National view ───────────
+export async function getNationalOverview() {
+  return query<{ fiscal_year: number; source_category: string; amount_nominal: number; amount_real: number }>(
+    `SELECT * FROM agg_national_overview ORDER BY fiscal_year, source_category`,
+  );
+}
+
+export async function getNationalAgencyTrend() {
+  return query<{ fiscal_year: number; agency_bucket: string; amount_nominal: number; amount_real: number }>(
+    `SELECT * FROM agg_national_agency_trend ORDER BY fiscal_year, agency_bucket`,
+  );
+}
+
+export async function getNationalConcentration() {
+  return query<{ fiscal_year: number; bucket: string; share: number }>(
+    `SELECT * FROM agg_national_concentration ORDER BY fiscal_year, bucket`,
+  );
+}
+
+// ─────────── /universities index table ───────────
+export interface UniversityIndexRow extends Row {
+  institution_sk: string;
+  name: string;
+  state: string;
+  total_rd_fy2024: number;
+  cagr_20yr: number | null;
+  federal_share: number | null;
+  pi_count: number;
+  stem_share: number | null;
+}
+
+export async function getUniversityIndex(): Promise<UniversityIndexRow[]> {
+  return query<UniversityIndexRow>(`
+    WITH latest AS (
+      SELECT institution_sk, total_rd_nominal AS total_rd_fy2024
+      FROM agg_uni_total_rd
+      WHERE fiscal_year = 2024
+    ),
+    cagr AS (
+      SELECT institution_sk,
+        POWER(
+          MAX(CASE WHEN fiscal_year = 2024 THEN total_rd_nominal END)
+            / NULLIF(MAX(CASE WHEN fiscal_year = 2005 THEN total_rd_nominal END), 0),
+          1.0 / 19.0
+        ) - 1 AS cagr_20yr
+      FROM agg_uni_total_rd
+      GROUP BY institution_sk
+    ),
+    fed AS (
+      SELECT institution_sk,
+        SUM(CASE WHEN source_category = 'federal' THEN amount_nominal ELSE 0 END)
+          / NULLIF(SUM(amount_nominal), 0) AS federal_share
+      FROM agg_uni_source_split
+      WHERE fiscal_year = 2024
+      GROUP BY institution_sk
+    ),
+    pi AS (
+      SELECT institution_sk, pi_count
+      FROM agg_uni_pi_metrics
+      WHERE fiscal_year = 2024
+    ),
+    stem AS (
+      SELECT institution_sk,
+        SUM(CASE WHEN is_stem THEN amount_nominal ELSE 0 END)
+          / NULLIF(SUM(amount_nominal), 0) AS stem_share
+      FROM agg_uni_field_mix
+      WHERE fiscal_year = 2024
+      GROUP BY institution_sk
+    )
+    SELECT
+      l.institution_sk,
+      i.canonical_name AS name,
+      i.state_code AS state,
+      l.total_rd_fy2024,
+      c.cagr_20yr,
+      f.federal_share,
+      COALESCE(pi.pi_count, 0) AS pi_count,
+      s.stem_share
+    FROM latest l
+    JOIN dim_institution i USING (institution_sk)
+    LEFT JOIN cagr c USING (institution_sk)
+    LEFT JOIN fed f USING (institution_sk)
+    LEFT JOIN pi USING (institution_sk)
+    LEFT JOIN stem s USING (institution_sk)
+    ORDER BY l.total_rd_fy2024 DESC
+  `);
+}
+
+export async function searchInstitutions(q: string): Promise<Array<{ sk: string; name: string; state: string | null }>> {
+  const safe = sq(q);
+  return query<{ sk: string; name: string; state: string | null }>(`
+    SELECT institution_sk AS sk, canonical_name AS name, state_code AS state
+    FROM dim_institution
+    WHERE LOWER(canonical_name) LIKE LOWER('%${safe}%')
+    ORDER BY canonical_name
+    LIMIT 20
+  `);
+}

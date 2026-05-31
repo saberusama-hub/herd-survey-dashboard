@@ -33,6 +33,22 @@ const PARQUET_FILES = [
   'dim_institution',
   'dim_agency',
   'cpi_u_annual',
+  // Pre-aggregated parquets built by scripts/aggregations/* (Phase P1).
+  'agg_uni_total_rd',
+  'agg_uni_source_split',
+  'agg_uni_agency_split',
+  'agg_uni_federal_funds',
+  'agg_uni_pi_metrics',
+  'agg_uni_pi_distribution',
+  'agg_uni_field_mix',
+  'agg_uni_subject_tag',
+  'agg_uni_concentration',
+  'agg_uni_state_context',
+  'agg_uni_peers',
+  'agg_uni_patents',
+  'agg_national_overview',
+  'agg_national_agency_trend',
+  'agg_national_concentration',
 ];
 
 let db: duckdb.AsyncDuckDB | null = null;
