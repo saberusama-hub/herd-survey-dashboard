@@ -81,6 +81,9 @@ export function formatPct(value: Nullish<number>, opts: FormatPctOptions = {}): 
   return `${sign}${pct.toFixed(decimals)}%`;
 }
 
+/** Alias retained for callers that prefer the full English name. */
+export const formatPercent = formatPct;
+
 export function formatFy(year: Nullish<number>): string {
   if (year === null || year === undefined || Number.isNaN(year)) return DASH;
   return `FY${year}`;

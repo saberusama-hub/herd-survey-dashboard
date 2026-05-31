@@ -10,5 +10,6 @@ export {
   formatFy,
   formatFyRange,
   formatPct,
+  formatPercent,
   formatUsd,
 } from './format';

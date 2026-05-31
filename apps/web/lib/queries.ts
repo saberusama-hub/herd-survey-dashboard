@@ -774,3 +774,35 @@ export async function searchInstitutions(q: string): Promise<Array<{ sk: string;
     LIMIT 20
   `);
 }
+
+/**
+ * National rank (1 = largest) for a given institution × fiscal year, based on
+ * total_rd_nominal from agg_uni_total_rd. Returns null if the institution did
+ * not report in that fiscal year. The denominator (total ranked universities)
+ * is returned alongside so the UI can render "47 of 812".
+ */
+export interface UniversityRank extends Row {
+  rank: number;
+  total_ranked: number;
+}
+
+export async function getUniversityRank(
+  sk: string,
+  fy: number,
+): Promise<UniversityRank | null> {
+  const safe = sq(sk);
+  return queryOne<UniversityRank>(`
+    WITH ranked AS (
+      SELECT
+        institution_sk,
+        ROW_NUMBER() OVER (ORDER BY total_rd_nominal DESC NULLS LAST) AS rank,
+        COUNT(*) OVER () AS total_ranked
+      FROM agg_uni_total_rd
+      WHERE fiscal_year = ${fy}
+        AND total_rd_nominal IS NOT NULL
+    )
+    SELECT rank, total_ranked
+    FROM ranked
+    WHERE institution_sk = '${safe}'
+  `);
+}
