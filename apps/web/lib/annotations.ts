@@ -90,3 +90,65 @@ export function colorForTone(tone: TimelineEvent['tone']): { fill: string; strok
       return { fill: 'hsl(var(--text-tertiary) / 0.08)', stroke: 'hsl(var(--text-tertiary) / 0.45)' };
   }
 }
+
+/* ───────────────── Heuristic annotation generators (spec §4.3) ─────────────────
+ *
+ * Helpers that scan a single-series timeseries and surface the most
+ * editorially-interesting point. Used by ChartFrame consumers to auto-place
+ * one or two annotations without hand-curating every chart.
+ */
+
+export interface SeriesPoint {
+  x: number;
+  y: number;
+}
+
+export interface AnnotationResult extends SeriesPoint {
+  label: string;
+}
+
+/** Highest-y point. Label: `Peak: <value>`. */
+export function peakYear(s: SeriesPoint[]): AnnotationResult {
+  const p = s.reduce((a, b) => (b.y > a.y ? b : a));
+  return { ...p, label: `Peak: ${p.y}` };
+}
+
+/**
+ * Biggest absolute year-over-year change. Label includes direction
+ * ("jumped" / "fell") and the absolute delta in original units.
+ */
+export function largestYoY(s: SeriesPoint[]): AnnotationResult {
+  if (s.length < 2) return { ...s[0], label: '' };
+  let max = { x: s[0].x, y: s[0].y, delta: 0 };
+  for (let i = 1; i < s.length; i++) {
+    const d = s[i].y - s[i - 1].y;
+    if (Math.abs(d) > Math.abs(max.delta)) {
+      max = { x: s[i].x, y: s[i].y, delta: d };
+    }
+  }
+  const dir = max.delta > 0 ? 'jumped' : 'fell';
+  return {
+    x: max.x,
+    y: max.y,
+    label: `${dir} ${Math.abs(Math.round(max.delta))} from prior year`,
+  };
+}
+
+/**
+ * Largest local "kink" — point where the rate of change reverses most. Uses
+ * |prev_slope − next_slope| as the score and returns the *next* point so the
+ * annotation lands on the visible inflection.
+ */
+export function inflectionYear(s: SeriesPoint[]): AnnotationResult {
+  if (s.length < 3) return { ...s[0], label: '' };
+  let max = { x: s[1].x, y: s[1].y, score: 0 };
+  for (let i = 1; i < s.length - 1; i++) {
+    const prev = s[i].y - s[i - 1].y;
+    const next = s[i + 1].y - s[i].y;
+    const score = Math.abs(prev - next);
+    if (score > max.score) {
+      max = { x: s[i + 1].x, y: s[i + 1].y, score };
+    }
+  }
+  return { x: max.x, y: max.y, label: 'Inflection' };
+}
