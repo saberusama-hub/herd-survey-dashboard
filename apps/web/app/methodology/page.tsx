@@ -85,10 +85,14 @@ export default function MethodologyPage() {
           The top-down view (HERD's federal-share-of-R&amp;D-expenditures) and the bottom-up view (sum of USAS contracts
           + USAS assistance + NIH + NSF) <em>do not match</em>, by design. The gap reflects real definitional and scope
           differences across sources, not data errors. See{' '}
-          <a className="text-accent hover:underline" href="/reconciliation/">
-            Cross-Source Reconciliation
+          <a className="text-accent underline underline-offset-2" href="/universities">
+            Universities → §5 Reconciliation
           </a>{' '}
-          for the per-institution and national-level views.
+          on any institution profile, or the national view's{' '}
+          <a className="text-accent underline underline-offset-2" href="/national#concentration">
+            concentration section
+          </a>
+          .
         </p>
       </section>
 
