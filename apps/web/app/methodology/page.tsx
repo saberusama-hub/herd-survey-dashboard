@@ -125,6 +125,116 @@ export default function MethodologyPage() {
       </section>
 
       <section className="space-y-4">
+        <h2 className="h-section">Three data landmines</h2>
+        <p className="text-text-secondary">
+          Three structural quirks in the source data shape what this dashboard can — and cannot — say.
+          They are surfaced here because every analyst working with federal R&amp;D data eventually trips on
+          them.
+        </p>
+        <Card>
+          <CardContent className="space-y-4 text-sm">
+            <Caveat title="Vol 70 → Vol 71 taxonomy break (FY2015–FY2016)">
+              NCSES Federal Funds switched obligation taxonomies between Vol&nbsp;70 (through FY2015) and
+              Vol&nbsp;71 (FY2016 onward). Many agency categories were renamed and a few sub-agency rollups
+              changed parents. National NSF Federal Funds totals are flagged at the year level so charts can
+              indicate the discontinuity; per-institution streams (HERD Q09) do not carry this flag because
+              HERD itself is internally consistent.
+            </Caveat>
+            <Caveat title="ARDES era — zero nonprofit dollars before FY2010">
+              The Academic R&amp;D Expenditure Survey (ARDES) that preceded HERD did not break out
+              nonprofit-source dollars at all. Source-of-funds rows where{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">source = 'nonprofit'</code> and{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">fiscal_year &lt; 2010</code> are
+              structurally zero — not missing, not suppressed, simply not asked for. Sections 3 and 7
+              indicate the ARDES boundary where relevant.
+            </Caveat>
+            <Caveat title="USAS PIID collision">
+              USASpending.gov keys contracts by{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">PIID</code> (procurement
+              instrument identifier). PIIDs are reused across agencies and sometimes across years for
+              modifications — collisions inflate naïve sum-by-PIID counts. The fact tables resolve this by
+              aggregating award-level outlays from the underlying transactions, not by counting distinct
+              PIIDs. Reconciliation deltas (§5) can still surface where the source-side join was imperfect.
+            </Caveat>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="h-section">Subject-area tagging</h2>
+        <p className="text-text-secondary">
+          Subject tags (AI, biomedical, materials, climate, quantum) come from
+          regex matching against grant <em>titles</em> only — NSF and NIH abstracts are not in the source
+          ledger, so the tagger sees only{' '}
+          <code className="text-xs bg-accent-muted/40 rounded px-1">project_title</code>. The patterns are
+          intentionally conservative: a grant on "computational linguistics" without one of the listed
+          keywords will not register as AI. Treat the tag counts as a directional, not exhaustive, signal.
+        </p>
+        <Card>
+          <CardContent className="text-sm">
+            <pre className="text-xs leading-relaxed overflow-x-auto">
+{`SUBJECT_PATTERNS = {
+  "AI":         r"\\b(artificial intelligence|machine learning|deep learning|
+                  neural network|transformer|LLM|computer vision|NLP|
+                  natural language processing)\\b",
+  "biomedical": r"\\b(biomedical|biomedicine|therapeutic|clinical trial|
+                  disease|cancer|immunology|oncology)\\b",
+  "materials":  r"\\b(materials science|nanomaterial|polymer|composite|
+                  alloy|semiconductor)\\b",
+  "climate":    r"\\b(climate change|carbon|greenhouse|sustainability|
+                  renewable|emission)\\b",
+  "quantum":    r"\\b(quantum computing|quantum information|qubit|
+                  quantum cryptography)\\b",
+}`}
+            </pre>
+            <p className="text-text-secondary mt-3">
+              Matching is case-insensitive (
+              <code className="text-xs bg-accent-muted/40 rounded px-1">
+                regexp_matches(text, pattern, 'i')
+              </code>{' '}
+              in DuckDB). One grant can carry multiple tags. Tag dollar totals are computed by attributing
+              the grant's full FY amount to every matching tag — overlap is intentional.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="h-section">PI deduplication</h2>
+        <p className="text-text-secondary">
+          Each principal investigator gets a stable surrogate key (
+          <code className="text-xs bg-accent-muted/40 rounded px-1">pi_sk</code>) via a cross-walk that
+          merges NIH PI Profile ID, NSF{' '}
+          <code className="text-xs bg-accent-muted/40 rounded px-1">nsf_id</code>, name string, and host
+          institution. The cross-walk is conservative — two PIs with the same name at different
+          institutions are kept separate. Phase D NSF builder couldn't populate{' '}
+          <code className="text-xs bg-accent-muted/40 rounded px-1">pi_sk</code> for ~62.6% of NSF
+          records (see caveats), so the union NIH+NSF PI count is a <strong>floor</strong>.
+        </p>
+        <Card>
+          <CardContent className="text-sm text-text-secondary space-y-2">
+            <p>
+              <strong className="text-text-primary">What the PI counts mean.</strong> Section 6 (PI
+              metrics) reports the distinct{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">pi_sk</code> count from the
+              top-20K NIH+NSF grants ledger, not the full universe. Counts are coverage floors — the
+              true distinct-PI population is higher. This is good enough for trend and ranking analysis;
+              treat absolute counts as lower bounds.
+            </p>
+            <p>
+              <strong className="text-text-primary">What reconciliation compares.</strong> Section 5
+              (HERD vs bottom-up streams) is{' '}
+              <em>not</em> the Vol 70/71 reconciliation. It compares institution-reported HERD federal
+              R&amp;D against the sum of NIH RePORTER + NSF Awards + USASpending contracts +
+              USASpending assistance, year by year. Gaps reflect timing (expenditures vs obligations),
+              sub-agency allocation methodology, and PIID resolution — see the Three data landmines
+              section above.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="space-y-4">
         <h2 className="h-section">QA results</h2>
         <p className="text-text-secondary">
           Two independent QA passes signed off the underlying data: structural (Phase 13.5, 81 checks, 0 blockers) and
