@@ -806,3 +806,72 @@ export async function getUniversityRank(
     WHERE institution_sk = '${safe}'
   `);
 }
+
+/**
+ * Resolve institution SKs to display names + state codes. Used by the profile
+ * §9 peer panel to label peer rows. Empty input returns an empty array
+ * (skips the round-trip).
+ */
+export interface InstitutionName extends Row {
+  institution_sk: string;
+  canonical_name: string;
+  state_code: string | null;
+}
+
+export async function getInstitutionNames(sks: string[]): Promise<InstitutionName[]> {
+  if (sks.length === 0) return [];
+  const list = sks.map((s) => `'${sq(s)}'`).join(',');
+  return query<InstitutionName>(`
+    SELECT institution_sk, canonical_name, state_code
+    FROM dim_institution
+    WHERE institution_sk IN (${list})
+  `);
+}
+
+/**
+ * Peer summary cards for the profile §9 view: peer name + state + latest
+ * reported total R&D, ordered by peer_rank (1 = closest match).
+ */
+export interface PeerCard extends Row {
+  peer_sk: string;
+  peer_rank: number;
+  canonical_name: string;
+  state_code: string | null;
+  fiscal_year: number | null;
+  total_rd_nominal: number | null;
+}
+
+export async function getPeerCards(uniSk: string): Promise<PeerCard[]> {
+  const safe = sq(uniSk);
+  return query<PeerCard>(`
+    WITH peers AS (
+      SELECT peer_sk, peer_rank
+      FROM agg_uni_peers
+      WHERE uni_sk = '${safe}'
+    ),
+    latest AS (
+      SELECT institution_sk, MAX(fiscal_year) AS fy
+      FROM agg_uni_total_rd
+      WHERE institution_sk IN (SELECT peer_sk FROM peers)
+      GROUP BY institution_sk
+    ),
+    totals AS (
+      SELECT t.institution_sk, t.fiscal_year, t.total_rd_nominal
+      FROM agg_uni_total_rd t
+      JOIN latest l
+        ON l.institution_sk = t.institution_sk
+       AND l.fy = t.fiscal_year
+    )
+    SELECT
+      p.peer_sk,
+      p.peer_rank,
+      i.canonical_name,
+      i.state_code,
+      t.fiscal_year,
+      t.total_rd_nominal
+    FROM peers p
+    JOIN dim_institution i ON i.institution_sk = p.peer_sk
+    LEFT JOIN totals t ON t.institution_sk = p.peer_sk
+    ORDER BY p.peer_rank
+  `);
+}
