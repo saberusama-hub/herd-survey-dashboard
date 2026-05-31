@@ -85,38 +85,40 @@ export default function DownloadsPage() {
 
 function FileTable({ files }: { files: [string, ManifestFile][] }) {
   return (
-    <table className="w-full text-sm">
-      <thead>
-        <tr className="border-b border-border text-text-secondary">
-          <th className="text-left font-medium px-6 py-3">File</th>
-          <th className="text-right font-medium px-6 py-3">Rows</th>
-          <th className="text-right font-medium px-6 py-3">Size</th>
-          <th className="text-right font-medium px-6 py-3">Columns</th>
-          <th className="text-right font-medium px-6 py-3">Download</th>
-        </tr>
-      </thead>
-      <tbody>
-        {files.map(([name, info]) => (
-          <tr key={name} className="border-b border-border/60 last:border-0 hover:bg-accent-muted/20">
-            <td className="px-6 py-2.5 font-mono text-xs">{name}.parquet</td>
-            <td className="px-6 py-2.5 text-right tabular-nums">{info.rows.toLocaleString('en-US')}</td>
-            <td className="px-6 py-2.5 text-right tabular-nums text-text-secondary">
-              {(info.size_bytes / 1024).toFixed(0)} KB
-            </td>
-            <td className="px-6 py-2.5 text-right tabular-nums text-text-tertiary">{info.columns.length}</td>
-            <td className="px-6 py-2.5 text-right">
-              <a
-                href={`/data/${name}.parquet`}
-                download
-                className="inline-flex items-center gap-1.5 text-accent hover:underline"
-              >
-                <Download className="h-3.5 w-3.5" /> .parquet
-              </a>
-            </td>
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm min-w-[640px]">
+        <thead>
+          <tr className="border-b border-border text-text-secondary">
+            <th className="text-left font-medium px-3 md:px-6 py-3">File</th>
+            <th className="text-right font-medium px-3 md:px-6 py-3">Rows</th>
+            <th className="text-right font-medium px-3 md:px-6 py-3">Size</th>
+            <th className="text-right font-medium px-3 md:px-6 py-3">Columns</th>
+            <th className="text-right font-medium px-3 md:px-6 py-3">Download</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {files.map(([name, info]) => (
+            <tr key={name} className="border-b border-border/60 last:border-0 hover:bg-accent-muted/20">
+              <td className="px-3 md:px-6 py-2.5 font-mono text-xs">{name}.parquet</td>
+              <td className="px-3 md:px-6 py-2.5 text-right tabular-nums">{info.rows.toLocaleString('en-US')}</td>
+              <td className="px-3 md:px-6 py-2.5 text-right tabular-nums text-text-secondary">
+                {(info.size_bytes / 1024).toFixed(0)} KB
+              </td>
+              <td className="px-3 md:px-6 py-2.5 text-right tabular-nums text-text-tertiary">{info.columns.length}</td>
+              <td className="px-3 md:px-6 py-2.5 text-right">
+                <a
+                  href={`/data/${name}.parquet`}
+                  download
+                  className="inline-flex items-center gap-1.5 text-accent hover:underline"
+                >
+                  <Download className="h-3.5 w-3.5" /> .parquet
+                </a>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

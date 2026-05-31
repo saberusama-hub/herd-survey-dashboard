@@ -1,0 +1,56 @@
+{
+  "runAt": "2026-05-31T20:48:13.606Z",
+  "baseUrl": "http://localhost:3000",
+  "routes": [
+    "/",
+    "/universities/",
+    "/national/",
+    "/compare/",
+    "/methodology/",
+    "/downloads/",
+    "/universities/INST0000001/",
+    "/universities/INST0000106/",
+    "/universities/INST0000317/",
+    "/universities/INST0000617/",
+    "/universities/INST0001706/"
+  ],
+  "viewports": [
+    "mobile",
+    "tablet",
+    "desktop",
+    "wide"
+  ],
+  "sampleInstitutions": [
+    {
+      "sk": "INST0000001",
+      "name": "State University of New York, University at Albany"
+    },
+    {
+      "sk": "INST0000106",
+      "name": "Florida Atlantic University"
+    },
+    {
+      "sk": "INST0000317",
+      "name": "Morehouse School of Medicine"
+    },
+    {
+      "sk": "INST0000617",
+      "name": "Franklin W. Olin College of Engineering"
+    },
+    {
+      "sk": "INST0001706",
+      "name": "Florida Polytechnic University"
+    }
+  ],
+  "ok": 43,
+  "fail": 1,
+  "failures": [
+    {
+      "route": "/downloads/",
+      "viewport": "mobile",
+      "failures": [
+        "OVERFLOW scrollWidth=685 > innerWidth=375 at mobile (375px)"
+      ]
+    }
+  ]
+}
