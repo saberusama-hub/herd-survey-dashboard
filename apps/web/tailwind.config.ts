@@ -7,24 +7,50 @@ const config: Config = {
     container: { center: true, padding: '1.5rem', screens: { '2xl': '1440px' } },
     extend: {
       colors: {
-        /* Surfaces */
+        /* ===== Editorial palette ===== */
+        ink: 'hsl(var(--ink))',
+        paper: 'hsl(var(--paper))',
         surface: 'hsl(var(--surface))',
         'surface-elevated': 'hsl(var(--surface-elevated))',
+        background: 'hsl(var(--background))',
         border: 'hsl(var(--border))',
         rule: 'hsl(var(--rule))',
         ring: 'hsl(var(--ring))',
 
+        /* Accent (cherry) */
+        accent: { DEFAULT: 'hsl(var(--accent))', strong: 'hsl(var(--accent-strong))' },
+        'accent-soft': 'hsl(var(--accent-soft))',
+        'accent-strong': 'hsl(var(--accent-strong))',
+        'accent-muted': 'hsl(var(--accent-soft))', // backwards-compat alias
+
+        /* Mute scale (Economist neutrals) */
+        mute: {
+          1: 'hsl(var(--mute-1))',
+          2: 'hsl(var(--mute-2))',
+          3: 'hsl(var(--mute-3))',
+        },
+
         /* Text */
+        text: {
+          primary: 'hsl(var(--text-primary))',
+          secondary: 'hsl(var(--text-secondary))',
+          tertiary: 'hsl(var(--text-tertiary))',
+        },
         'text-primary': 'hsl(var(--text-primary))',
         'text-secondary': 'hsl(var(--text-secondary))',
         'text-tertiary': 'hsl(var(--text-tertiary))',
         'text-quaternary': 'hsl(var(--text-quaternary))',
 
-        /* Accent (editorial teal) */
-        accent: 'hsl(var(--accent))',
-        'accent-soft': 'hsl(var(--accent-soft))',
-        'accent-strong': 'hsl(var(--accent-strong))',
-        'accent-muted': 'hsl(var(--accent-soft))', // backwards-compat alias
+        /* Agency-categorical (fixed assignment, spec §4.1) */
+        agency: {
+          nih: 'hsl(var(--agency-nih))',
+          nsf: 'hsl(var(--agency-nsf))',
+          dod: 'hsl(var(--agency-dod))',
+          doe: 'hsl(var(--agency-doe))',
+          nasa: 'hsl(var(--agency-nasa))',
+          usda: 'hsl(var(--agency-usda))',
+          other: 'hsl(var(--agency-other))',
+        },
 
         /* Semantic */
         positive: 'hsl(var(--positive))',
@@ -32,7 +58,7 @@ const config: Config = {
         warning: 'hsl(var(--warning))',
         highlight: 'hsl(var(--highlight))',
 
-        /* Categorical (7 colors, agency-mapped) */
+        /* Legacy categorical aliases (mapped to agency palette) */
         'cat-1': 'hsl(var(--cat-1))',
         'cat-2': 'hsl(var(--cat-2))',
         'cat-3': 'hsl(var(--cat-3))',
@@ -41,7 +67,7 @@ const config: Config = {
         'cat-6': 'hsl(var(--cat-6))',
         'cat-7': 'hsl(var(--cat-7))',
 
-        /* Sequential ramp aliases */
+        /* Sequential blues (choropleth) */
         'seq-1': 'hsl(var(--seq-1))',
         'seq-2': 'hsl(var(--seq-2))',
         'seq-3': 'hsl(var(--seq-3))',
@@ -50,7 +76,7 @@ const config: Config = {
         'seq-6': 'hsl(var(--seq-6))',
         'seq-7': 'hsl(var(--seq-7))',
 
-        /* Diverging */
+        /* Diverging (pink/green) */
         'div-neg-3': 'hsl(var(--div-neg-3))',
         'div-neg-2': 'hsl(var(--div-neg-2))',
         'div-neg-1': 'hsl(var(--div-neg-1))',
@@ -58,7 +84,6 @@ const config: Config = {
         'div-pos-1': 'hsl(var(--div-pos-1))',
         'div-pos-2': 'hsl(var(--div-pos-2))',
         'div-pos-3': 'hsl(var(--div-pos-3))',
-
       },
       fontFamily: {
         /* Calibri stack — Carlito is the metric-compatible open fallback (from @fontsource/carlito). */
