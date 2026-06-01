@@ -120,7 +120,7 @@ export function Section5Reconciliation({ profile }: Props) {
         eyebrow="Federal R&D coverage"
         title="Top-down HERD vs bottom-up bottom-line, year by year"
         dek="Bars are grouped by fiscal year. Left bar (accent): HERD federal R&D. Right bar (gray): sum of bottom-up federal streams."
-        source="HERD Q09 · sheet_07_cross_source_reconciliation"
+        source="HERD Q09 · raw NIH RePORTER + NSF Awards + USAspending"
         note="HERD measures expenditures; bottom-up streams measure obligations or outlays. A 15–25% gap is expected; larger gaps may reflect sub-agency allocation method or PIID collision in USASpending. See Methodology."
         methodology={{
           what:
