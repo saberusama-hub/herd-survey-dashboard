@@ -124,6 +124,21 @@ export default function MethodologyPage() {
               HERD-reported federal R&amp;D exceeds Federal Funds explicit obligations after 2018. This is documented in
               Sheet 11 (federal_university_bridge).
             </Caveat>
+            <Caveat title="sheet_02 ↔ sheet_01 surrogate-key bridge (added S5.5)">
+              Federal-agency splits live on a different <code>institution_sk</code> universe (2,056 SKs) than the
+              HERD-tracked panel (1,014 SKs). A bridge (<code>sheet01_sheet02_bridge.parquet</code>) maps sheet_02 SKs to
+              the canonical sheet_01 SK via normalized-name + state matching, name-only unique matches, parent-strip
+              fallback, and a curated manual override list for high-value campuses. ~80% of HERD universities now
+              resolve to ≥1 federal-agency row; the remainder are small or specialty institutions with no
+              federal-grants record in sheet_02.
+            </Caveat>
+            <Caveat title="Sum(R&D by field) ≠ Total R&D (~13% of inst×fy pairs)">
+              HERD Q01 (total) and Q07 (field-level) are reported on separate forms, with different rounding
+              conventions and occasional respondent disagreement on field assignment. On 12.9% of institution × fiscal-year
+              pairs, the field-mix sum differs from total R&amp;D by more than 1% (mean bias +5.8%, the field-mix sum is
+              slightly higher). Charts that sum field-mix may differ from the total R&amp;D timeline by a small margin —
+              we do not normalize to force agreement because that would obscure respondent behavior.
+            </Caveat>
           </CardContent>
         </Card>
       </section>
