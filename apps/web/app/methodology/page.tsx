@@ -372,6 +372,44 @@ export default function MethodologyPage() {
               sub-agency allocation methodology, and PIID resolution — see the Three data landmines
               section above.
             </p>
+            <p>
+              <strong className="text-text-primary">NSF co-PI recovery status (S1.5).</strong>{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">fact_nsf_award</code> stores
+              only the lead PI per row (266K rows for 266K awards; all rows have{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">pi_role = &apos;Principal Investigator&apos;</code>);
+              an aggregate <code className="text-xs bg-accent-muted/40 rounded px-1">n_pi</code>{' '}
+              column counts the full team but does not provide individual co-PI surrogate keys. NSF
+              does not publish a co-PI bridge in the public API. Consequence:
+              <code className="text-xs bg-accent-muted/40 rounded px-1 mx-1">agg_uni_pi_universe</code>
+              undercounts NSF; team-size bucketing (
+              <code className="text-xs bg-accent-muted/40 rounded px-1">agg_uni_team_size</code>) uses
+              <code className="text-xs bg-accent-muted/40 rounded px-1 mx-1">n_pi</code> and is correct.
+            </p>
+            <p>
+              <strong className="text-text-primary">FY2005 + FY2016 entity-resolution breaks.</strong>{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">dim_institution</code>{' '}
+              consolidated some multi-campus institutions (notably Harvard) into a single surrogate
+              key in FY2005 and split them back out in FY2006. A smaller break occurred at the
+              FY2016 boundary. 81 institutions (16.7%) show &gt;100% YoY swings at FY05→06.
+              Both <code className="text-xs bg-accent-muted/40 rounded px-1">agg_uni_pi_universe</code>{' '}
+              and <code className="text-xs bg-accent-muted/40 rounded px-1">agg_uni_team_size</code>{' '}
+              now carry a <code className="text-xs bg-accent-muted/40 rounded px-1">data_quality</code>{' '}
+              column (<code className="text-xs bg-accent-muted/40 rounded px-1">fy05_entity_resolution_break</code>{' '}
+              / <code className="text-xs bg-accent-muted/40 rounded px-1">fy16_minor_break</code> /{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">clean</code>). Charts mask
+              or label affected years.
+            </p>
+            <p>
+              <strong className="text-text-primary">Topic regex precision (S1.5).</strong> Topic
+              tagging uses RE2-compatible regex over title + abstract. Two patterns were tightened:
+              <em>Neuroscience &amp; brain</em> no longer matches the bare word{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">neural</code> (which
+              over-matched AI/ML &ldquo;neural networks&rdquo;); <em>Earth observation</em> no
+              longer matches bare <code className="text-xs bg-accent-muted/40 rounded px-1">geospatial</code>{' '}
+              (over-matched GIS-tangential work). Cancer keeps the broader pattern (cancer / oncology
+              / tumor / carcinoma / malignan / metasta) with an acknowledged precision-vs-recall
+              trade-off in favor of recall.
+            </p>
           </CardContent>
         </Card>
       </section>
