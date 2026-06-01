@@ -56,8 +56,6 @@ const PARQUET_FILES = [
   'agg_national_team_size',
   'agg_national_topic',
   'dim_institution_crosswalk',
-  // sheet_01 ↔ sheet_02 SK bridge (S5.5 fix). Sources sheet_02 → sheet_01 keying.
-  'sheet01_sheet02_bridge',
 ];
 
 let db: duckdb.AsyncDuckDB | null = null;

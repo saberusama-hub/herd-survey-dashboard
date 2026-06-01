@@ -1,5 +1,5 @@
 {
-  "runAt": "2026-05-31T20:48:13.606Z",
+  "runAt": "2026-05-31T21:19:42.192Z",
   "baseUrl": "http://localhost:3000",
   "routes": [
     "/",
@@ -42,15 +42,7 @@
       "name": "Florida Polytechnic University"
     }
   ],
-  "ok": 43,
-  "fail": 1,
-  "failures": [
-    {
-      "route": "/downloads/",
-      "viewport": "mobile",
-      "failures": [
-        "OVERFLOW scrollWidth=685 > innerWidth=375 at mobile (375px)"
-      ]
-    }
-  ]
+  "ok": 44,
+  "fail": 0,
+  "failures": []
 }

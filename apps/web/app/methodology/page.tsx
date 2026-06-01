@@ -124,13 +124,12 @@ export default function MethodologyPage() {
               HERD-reported federal R&amp;D exceeds Federal Funds explicit obligations after 2018. This is documented in
               Sheet 11 (federal_university_bridge).
             </Caveat>
-            <Caveat title="sheet_02 ↔ sheet_01 surrogate-key bridge (added S5.5)">
-              Federal-agency splits live on a different <code>institution_sk</code> universe (2,056 SKs) than the
-              HERD-tracked panel (1,014 SKs). A bridge (<code>sheet01_sheet02_bridge.parquet</code>) maps sheet_02 SKs to
-              the canonical sheet_01 SK via normalized-name + state matching, name-only unique matches, parent-strip
-              fallback, and a curated manual override list for high-value campuses. ~80% of HERD universities now
-              resolve to ≥1 federal-agency row; the remainder are small or specialty institutions with no
-              federal-grants record in sheet_02.
+            <Caveat title="Federal-by-agency now sourced from HERD raw (S5.5 v3)">
+              Section 4 (Federal funding by agency) used to flow through sheet_02 with an SK bridge. As of S5.5 v3
+              it reads <code>fact_herd_expenditures</code> directly (Q09K for FY2010–24 and Q02b for FY2005–09),
+              re-keyed by HERD&apos;s own <code>institution_sk</code>. The bridge is retired — raw HERD already lives on
+              the canonical sheet_01 SK universe, so 100% of HERD-tracked universities resolve correctly with no
+              fanout or under-reporting.
             </Caveat>
             <Caveat title="Sum(R&D by field) ≠ Total R&D (~13% of inst×fy pairs)">
               HERD Q01 (total) and Q07 (field-level) are reported on separate forms, with different rounding
