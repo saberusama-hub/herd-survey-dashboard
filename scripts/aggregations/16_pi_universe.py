@@ -85,7 +85,12 @@ SELECT
   COALESCE(nh.amount_nih, 0) AS federal_amount_nih,
   COALESCE(na.amount_nsf, 0) + COALESCE(nh.amount_nih, 0) AS federal_amount_total,
   (COALESCE(na.amount_nsf, 0) + COALESCE(nh.amount_nih, 0))
-    / NULLIF(pc.distinct_pi_count, 0) AS amount_per_pi
+    / NULLIF(pc.distinct_pi_count, 0) AS amount_per_pi,
+  CASE
+    WHEN pc.fiscal_year = 2005 THEN 'fy05_entity_resolution_break'
+    WHEN pc.fiscal_year = 2016 THEN 'fy16_minor_break'
+    ELSE 'clean'
+  END AS data_quality
 FROM pi_counts pc
 LEFT JOIN nsf_amounts na
   ON na.institution_sk = pc.institution_sk AND na.fiscal_year = pc.fiscal_year

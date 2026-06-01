@@ -67,7 +67,12 @@ SELECT
   fiscal_year,
   team_size_bucket,
   COUNT(*) AS grant_count,
-  SUM(amount) AS total_amount
+  SUM(amount) AS total_amount,
+  CASE
+    WHEN fiscal_year = 2005 THEN 'fy05_entity_resolution_break'
+    WHEN fiscal_year = 2016 THEN 'fy16_minor_break'
+    ELSE 'clean'
+  END AS data_quality
 FROM bucketed
 GROUP BY 1, 2, 3
 """
