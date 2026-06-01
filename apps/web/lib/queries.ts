@@ -601,8 +601,27 @@ export interface UniversityProfile extends Row {
   sources: Array<{ fiscal_year: number; source_category: string; amount_nominal: number }>;
   agencies: Array<{ fiscal_year: number; agency_bucket: string; amount_nominal: number }>;
   federalFunds: Array<{ fiscal_year: number; agency_bucket: string; amount_nominal: number; taxonomy_version: string }>;
-  piMetrics: Array<{ fiscal_year: number; pi_count: number; amount_per_pi: number; federal_amount: number }>;
+  piMetrics: Array<{
+    fiscal_year: number;
+    distinct_pi_count: number;
+    federal_amount_nsf: number;
+    federal_amount_nih: number;
+    federal_amount_total: number;
+    amount_per_pi: number;
+  }>;
   piDistribution: Array<{ fiscal_year: number; decile: number; min_amount: number; max_amount: number; avg_amount: number; pi_count: number }>;
+  teamSize: Array<{
+    fiscal_year: number;
+    team_size_bucket: string;
+    grant_count: number;
+    total_amount: number;
+  }>;
+  topics: Array<{
+    fiscal_year: number;
+    topic: string;
+    grant_count: number;
+    tagged_amount: number;
+  }>;
   fieldMix: Array<{ fiscal_year: number; field_category: string; is_stem: boolean; amount_nominal: number }>;
   subjectTags: Array<{ fiscal_year: number; subject_tag: string; tagged_amount: number }>;
   concentration: Array<{ fiscal_year: number; hhi: number; shannon_entropy: number; cov_5yr: number | null }>;
@@ -613,7 +632,23 @@ export interface UniversityProfile extends Row {
 
 export async function getUniversityProfile(sk: string): Promise<UniversityProfile> {
   const safe = sq(sk);
-  const [name, totalRd, sources, agencies, federalFunds, piMetrics, piDistribution, fieldMix, subjectTags, concentration, stateContext, peers, patents] = await Promise.all([
+  const [
+    name,
+    totalRd,
+    sources,
+    agencies,
+    federalFunds,
+    piMetrics,
+    piDistribution,
+    teamSize,
+    topics,
+    fieldMix,
+    subjectTags,
+    concentration,
+    stateContext,
+    peers,
+    patents,
+  ] = await Promise.all([
     query<{ canonical_name: string; state_code: string }>(
       `SELECT canonical_name, state_code FROM dim_institution WHERE institution_sk = '${safe}'`,
     ),
@@ -629,11 +664,24 @@ export async function getUniversityProfile(sk: string): Promise<UniversityProfil
     query<UniversityProfile['federalFunds'][number]>(
       `SELECT fiscal_year, agency_bucket, amount_nominal, taxonomy_version FROM agg_uni_federal_funds WHERE institution_sk = '${safe}' ORDER BY fiscal_year, agency_bucket`,
     ),
+    // Phase R: full federal-PI universe (was: top-1K-grants floor).
     query<UniversityProfile['piMetrics'][number]>(
-      `SELECT fiscal_year, pi_count, amount_per_pi, federal_amount FROM agg_uni_pi_metrics WHERE institution_sk = '${safe}' ORDER BY fiscal_year`,
+      `SELECT fiscal_year, distinct_pi_count, federal_amount_nsf, federal_amount_nih,
+              federal_amount_total, amount_per_pi
+       FROM agg_uni_pi_universe WHERE institution_sk = '${safe}' ORDER BY fiscal_year`,
     ),
     query<UniversityProfile['piDistribution'][number]>(
       `SELECT fiscal_year, decile, min_amount, max_amount, avg_amount, pi_count FROM agg_uni_pi_distribution WHERE institution_sk = '${safe}' ORDER BY fiscal_year, decile`,
+    ),
+    query<UniversityProfile['teamSize'][number]>(
+      `SELECT fiscal_year, team_size_bucket, grant_count, total_amount
+       FROM agg_uni_team_size WHERE institution_sk = '${safe}'
+       ORDER BY fiscal_year, team_size_bucket`,
+    ),
+    query<UniversityProfile['topics'][number]>(
+      `SELECT fiscal_year, topic, grant_count, tagged_amount
+       FROM agg_uni_topic WHERE institution_sk = '${safe}'
+       ORDER BY fiscal_year, tagged_amount DESC`,
     ),
     query<UniversityProfile['fieldMix'][number]>(
       `SELECT fiscal_year, field_category, is_stem, amount_nominal FROM agg_uni_field_mix WHERE institution_sk = '${safe}' ORDER BY fiscal_year, field_category`,
@@ -667,6 +715,8 @@ export async function getUniversityProfile(sk: string): Promise<UniversityProfil
     federalFunds,
     piMetrics,
     piDistribution,
+    teamSize,
+    topics,
     fieldMix,
     subjectTags,
     concentration,
@@ -674,6 +724,66 @@ export async function getUniversityProfile(sk: string): Promise<UniversityProfil
     peers,
     patents,
   };
+}
+
+// ─────────── Phase R: team-size + topics helpers (national + per-uni) ────────
+
+export interface TeamSizeRow extends Row {
+  fiscal_year: number;
+  team_size_bucket: string;
+  grant_count: number;
+  total_amount: number;
+}
+
+export interface NationalTeamSizeRow extends TeamSizeRow {
+  share_of_total: number;
+}
+
+export interface TopicRow extends Row {
+  fiscal_year: number;
+  topic: string;
+  grant_count: number;
+  tagged_amount: number;
+}
+
+export interface NationalTopicRow extends TopicRow {
+  share_of_total: number;
+}
+
+export async function getUniversityTeamSize(sk: string): Promise<TeamSizeRow[]> {
+  const safe = sq(sk);
+  return query<TeamSizeRow>(`
+    SELECT fiscal_year, team_size_bucket, grant_count, total_amount
+    FROM agg_uni_team_size
+    WHERE institution_sk = '${safe}'
+    ORDER BY fiscal_year, team_size_bucket
+  `);
+}
+
+export async function getUniversityTopics(sk: string): Promise<TopicRow[]> {
+  const safe = sq(sk);
+  return query<TopicRow>(`
+    SELECT fiscal_year, topic, grant_count, tagged_amount
+    FROM agg_uni_topic
+    WHERE institution_sk = '${safe}'
+    ORDER BY fiscal_year, tagged_amount DESC
+  `);
+}
+
+export async function getNationalTeamSize(): Promise<NationalTeamSizeRow[]> {
+  return query<NationalTeamSizeRow>(`
+    SELECT fiscal_year, team_size_bucket, grant_count, total_amount, share_of_total
+    FROM agg_national_team_size
+    ORDER BY fiscal_year, team_size_bucket
+  `);
+}
+
+export async function getNationalTopics(): Promise<NationalTopicRow[]> {
+  return query<NationalTopicRow>(`
+    SELECT fiscal_year, topic, grant_count, tagged_amount, share_of_total
+    FROM agg_national_topic
+    ORDER BY fiscal_year, tagged_amount DESC
+  `);
 }
 
 // ─────────── National view ───────────
@@ -812,9 +922,9 @@ export async function getNationalTrends(): Promise<NationalTrendRow[]> {
       GROUP BY fiscal_year
     ),
     pis AS (
-      SELECT fiscal_year, SUM(pi_count) AS pi_count
-      FROM agg_uni_pi_metrics
-      WHERE pi_count IS NOT NULL
+      SELECT fiscal_year, SUM(distinct_pi_count) AS pi_count
+      FROM agg_uni_pi_universe
+      WHERE distinct_pi_count IS NOT NULL
       GROUP BY fiscal_year
     )
     SELECT
@@ -867,8 +977,8 @@ export async function getUniversityIndex(): Promise<UniversityIndexRow[]> {
       GROUP BY institution_sk
     ),
     pi AS (
-      SELECT institution_sk, pi_count
-      FROM agg_uni_pi_metrics
+      SELECT institution_sk, distinct_pi_count AS pi_count
+      FROM agg_uni_pi_universe
       WHERE fiscal_year = 2024
     ),
     stem AS (

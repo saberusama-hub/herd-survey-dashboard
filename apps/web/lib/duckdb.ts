@@ -49,6 +49,13 @@ const PARQUET_FILES = [
   'agg_national_overview',
   'agg_national_agency_trend',
   'agg_national_concentration',
+  // Phase R (raw-lake-backed): full-universe PI, team-size, 30-topic.
+  'agg_uni_pi_universe',
+  'agg_uni_team_size',
+  'agg_uni_topic',
+  'agg_national_team_size',
+  'agg_national_topic',
+  'dim_institution_crosswalk',
 ];
 
 let db: duckdb.AsyncDuckDB | null = null;
