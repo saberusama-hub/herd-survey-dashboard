@@ -1008,13 +1008,26 @@ export async function getUniversityIndex(): Promise<UniversityIndexRow[]> {
   `);
 }
 
+/**
+ * Search institutions, restricted to the ~1,014 HERD-tracked universities that
+ * have rows in agg_uni_total_rd. This dedupes the raw 75,204-row dim_institution
+ * (which contains every NSF/NIH grantee org incl. subunits, hospitals, school
+ * districts, foreign collaborators) down to the HERD-survey universe so the
+ * compare picker doesn't return ten different "Harvard" variants.
+ *
+ * Trade-off: institutions in NSF/NIH but NOT in HERD are unreachable here. For
+ * full-universe search use searchAllInstitutions() (currently only used by the
+ * old /universities/[sk] direct-link path; in practice that path is also
+ * driven by HERD-tracked SKs).
+ */
 export async function searchInstitutions(q: string): Promise<Array<{ sk: string; name: string; state: string | null }>> {
   const safe = sq(q);
   return query<{ sk: string; name: string; state: string | null }>(`
-    SELECT institution_sk AS sk, canonical_name AS name, state_code AS state
-    FROM dim_institution
-    WHERE LOWER(canonical_name) LIKE LOWER('%${safe}%')
-    ORDER BY canonical_name
+    SELECT i.institution_sk AS sk, i.canonical_name AS name, i.state_code AS state
+    FROM dim_institution i
+    WHERE LOWER(i.canonical_name) LIKE LOWER('%${safe}%')
+      AND i.institution_sk IN (SELECT DISTINCT institution_sk FROM agg_uni_total_rd)
+    ORDER BY i.canonical_name
     LIMIT 20
   `);
 }
