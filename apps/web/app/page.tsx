@@ -6,6 +6,7 @@ import { KpiStrip, type KpiTile } from '@/components/editorial/KpiStrip';
 import { UniversitySearchBox } from '@/components/editorial/UniversitySearchBox';
 import { ResponsiveSvg } from '@/components/charts/ResponsiveSvg';
 import { query } from '@/lib/duckdb';
+import type { Row } from '@/lib/types';
 import { formatDollars, formatPercent } from '@/lib/format';
 import {
   type UniversityIndexRow,
@@ -68,7 +69,7 @@ const AGENCY_LABEL: Record<string, string> = {
 
 // Single source of truth: query DuckDB-WASM for the headline KPI values.
 // All amounts use HERD nominal dollars (the canonical reporting basis).
-interface KpiRow {
+interface KpiRow extends Row {
   total_entities: number;
   herd_universities: number;
   fy24_total: number;
@@ -76,27 +77,27 @@ interface KpiRow {
   cum20_federal: number;
   fy24: number;
 }
-interface AgencyKpiRow {
+interface AgencyKpiRow extends Row {
   fy: number;
   agency_bucket: string;
   amount_nominal: number;
   pct_of_federal: number;
 }
-interface TopicRow {
+interface TopicRow extends Row {
   fy: number;
   topic: string;
   tagged_amount: number;
 }
-interface AgencyShareRow {
+interface AgencyShareRow extends Row {
   fy: number;
   agency_bucket: string;
   amount_nominal: number;
 }
-interface SourceTotalRow {
+interface SourceTotalRow extends Row {
   source_category: string;
   total: number;
 }
-interface StateRow {
+interface StateRow extends Row {
   state_code: string;
   total: number;
   n_institutions: number;
