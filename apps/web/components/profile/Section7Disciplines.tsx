@@ -142,6 +142,14 @@ export function Section7Disciplines({ profile }: Props) {
             title="R&D spending by HERD field of science"
             dek="Latest reported year. Bars are sorted descending and direct-labeled with the dollar amount."
             source="HERD Q03 · agg_uni_field_mix"
+            methodology={{
+              what:
+                'Which broad academic disciplines drove R&D spending at this university in the latest year — life sciences, engineering, social sciences, humanities, and so on.',
+              how:
+                'We sum HERD Q03 ("R&D expenditures by field of science") for the latest fiscal year across the eight HERD field categories. STEM bars are accent-colored; humanities + social sciences are muted.',
+              caveats:
+                'HERD field categories are coarse — "Life sciences" lumps biology + medicine; "Engineering" lumps every engineering discipline. For finer-grained labels, see the Topics chart below.',
+            }}
           >
             <ResponsiveSvg height={Math.max(280, fieldBars.length * 32 + 40)}>
               {(w, h) => <FieldBars width={w} height={h} bars={fieldBars} />}
@@ -155,6 +163,14 @@ export function Section7Disciplines({ profile }: Props) {
             title={`Top ${showAllTopics ? sortedTopics.length : Math.min(10, sortedTopics.length)} research topics by federal $`}
             dek="30-topic taxonomy over NSF + NIH grant text (titles + NSF abstracts + NIH project terms). Sparkline = 20-year topic trajectory."
             source="agg_uni_topic (regex-matched, non-exclusive)"
+            methodology={{
+              what:
+                'What this university actually researches — concrete topics like "Cancer," "Quantum computing," or "Climate" — and how each topic has trended over 20 years.',
+              how:
+                'Each NSF and NIH grant is tagged against a 30-topic regex taxonomy that scans the grant title, NSF abstract, and NIH project terms for keyword matches. We sum the tagged dollars per topic per year for this institution.',
+              caveats:
+                'Topics are NOT mutually exclusive — one grant can match multiple topics (e.g., "Cancer" and "AI/ML"). Patterns were tightened in May 2026 to reduce false positives on "Neuroscience" and "Earth observation." Sums per FY can exceed 100% of grants for that reason.',
+            }}
           >
             <ul className="divide-y divide-rule/60">
               {topicsToShow.map((r) => (

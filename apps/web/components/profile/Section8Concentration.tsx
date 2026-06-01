@@ -115,6 +115,14 @@ export function Section8Concentration({ profile }: Props) {
           dek="A single line: how concentrated the federal-agency mix has been each year. HHI ranges 0–10,000 — below 1500 is conventionally diversified."
           source="agg_uni_concentration"
           note="HHI thresholds — < 1500 = diversified; 1500–2500 = moderately concentrated; > 2500 = highly concentrated."
+          methodology={{
+            what:
+              'Whether this university leans heavily on one or two federal agencies for its research money, or has spread funding across many.',
+            how:
+              'For each fiscal year we compute the Herfindahl-Hirschman Index (HHI) of the seven HERD agency buckets — square each agency’s share of the institution’s federal R&D, sum them, multiply by 10,000. The result ranges 0 (perfectly even) to 10,000 (all funding from one agency).',
+            caveats:
+              'HHI is computed at the parent-agency level (HHS, NSF, DOD, DOE, NASA, USDA, Other). Sub-agency diversity (e.g., across NIH institutes) is not captured.',
+          }}
         >
           <LineChart
             data={lineData as unknown as Array<Record<string, unknown>>}

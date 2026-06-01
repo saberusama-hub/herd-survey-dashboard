@@ -123,6 +123,14 @@ export function Section4Agencies({ profile }: Props) {
         title="Federal funding by agency, latest reported year"
         dek="Bars are direct-labeled with the dollar amount and the share of this institution's federal R&D."
         source="HERD Q09 · agg_uni_agency_split"
+        methodology={{
+          what:
+            'Which federal agencies actually paid this university for research in the most recent reported year — and how much each one chipped in.',
+          how:
+            'We take HERD Q09 ("Federal R&D by agency") for the latest fiscal year and group reported obligations into the seven canonical agency buckets (HHS includes NIH, plus NSF / DOD / DOE / NASA / USDA / Other federal). Bars are sorted by amount.',
+          caveats:
+            'HERD Q09 is reported by the institution’s sponsored-research office. Sub-agencies (e.g., NIH, ARO, ONR) are rolled up to their parent department, so the same dollar appears once in its parent bucket.',
+        }}
       >
         <ResponsiveSvg height={chartHeight}>
           {(w, h) => <AgencyBars width={w} height={h} bars={bars} />}

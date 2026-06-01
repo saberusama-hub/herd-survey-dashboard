@@ -77,6 +77,14 @@ export function Section9StateContext({ profile }: Props) {
           }
           dek="This institution's R&D as a fraction of all R&D performed by HERD-tracked institutions in the same state."
           source="agg_uni_state_context"
+          methodology={{
+            what:
+              'How big a fish this university is in its own state — what slice of all university research spending in the state belongs to it.',
+            how:
+              'For each fiscal year we divide this institution’s total HERD R&D by the sum of HERD R&D across every HERD-tracked university in the same state. The two endpoints (first and latest reported FY) are shown side by side; the sparkline traces the in-between years.',
+            caveats:
+              'Denominator only includes HERD-tracked universities. State R&D performed by hospitals, FFRDCs, or non-HERD institutions is not in the comparison.',
+          }}
         >
           <div className="space-y-3">
             <div className="flex items-end justify-between gap-6">
@@ -123,6 +131,14 @@ export function Section9StateContext({ profile }: Props) {
           title="Same state, similar R&D size"
           dek="Up to five same-state peers within ±25% of this institution's latest total R&D, sorted by R&D-size closeness."
           source="agg_uni_peers"
+          methodology={{
+            what:
+              'A short list of other universities in the same state with roughly comparable research spending — useful for benchmarking.',
+            how:
+              'Peers are HERD-tracked universities in the same `state_code` whose latest total R&D falls within ±25% of this institution’s. We rank by closeness in absolute dollars and keep up to five.',
+            caveats:
+              'Same-state ±25% is a coarse filter — peer set may include institutions with very different research portfolios. For richer peer matching, use the Compare page.',
+          }}
         >
           {peers === null ? (
             <div className="h-32 animate-pulse rounded bg-border/20" />
@@ -161,6 +177,14 @@ export function Section9StateContext({ profile }: Props) {
           dek="Patent counts come from USPTO assignee data — not yet loaded into this build."
           source="agg_uni_patents (stub)"
           note="USPTO ingestion is out of scope for the current data layer. The metric will appear here once that source is added."
+          methodology={{
+            what:
+              'How efficiently this university converts federal research grants into issued patents — a rough proxy for translational productivity.',
+            how:
+              'Numerator (planned): USPTO assignee records matched to this institution. Denominator: count of NIH + NSF awards in the fiscal year. We currently show only the denominator since the USPTO source has not been ingested.',
+            caveats:
+              'USPTO data ingestion is out of scope for the current build, so the ratio is shown as "—" everywhere. Award counts are real but the patent numerator is missing.',
+          }}
         >
           <div className="space-y-2">
             <p className="text-3xl font-semibold text-text-tertiary tnum">—</p>

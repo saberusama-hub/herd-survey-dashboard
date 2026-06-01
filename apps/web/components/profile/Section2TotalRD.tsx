@@ -107,6 +107,16 @@ export function Section2TotalRD({ profile }: Props) {
         }
         source="HERD Q01 · agg_uni_total_rd"
         note={peakNote ?? undefined}
+        methodology={{
+          what:
+            'How much money this university spent on research each year, in plain dollars or rebased to today’s prices.',
+          how:
+            mode === 'nominal'
+              ? 'We take the HERD Q01 "total R&D" line reported by the institution for each fiscal year. Nominal mode shows the raw reported dollars (no inflation adjustment).'
+              : 'We take the HERD Q01 "total R&D" line per fiscal year and multiply by the BLS CPI-U deflator so every year is expressed in FY2024 purchasing power.',
+          caveats:
+            'HERD is self-reported by the institution every spring. A small number of universities revise prior-year numbers; we use the latest snapshot.',
+        }}
       >
         <BarChart
           data={data as unknown as Array<Record<string, unknown>>}

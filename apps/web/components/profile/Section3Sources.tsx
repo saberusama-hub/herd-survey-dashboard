@@ -117,6 +117,14 @@ export function Section3Sources({ profile }: Props) {
             ? 'Nonprofit funding was not collected in HERD before FY2010 (ARDES non-response), so pre-FY2010 stacks understate that slice.'
             : undefined
         }
+        methodology={{
+          what:
+            'Who paid for the research at this university each year, split across six categories: federal, state, industry, the school itself, nonprofits, and other.',
+          how:
+            'We sum the HERD Q01 "Source of Funds" reported values per institution per fiscal year, by source category. Each stacked bar therefore equals the total R&D for that year.',
+          caveats:
+            'HERD did not collect the "nonprofit" category before FY2010 (ARDES non-response window), so FY2005–FY2009 bars understate that slice.',
+        }}
       >
         <ResponsiveSvg height={340}>
           {(w, h) => (

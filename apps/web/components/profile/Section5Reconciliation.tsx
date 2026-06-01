@@ -122,6 +122,14 @@ export function Section5Reconciliation({ profile }: Props) {
         dek="Bars are grouped by fiscal year. Left bar (accent): HERD federal R&D. Right bar (gray): sum of bottom-up federal streams."
         source="HERD Q09 · sheet_07_cross_source_reconciliation"
         note="HERD measures expenditures; bottom-up streams measure obligations or outlays. A 15–25% gap is expected; larger gaps may reflect sub-agency allocation method or PIID collision in USASpending. See Methodology."
+        methodology={{
+          what:
+            'A reality check: does the university’s reported federal funding (HERD) match what we can actually find by counting up individual grants and contracts in the federal databases?',
+          how:
+            'Left bar = HERD Q09 total federal R&D for the year (top-down, self-reported). Right bar = sum of NIH RePORTER + NSF Awards + USAspending contracts + USAspending assistance for the same institution and year (bottom-up, transaction-level).',
+          caveats:
+            'HERD measures expenditures spent in the FY; the bottom-up streams measure obligations awarded. A 15–25% gap is normal. Larger gaps usually point to sub-agency allocation, PIID collisions in USAspending, or sub-award flows we cannot see.',
+        }}
       >
         <ResponsiveSvg height={340}>
           {(w, h) => (

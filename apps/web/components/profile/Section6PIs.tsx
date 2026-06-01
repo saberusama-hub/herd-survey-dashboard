@@ -170,6 +170,14 @@ export function Section6PIs({ profile }: Props) {
           title="Distinct federal PIs per fiscal year"
           dek="Every unique person who held a NSF or NIH grant in the year — lead PIs plus co-PIs from multi-PI projects."
           source="agg_uni_pi_universe (raw NSF awards ∪ NIH PI bridge)"
+          methodology={{
+            what:
+              'How many individual researchers at this university held a federal NSF or NIH grant in each year.',
+            how:
+              'For every fiscal year we count distinct PIs that appear in the raw NSF Awards file or the NIH RePORTER PI bridge. The two universes are unioned and deduplicated by name + institution.',
+            caveats:
+              'FY2005 is masked — upstream entity resolution lumped subunits (e.g., Harvard Medical School) into the parent in FY2005 only, affecting 81 institutions. NSF counts only the lead PI per award (the agency does not ship the full co-PI roster), so true team headcount is slightly higher than shown.',
+          }}
         >
           <LineChart
             data={lineData as unknown as Array<Record<string, unknown>>}
@@ -190,6 +198,14 @@ export function Section6PIs({ profile }: Props) {
               : 'Distribution of federal funding across grant team-size buckets.'
           }
           source="agg_uni_team_size (NSF n_pi ∪ NIH PI bridge count)"
+          methodology={{
+            what:
+              'Of every federal dollar coming into this university, how much went to lone researchers vs. larger collaborative teams.',
+            how:
+              'Each NSF or NIH grant is bucketed by its team size (1, 2-5, 6-10, 11-20, 21+ PIs). Team size comes from the NSF `n_pi` field and the NIH `PI_IDS` array (unnested). We sum the dollar amount of grants in each bucket for the latest fiscal year.',
+            caveats:
+              'NSF does not publish the full co-PI roster — each grant is placed in its reported team-size bucket but the individual co-PIs are not counted separately. This nudges the bigger-team buckets slightly conservative.',
+          }}
         >
           <BarChart
             data={teamBars as unknown as Array<Record<string, unknown>>}
@@ -219,6 +235,14 @@ export function Section6PIs({ profile }: Props) {
                 )} per PI on average.`
               : undefined
           }
+          methodology={{
+            what:
+              'Whether federal money at this university is spread evenly across researchers, or concentrated in a few big-grant labs.',
+            how:
+              'In the latest reported year we sort every PI by total NSF+NIH dollars received, split the roster into ten equal buckets (deciles), and plot the average $/PI in each decile. Decile 1 = lowest-funded 10% of PIs; decile 10 = highest-funded 10%.',
+            caveats:
+              'A "PI" here means lead or co-PI on any NSF/NIH grant — including small no-cost extensions. PIs working at multiple institutions are counted at each.',
+          }}
         >
           <ResponsiveSvg height={240}>
             {(w, h) => <DistributionPlot data={distRows} width={w} height={h} />}
