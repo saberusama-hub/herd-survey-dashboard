@@ -57,4 +57,36 @@ describe('ChartFrame', () => {
     expect(html).toContain('No eyebrow');
     expect(html).not.toContain('uppercase tracking-wider text-text-tertiary');
   });
+
+  it('renders a (?) toggle button + aria attrs when methodology is supplied', () => {
+    const html = renderToStaticMarkup(
+      <ChartFrame
+        title="Has methodology"
+        methodology={{
+          what: 'Plain-language description.',
+          how: 'Sum of column X by FY.',
+        }}
+      >
+        <div>chart</div>
+      </ChartFrame>,
+    );
+
+    // Button rendered with correct aria semantics.
+    expect(html).toContain('aria-expanded="false"');
+    expect(html).toContain('aria-label="What this chart shows"');
+    expect(html).toContain('aria-controls=');
+    // Default-collapsed: the methodology copy must NOT appear in the SSR output.
+    expect(html).not.toContain('Plain-language description.');
+    expect(html).not.toContain('Sum of column X by FY.');
+  });
+
+  it('omits the (?) button when methodology is not supplied', () => {
+    const html = renderToStaticMarkup(
+      <ChartFrame title="No methodology">
+        <div>chart</div>
+      </ChartFrame>,
+    );
+
+    expect(html).not.toContain('aria-label="What this chart shows"');
+  });
 });
