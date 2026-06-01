@@ -1,5 +1,22 @@
 'use client';
 
+/**
+ * /compare — Side-by-side university comparison page.
+ *
+ * Rebuilt in Phase S2 to address user feedback:
+ *  1. Search returns one entry per university (dedup via HERD-tracked filter
+ *     in lib/queries.ts searchInstitutions).
+ *  2. Metrics verified against source parquets; FY2005 PI values masked
+ *     (entity-resolution discontinuity flagged in agg_uni_pi_universe.data_quality).
+ *  3. Year-range selector (start/end FY) defaulting to last 5 FYs (2020–2024).
+ *  4. Table view (rows=FY, cols=university) below the charts with CSV export.
+ *  5. 15 metrics exposed — see METRICS[] below for each source aggregation.
+ *
+ * Every metric records (a) its source parquet, (b) its formula, and (c) any
+ * data-quality caveats. Audit by reading the `series:` and `description:`
+ * fields together.
+ */
+
 import Link from 'next/link';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 
@@ -8,99 +25,323 @@ import { BarChart } from '@/components/charts/BarChart';
 import { ChartFrame } from '@/components/editorial/ChartFrame';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/Card';
-import { formatCount, formatDollars, formatPercent } from '@/lib/format';
+import { formatCount, formatDollars, formatFy, formatPercent } from '@/lib/format';
 import {
   type UniversityProfile,
   getUniversityProfile,
   searchInstitutions,
 } from '@/lib/queries';
-import { Search, X } from 'lucide-react';
+import { Search, X, Download } from 'lucide-react';
 
 const MIN_PICKS = 2;
 const MAX_PICKS = 5;
+const FY_MIN = 2005;
+const FY_MAX = 2024;
+const DEFAULT_START = 2020;
+const DEFAULT_END = 2024;
+const PI_MASK_FYS = new Set<number>([2005]); // entity-resolution break — see S1.5 fix 2
 
-/** Time-series shape consumed by the per-uni mini BarChart. */
-type SeriesPoint = { fiscal_year: number; value: number };
+/** Time-series shape consumed by the per-uni mini BarChart + table. */
+type SeriesPoint = { fiscal_year: number; value: number | null };
 
-type MetricFormat = 'dollars' | 'percent' | 'count';
+type MetricFormat = 'dollars' | 'percent' | 'count' | 'index';
 
 interface MetricDef {
-  key: 'totalRd' | 'federalShare' | 'piCount' | 'stemShare';
+  key: string;
   label: string;
   description: string;
   /** Y-axis / tooltip formatter applied to the SeriesPoint.value */
   format: MetricFormat;
-  /** Derives a per-FY series from a UniversityProfile. */
+  /** Source parquet(s) — documented for auditing */
+  source: string;
+  /** Derives a per-FY series from a UniversityProfile. Returns rows even when
+   *  data missing for a year (value=null) so the table view stays rectangular
+   *  across the selected range; the chart filters nulls. */
   series: (p: UniversityProfile) => SeriesPoint[];
+  /** Whether this metric should mask FY2005 for entity-resolution reasons. */
+  maskFy05?: boolean;
 }
+
+/**
+ * Helper: collapse rows by fiscal_year, summing `amount_nominal` where `pred`
+ * is true and total. Returns numerator/denominator for share metrics.
+ */
+function byFyShareSum<T>(
+  rows: ReadonlyArray<T>,
+  fyOf: (r: T) => number,
+  amtOf: (r: T) => number,
+  predicate: (r: T) => boolean,
+): Array<{ fy: number; num: number; den: number }> {
+  const m = new Map<number, { num: number; den: number }>();
+  for (const r of rows) {
+    const fy = fyOf(r);
+    const amt = amtOf(r) || 0;
+    const cur = m.get(fy) ?? { num: 0, den: 0 };
+    cur.den += amt;
+    if (predicate(r)) cur.num += amt;
+    m.set(fy, cur);
+  }
+  return Array.from(m.entries())
+    .sort((a, b) => a[0] - b[0])
+    .map(([fy, v]) => ({ fy, ...v }));
+}
+
+/**
+ * Helper: compute HHI (Herfindahl) from row-level shares (sum of squared shares).
+ * Returns map FY -> HHI, where HHI ranges 0–10,000 (concentration index).
+ */
+function hhiByFy<T>(
+  rows: ReadonlyArray<T>,
+  fyOf: (r: T) => number,
+  groupOf: (r: T) => string,
+  amtOf: (r: T) => number,
+): Map<number, number> {
+  const m = new Map<number, Map<string, number>>();
+  for (const r of rows) {
+    const fy = fyOf(r);
+    const amt = amtOf(r) || 0;
+    if (amt <= 0) continue;
+    const inner = m.get(fy) ?? new Map<string, number>();
+    inner.set(groupOf(r), (inner.get(groupOf(r)) ?? 0) + amt);
+    m.set(fy, inner);
+  }
+  const out = new Map<number, number>();
+  for (const [fy, groups] of m) {
+    const total = Array.from(groups.values()).reduce((s, v) => s + v, 0);
+    if (total <= 0) continue;
+    let h = 0;
+    for (const v of groups.values()) {
+      const s = (v / total) * 100; // percent share
+      h += s * s;
+    }
+    out.set(fy, h); // 0–10,000
+  }
+  return out;
+}
+
+/**
+ * Helper: Shannon entropy in nats from row-level shares.
+ */
+function shannonByFy<T>(
+  rows: ReadonlyArray<T>,
+  fyOf: (r: T) => number,
+  groupOf: (r: T) => string,
+  amtOf: (r: T) => number,
+): Map<number, number> {
+  const m = new Map<number, Map<string, number>>();
+  for (const r of rows) {
+    const fy = fyOf(r);
+    const amt = amtOf(r) || 0;
+    if (amt <= 0) continue;
+    const inner = m.get(fy) ?? new Map<string, number>();
+    inner.set(groupOf(r), (inner.get(groupOf(r)) ?? 0) + amt);
+    m.set(fy, inner);
+  }
+  const out = new Map<number, number>();
+  for (const [fy, groups] of m) {
+    const total = Array.from(groups.values()).reduce((s, v) => s + v, 0);
+    if (total <= 0) continue;
+    let h = 0;
+    for (const v of groups.values()) {
+      const p = v / total;
+      if (p > 0) h -= p * Math.log(p);
+    }
+    out.set(fy, h);
+  }
+  return out;
+}
+
+/** Convenience: filter sources rows by category. */
+const isCat = (c: string) => (r: { source_category: string }) => r.source_category === c;
+
+/* ────────────────────── Metric catalog ────────────────────── */
 
 const METRICS: MetricDef[] = [
   {
-    key: 'totalRd',
-    label: 'Total R&D',
-    description: 'HERD-reported total R&D expenditure per fiscal year (nominal dollars).',
+    key: 'totalRdNominal',
+    label: 'Total R&D ($)',
+    description: 'HERD-reported total R&D expenditure per fiscal year, nominal dollars.',
     format: 'dollars',
+    source: 'agg_uni_total_rd.total_rd_nominal',
     series: (p) =>
-      p.totalRd.map((r) => ({
-        fiscal_year: r.fiscal_year,
-        value: Number(r.total_rd_nominal) || 0,
-      })),
+      p.totalRd.map((r) => ({ fiscal_year: r.fiscal_year, value: Number(r.total_rd_nominal) || 0 })),
+  },
+  {
+    key: 'totalRdReal',
+    label: 'Total R&D (FY2024 $)',
+    description: 'Total R&D in constant FY2024 dollars (CPI-U deflated).',
+    format: 'dollars',
+    source: 'agg_uni_total_rd.total_rd_real',
+    series: (p) =>
+      p.totalRd.map((r) => ({ fiscal_year: r.fiscal_year, value: Number(r.total_rd_real) || 0 })),
+  },
+  {
+    key: 'federal',
+    label: 'Federal R&D ($)',
+    description: 'HERD federal R&D dollars per fiscal year.',
+    format: 'dollars',
+    source: "agg_uni_source_split where source_category='federal'",
+    series: (p) =>
+      byFyShareSum(p.sources, (r) => r.fiscal_year, (r) => Number(r.amount_nominal) || 0, isCat('federal'))
+        .map((x) => ({ fiscal_year: x.fy, value: x.num })),
+  },
+  {
+    key: 'state',
+    label: 'State R&D ($)',
+    description: 'HERD state/local govt R&D dollars per fiscal year.',
+    format: 'dollars',
+    source: "agg_uni_source_split where source_category='state'",
+    series: (p) =>
+      byFyShareSum(p.sources, (r) => r.fiscal_year, (r) => Number(r.amount_nominal) || 0, isCat('state'))
+        .map((x) => ({ fiscal_year: x.fy, value: x.num })),
+  },
+  {
+    key: 'industry',
+    label: 'Industry R&D ($)',
+    description: 'HERD industry-funded R&D dollars per fiscal year.',
+    format: 'dollars',
+    source: "agg_uni_source_split where source_category='industry'",
+    series: (p) =>
+      byFyShareSum(p.sources, (r) => r.fiscal_year, (r) => Number(r.amount_nominal) || 0, isCat('industry'))
+        .map((x) => ({ fiscal_year: x.fy, value: x.num })),
+  },
+  {
+    key: 'institutional',
+    label: 'Institutional R&D ($)',
+    description: "HERD institutional (own funds) R&D dollars per fiscal year.",
+    format: 'dollars',
+    source: "agg_uni_source_split where source_category='institutional'",
+    series: (p) =>
+      byFyShareSum(p.sources, (r) => r.fiscal_year, (r) => Number(r.amount_nominal) || 0, isCat('institutional'))
+        .map((x) => ({ fiscal_year: x.fy, value: x.num })),
+  },
+  {
+    key: 'nonprofit',
+    label: 'Nonprofit R&D ($)',
+    description: 'HERD nonprofit-funded R&D dollars per fiscal year.',
+    format: 'dollars',
+    source: "agg_uni_source_split where source_category='nonprofit'",
+    series: (p) =>
+      byFyShareSum(p.sources, (r) => r.fiscal_year, (r) => Number(r.amount_nominal) || 0, isCat('nonprofit'))
+        .map((x) => ({ fiscal_year: x.fy, value: x.num })),
   },
   {
     key: 'federalShare',
-    label: 'Federal share',
+    label: 'Federal share (%)',
     description: 'Federal funds as a share of total R&D, per fiscal year.',
     format: 'percent',
-    series: (p) => {
-      const byFy = new Map<number, { fed: number; total: number }>();
-      for (const r of p.sources) {
-        const acc = byFy.get(r.fiscal_year) ?? { fed: 0, total: 0 };
-        const amt = Number(r.amount_nominal) || 0;
-        acc.total += amt;
-        if (r.source_category === 'federal') acc.fed += amt;
-        byFy.set(r.fiscal_year, acc);
-      }
-      return Array.from(byFy.entries())
-        .sort((a, b) => a[0] - b[0])
-        .map(([fy, v]) => ({
-          fiscal_year: fy,
-          value: v.total > 0 ? v.fed / v.total : 0,
-        }));
-    },
-  },
-  {
-    key: 'piCount',
-    label: '# of PIs',
-    description:
-      'Distinct federally-funded PIs receiving any NSF or NIH grant in the fiscal year. Full universe — includes co-PIs via the NIH PI bridge.',
-    format: 'count',
+    source: 'agg_uni_source_split',
     series: (p) =>
-      p.piMetrics.map((r) => ({
-        fiscal_year: r.fiscal_year,
-        value: Number(r.distinct_pi_count) || 0,
-      })),
+      byFyShareSum(p.sources, (r) => r.fiscal_year, (r) => Number(r.amount_nominal) || 0, isCat('federal'))
+        .map((x) => ({ fiscal_year: x.fy, value: x.den > 0 ? x.num / x.den : 0 })),
   },
   {
     key: 'stemShare',
-    label: 'STEM share',
+    label: 'STEM share (%)',
     description: 'Share of HERD R&D in STEM field categories, per fiscal year.',
     format: 'percent',
+    source: 'agg_uni_field_mix',
+    series: (p) =>
+      byFyShareSum(p.fieldMix, (r) => r.fiscal_year, (r) => Number(r.amount_nominal) || 0, (r) => Boolean(r.is_stem))
+        .map((x) => ({ fiscal_year: x.fy, value: x.den > 0 ? x.num / x.den : 0 })),
+  },
+  {
+    key: 'piCount',
+    label: '# of federal PIs',
+    description:
+      'Distinct federally-funded PIs (NSF lead + NIH lead+co-PIs) per fiscal year. ' +
+      'FY2005 masked due to dim_institution entity-resolution discontinuity. ' +
+      'NSF contributes lead PI only (no public co-PI bridge) so this is a floor for NSF.',
+    format: 'count',
+    source: 'agg_uni_pi_universe.distinct_pi_count',
+    maskFy05: true,
+    series: (p) =>
+      p.piMetrics.map((r) => ({
+        fiscal_year: r.fiscal_year,
+        value: PI_MASK_FYS.has(r.fiscal_year) ? null : (Number(r.distinct_pi_count) || 0),
+      })),
+  },
+  {
+    key: 'amountPerPi',
+    label: 'Federal $ per PI',
+    description:
+      'Total NSF + NIH dollars divided by distinct PI count. FY2005 masked.',
+    format: 'dollars',
+    source: 'agg_uni_pi_universe.amount_per_pi',
+    maskFy05: true,
+    series: (p) =>
+      p.piMetrics.map((r) => ({
+        fiscal_year: r.fiscal_year,
+        value: PI_MASK_FYS.has(r.fiscal_year) ? null : (Number(r.amount_per_pi) || 0),
+      })),
+  },
+  {
+    key: 'agencyHHI',
+    label: 'Agency HHI',
+    description:
+      'Herfindahl–Hirschman Index of federal-agency mix (sum of squared % shares, 0–10,000). ' +
+      'Higher = more concentrated in one agency.',
+    format: 'index',
+    source: 'agg_uni_agency_split (computed at query time)',
     series: (p) => {
-      const byFy = new Map<number, { stem: number; total: number }>();
-      for (const r of p.fieldMix) {
-        const acc = byFy.get(r.fiscal_year) ?? { stem: 0, total: 0 };
-        const amt = Number(r.amount_nominal) || 0;
-        acc.total += amt;
-        if (r.is_stem) acc.stem += amt;
-        byFy.set(r.fiscal_year, acc);
-      }
-      return Array.from(byFy.entries())
+      const m = hhiByFy(
+        p.agencies,
+        (r) => r.fiscal_year,
+        (r) => r.agency_bucket,
+        (r) => Number(r.amount_nominal) || 0,
+      );
+      return Array.from(m.entries())
         .sort((a, b) => a[0] - b[0])
-        .map(([fy, v]) => ({
-          fiscal_year: fy,
-          value: v.total > 0 ? v.stem / v.total : 0,
-        }));
+        .map(([fy, v]) => ({ fiscal_year: fy, value: v }));
     },
+  },
+  {
+    key: 'fieldShannon',
+    label: 'Field-mix entropy',
+    description:
+      'Shannon entropy of HERD field-of-science mix (nats). Higher = more diverse research portfolio.',
+    format: 'index',
+    source: 'agg_uni_field_mix (computed at query time)',
+    series: (p) => {
+      const m = shannonByFy(
+        p.fieldMix,
+        (r) => r.fiscal_year,
+        (r) => r.field_category,
+        (r) => Number(r.amount_nominal) || 0,
+      );
+      return Array.from(m.entries())
+        .sort((a, b) => a[0] - b[0])
+        .map(([fy, v]) => ({ fiscal_year: fy, value: v }));
+    },
+  },
+  {
+    key: 'cov5yr',
+    label: '5-yr funding CoV',
+    description:
+      'Coefficient of variation of total R&D over the trailing 5 years, per agg_uni_concentration. ' +
+      'Higher = more volatile funding.',
+    format: 'percent',
+    source: 'agg_uni_concentration.cov_5yr',
+    series: (p) =>
+      p.concentration.map((r) => ({
+        fiscal_year: r.fiscal_year,
+        value: r.cov_5yr === null || r.cov_5yr === undefined ? null : Number(r.cov_5yr),
+      })),
+  },
+  {
+    key: 'shareOfState',
+    label: 'Share of state R&D (%)',
+    description:
+      "This university's HERD R&D as a share of the state's total HERD R&D, per fiscal year.",
+    format: 'percent',
+    source: 'agg_uni_state_context.share_of_state',
+    series: (p) =>
+      p.stateContext.map((r) => ({
+        fiscal_year: r.fiscal_year,
+        value: r.share_of_state === null || r.share_of_state === undefined
+          ? null
+          : Number(r.share_of_state),
+      })),
   },
 ];
 
@@ -110,6 +351,7 @@ function formatMetricValue(v: number | null, format: MetricFormat): string {
   if (v === null || v === undefined || Number.isNaN(v)) return '—';
   if (format === 'dollars') return formatDollars(v);
   if (format === 'percent') return formatPercent(v, { decimals: 1 });
+  if (format === 'index') return v.toLocaleString('en-US', { maximumFractionDigits: 0 });
   return formatCount(v);
 }
 
@@ -119,13 +361,17 @@ interface LoadedUni {
   profile: UniversityProfile;
 }
 
+/* ────────────────────── Component ────────────────────── */
+
 export default function ComparePage() {
   const { ready, error } = useDuckDB();
   const [picks, setPicks] = useState<string[]>([]);
   const [loaded, setLoaded] = useState<Record<string, UniversityProfile>>({});
   const [loadingSk, setLoadingSk] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [metricKey, setMetricKey] = useState<MetricDef['key']>('totalRd');
+  const [metricKey, setMetricKey] = useState<string>('totalRdNominal');
+  const [startFy, setStartFy] = useState<number>(DEFAULT_START);
+  const [endFy, setEndFy] = useState<number>(DEFAULT_END);
 
   // Fetch UniversityProfile each time picks grows by one. Cleanup unused entries.
   useEffect(() => {
@@ -145,7 +391,6 @@ export default function ComparePage() {
         if (cancelled) return;
         setLoadError(e instanceof Error ? e.message : String(e));
         setLoadingSk((cur) => (cur === next ? null : cur));
-        // Drop the failed pick so the user can retry.
         setPicks((prev) => prev.filter((s) => s !== next));
       });
     return () => {
@@ -153,18 +398,15 @@ export default function ComparePage() {
     };
   }, [ready, picks, loaded]);
 
-  // Prune loaded entries no longer in picks (keeps memory bounded).
+  // Prune loaded entries no longer in picks.
   useEffect(() => {
     setLoaded((prev) => {
       const picksSet = new Set(picks);
       let changed = false;
       const out: Record<string, UniversityProfile> = {};
       for (const [sk, p] of Object.entries(prev)) {
-        if (picksSet.has(sk)) {
-          out[sk] = p;
-        } else {
-          changed = true;
-        }
+        if (picksSet.has(sk)) out[sk] = p;
+        else changed = true;
       }
       return changed ? out : prev;
     });
@@ -174,16 +416,12 @@ export default function ComparePage() {
     if (picks.includes(sk) || picks.length >= MAX_PICKS) return;
     setPicks((prev) => [...prev, sk]);
   };
+  const removePick = (sk: string) => setPicks((prev) => prev.filter((p) => p !== sk));
 
-  const removePick = (sk: string) => {
-    setPicks((prev) => prev.filter((p) => p !== sk));
-  };
-
-  const orderedUnis: LoadedUni[] = useMemo(() => {
-    return picks
-      .filter((sk) => loaded[sk])
-      .map((sk) => ({ sk, profile: loaded[sk] }));
-  }, [picks, loaded]);
+  const orderedUnis: LoadedUni[] = useMemo(
+    () => picks.filter((sk) => loaded[sk]).map((sk) => ({ sk, profile: loaded[sk] })),
+    [picks, loaded],
+  );
 
   const activeMetric = METRIC_BY_KEY.get(metricKey) ?? METRICS[0];
 
@@ -203,16 +441,20 @@ export default function ComparePage() {
       <PageHeader
         eyebrow="Compare"
         title="Side-by-side university comparison"
-        description={`Pick ${MIN_PICKS}–${MAX_PICKS} universities and a metric. Each university renders as its own small multiple so trajectories line up at a glance.`}
+        description={`Pick ${MIN_PICKS}–${MAX_PICKS} HERD-tracked universities, a metric, and a year range. Charts + a tabular view below.`}
       />
 
       <Card>
         <CardContent className="space-y-5">
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <MetricPicker
-              value={metricKey}
-              onChange={setMetricKey}
-              description={activeMetric.description}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <MetricPicker value={metricKey} onChange={setMetricKey} />
+            <YearRangePicker
+              startFy={startFy}
+              endFy={endFy}
+              onChange={(s, e) => {
+                setStartFy(s);
+                setEndFy(e);
+              }}
             />
           </div>
 
@@ -235,7 +477,21 @@ export default function ComparePage() {
       {picks.length < MIN_PICKS ? (
         <EmptyState minPicks={MIN_PICKS} currentPicks={picks.length} />
       ) : (
-        <SmallMultiples unis={orderedUnis} metric={activeMetric} loadingSk={loadingSk} />
+        <>
+          <SmallMultiples
+            unis={orderedUnis}
+            metric={activeMetric}
+            loadingSk={loadingSk}
+            startFy={startFy}
+            endFy={endFy}
+          />
+          <CompareTable
+            unis={orderedUnis}
+            metric={activeMetric}
+            startFy={startFy}
+            endFy={endFy}
+          />
+        </>
       )}
     </div>
   );
@@ -246,13 +502,12 @@ export default function ComparePage() {
 function MetricPicker({
   value,
   onChange,
-  description,
 }: {
-  value: MetricDef['key'];
-  onChange: (v: MetricDef['key']) => void;
-  description: string;
+  value: string;
+  onChange: (v: string) => void;
 }) {
   const id = useId();
+  const description = METRIC_BY_KEY.get(value)?.description ?? '';
   return (
     <div className="flex flex-col gap-2">
       <label
@@ -264,16 +519,107 @@ function MetricPicker({
       <select
         id={id}
         value={value}
-        onChange={(e) => onChange(e.target.value as MetricDef['key'])}
+        onChange={(e) => onChange(e.target.value)}
         className="h-9 rounded-md border border-rule bg-surface-elevated px-3 text-sm tnum focus:outline-none focus:ring-2 focus:ring-ring"
       >
-        {METRICS.map((m) => (
-          <option key={m.key} value={m.key}>
-            {m.label}
-          </option>
-        ))}
+        <optgroup label="Funding totals (HERD)">
+          {METRICS.filter((m) =>
+            ['totalRdNominal', 'totalRdReal', 'federal', 'state', 'industry', 'institutional', 'nonprofit'].includes(m.key),
+          ).map((m) => (
+            <option key={m.key} value={m.key}>
+              {m.label}
+            </option>
+          ))}
+        </optgroup>
+        <optgroup label="Shares & composition">
+          {METRICS.filter((m) => ['federalShare', 'stemShare', 'shareOfState'].includes(m.key)).map((m) => (
+            <option key={m.key} value={m.key}>
+              {m.label}
+            </option>
+          ))}
+        </optgroup>
+        <optgroup label="People & PIs (NSF + NIH)">
+          {METRICS.filter((m) => ['piCount', 'amountPerPi'].includes(m.key)).map((m) => (
+            <option key={m.key} value={m.key}>
+              {m.label}
+            </option>
+          ))}
+        </optgroup>
+        <optgroup label="Concentration & diversity">
+          {METRICS.filter((m) => ['agencyHHI', 'fieldShannon', 'cov5yr'].includes(m.key)).map((m) => (
+            <option key={m.key} value={m.key}>
+              {m.label}
+            </option>
+          ))}
+        </optgroup>
       </select>
       <p className="text-[11px] italic text-text-tertiary max-w-md">{description}</p>
+    </div>
+  );
+}
+
+/* ────────────────────── Year range picker ────────────────────── */
+
+function YearRangePicker({
+  startFy,
+  endFy,
+  onChange,
+}: {
+  startFy: number;
+  endFy: number;
+  onChange: (start: number, end: number) => void;
+}) {
+  const startId = useId();
+  const endId = useId();
+  const years = Array.from({ length: FY_MAX - FY_MIN + 1 }, (_, i) => FY_MIN + i);
+
+  return (
+    <div className="flex flex-col gap-2">
+      <span className="text-[11px] uppercase tracking-wider text-text-tertiary">
+        Year range
+      </span>
+      <div className="flex items-center gap-2">
+        <label htmlFor={startId} className="sr-only">
+          Start fiscal year
+        </label>
+        <select
+          id={startId}
+          value={startFy}
+          onChange={(e) => {
+            const s = Number(e.target.value);
+            onChange(s, Math.max(s, endFy));
+          }}
+          className="h-9 flex-1 rounded-md border border-rule bg-surface-elevated px-3 text-sm tnum focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          {years.map((y) => (
+            <option key={y} value={y}>
+              FY{y}
+            </option>
+          ))}
+        </select>
+        <span className="text-xs text-text-tertiary">to</span>
+        <label htmlFor={endId} className="sr-only">
+          End fiscal year
+        </label>
+        <select
+          id={endId}
+          value={endFy}
+          onChange={(e) => {
+            const ev = Number(e.target.value);
+            onChange(Math.min(startFy, ev), ev);
+          }}
+          className="h-9 flex-1 rounded-md border border-rule bg-surface-elevated px-3 text-sm tnum focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          {years.map((y) => (
+            <option key={y} value={y}>
+              FY{y}
+            </option>
+          ))}
+        </select>
+      </div>
+      <p className="text-[11px] italic text-text-tertiary">
+        Default is the last 5 FYs (FY2020–FY2024). HERD coverage starts FY2005.
+      </p>
     </div>
   );
 }
@@ -344,7 +690,7 @@ function CohortPicker({
       )}
 
       {loadError && (
-        <p className="text-xs text-negative">Couldn't load that university: {loadError}</p>
+        <p className="text-xs text-negative">Couldn&apos;t load that university: {loadError}</p>
       )}
     </div>
   );
@@ -368,7 +714,6 @@ function SearchTypeahead({
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const listboxId = useId();
 
-  // Debounced search — only kick off after the user stops typing 150ms.
   useEffect(() => {
     if (!ready) {
       setResults([]);
@@ -395,7 +740,6 @@ function SearchTypeahead({
     };
   }, [ready, q]);
 
-  // Outside click closes the dropdown.
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
       if (!wrapRef.current) return;
@@ -444,7 +788,6 @@ function SearchTypeahead({
               <button
                 type="button"
                 onMouseDown={(e) => {
-                  // mousedown (not click) so focus loss doesn't cancel the add
                   e.preventDefault();
                   onPick(r.sk);
                   setQ('');
@@ -495,25 +838,39 @@ function EmptyState({ minPicks, currentPicks }: { minPicks: number; currentPicks
 
 /* ────────────────────── Small multiples grid ────────────────────── */
 
+function clipToRange(points: SeriesPoint[], start: number, end: number): SeriesPoint[] {
+  return points.filter((p) => p.fiscal_year >= start && p.fiscal_year <= end);
+}
+
 function SmallMultiples({
   unis,
   metric,
   loadingSk,
+  startFy,
+  endFy,
 }: {
   unis: LoadedUni[];
   metric: MetricDef;
   loadingSk: string | null;
+  startFy: number;
+  endFy: number;
 }) {
-  // Compute the shared Y-domain across every selected uni so panels are
-  // directly comparable. Each uni's max defines the local label / footnote.
   const seriesPerUni = useMemo(
-    () => unis.map((u) => ({ sk: u.sk, name: u.profile.name, state: u.profile.state, points: metric.series(u.profile) })),
-    [unis, metric],
+    () =>
+      unis.map((u) => ({
+        sk: u.sk,
+        name: u.profile.name,
+        state: u.profile.state,
+        points: clipToRange(metric.series(u.profile), startFy, endFy),
+      })),
+    [unis, metric, startFy, endFy],
   );
 
   const sharedMax = useMemo(() => {
     let m = 0;
-    for (const u of seriesPerUni) for (const p of u.points) if (p.value > m) m = p.value;
+    for (const u of seriesPerUni) for (const p of u.points) {
+      if (p.value !== null && p.value > m) m = p.value;
+    }
     return m;
   }, [seriesPerUni]);
 
@@ -533,7 +890,9 @@ function SmallMultiples({
   return (
     <section className={`grid grid-cols-1 ${colCount} gap-4 md:gap-6`} aria-label="Comparison panels">
       {seriesPerUni.map((u) => {
-        const data = u.points.map((p) => ({ fiscal_year: p.fiscal_year, value: p.value }));
+        const data = u.points
+          .filter((p) => p.value !== null)
+          .map((p) => ({ fiscal_year: p.fiscal_year, value: p.value as number }));
         const latest = data.length > 0 ? data[data.length - 1] : null;
         const peak = data.reduce<{ fy: number; v: number } | null>((acc, p) => {
           if (!acc || p.value > acc.v) return { fy: p.fiscal_year, v: p.value };
@@ -549,9 +908,9 @@ function SmallMultiples({
                 dek={
                   latest
                     ? `FY${latest.fiscal_year}: ${formatMetricValue(latest.value, metric.format)}`
-                    : 'No data reported'
+                    : 'No data in range'
                 }
-                source={`${metric.label} · per-FY series`}
+                source={`${metric.label} · FY${startFy}–FY${endFy}`}
                 note={
                   peak && data.length > 1
                     ? `Peak FY${peak.fy} · ${formatMetricValue(peak.v, metric.format)}`
@@ -560,7 +919,7 @@ function SmallMultiples({
               >
                 {data.length === 0 ? (
                   <div className="flex h-[220px] items-center justify-center rounded-md border border-dashed border-rule text-xs text-text-tertiary">
-                    No {metric.label.toLowerCase()} data reported.
+                    No {metric.label.toLowerCase()} data in this range.
                   </div>
                 ) : (
                   <BarChart
@@ -570,11 +929,6 @@ function SmallMultiples({
                     height={220}
                     showLegend={false}
                     yFormat={yFormat}
-                    // Use the same domain top across all panels so heights are
-                    // directly comparable. Recharts respects this on the YAxis
-                    // through the chart's "domain" prop, but we don't expose it
-                    // here — instead we lean on the shared yFormat and the
-                    // per-uni "latest" / "peak" labels for context.
                   />
                 )}
               </ChartFrame>
@@ -591,12 +945,154 @@ function SmallMultiples({
           </CardContent>
         </Card>
       )}
-      {/* Avoid orphan-grid notice when sharedMax is 0 across all unis */}
       {sharedMax === 0 && unis.length > 0 && (
         <p className="col-span-full text-[11px] italic text-text-tertiary">
-          No data reported across the selected cohort for this metric.
+          No data reported across the selected cohort for this metric in this range.
         </p>
       )}
     </section>
   );
+}
+
+/* ────────────────────── Table view + CSV export ────────────────────── */
+
+function CompareTable({
+  unis,
+  metric,
+  startFy,
+  endFy,
+}: {
+  unis: LoadedUni[];
+  metric: MetricDef;
+  startFy: number;
+  endFy: number;
+}) {
+  const years = useMemo(() => {
+    const out: number[] = [];
+    for (let y = startFy; y <= endFy; y++) out.push(y);
+    return out;
+  }, [startFy, endFy]);
+
+  // Build a uni → (fy → value|null) lookup.
+  const lookup = useMemo(() => {
+    const m = new Map<string, Map<number, number | null>>();
+    for (const u of unis) {
+      const pts = metric.series(u.profile);
+      const inner = new Map<number, number | null>();
+      for (const p of pts) inner.set(p.fiscal_year, p.value);
+      m.set(u.sk, inner);
+    }
+    return m;
+  }, [unis, metric]);
+
+  const csvHref = useMemo(() => {
+    const head = ['fiscal_year', ...unis.map((u) => `${u.profile.name} (${u.profile.state ?? ''})`)];
+    const rows: string[] = [head.map(csvCell).join(',')];
+    for (const y of years) {
+      const cells = [
+        String(y),
+        ...unis.map((u) => {
+          const v = lookup.get(u.sk)?.get(y);
+          if (v === null || v === undefined || Number.isNaN(v)) return '';
+          // CSV: numeric raw value (no formatting) so downstream tools can parse.
+          return String(v);
+        }),
+      ];
+      rows.push(cells.map(csvCell).join(','));
+    }
+    const csv = rows.join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    return URL.createObjectURL(blob);
+  }, [years, unis, lookup]);
+
+  const csvName = `compare_${metric.key}_FY${startFy}-FY${endFy}.csv`;
+
+  return (
+    <Card>
+      <CardContent className="space-y-4">
+        <div className="flex flex-col gap-1 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h2 className="h-section">Table view</h2>
+            <p className="text-[11px] italic text-text-tertiary">
+              Rows = fiscal year, columns = university. Same metric as charts above. Source:{' '}
+              <code className="text-[11px] bg-accent-muted/40 rounded px-1">{metric.source}</code>.
+            </p>
+          </div>
+          <a
+            href={csvHref}
+            download={csvName}
+            className="inline-flex h-9 items-center gap-2 self-start rounded-md border border-rule bg-surface-elevated px-3 text-sm hover:bg-accent-soft/40 focus:outline-none focus:ring-2 focus:ring-ring md:self-auto"
+          >
+            <Download className="h-3.5 w-3.5" /> Download CSV
+          </a>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="border-b border-rule">
+              <tr>
+                <th
+                  scope="col"
+                  className="py-2 pr-3 text-left text-[11px] uppercase tracking-wider text-text-tertiary"
+                >
+                  Fiscal year
+                </th>
+                {unis.map((u) => (
+                  <th
+                    key={u.sk}
+                    scope="col"
+                    className="py-2 px-3 text-right text-[11px] uppercase tracking-wider text-text-tertiary"
+                  >
+                    <span className="block truncate" title={u.profile.name}>
+                      {u.profile.name}
+                    </span>
+                    {u.profile.state && (
+                      <span className="block text-[10px] font-normal normal-case text-text-tertiary tnum">
+                        {u.profile.state}
+                      </span>
+                    )}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-rule">
+              {years.map((y) => (
+                <tr key={y}>
+                  <td className="py-2 pr-3 tnum text-text-secondary">{formatFy(y)}</td>
+                  {unis.map((u) => {
+                    const v = lookup.get(u.sk)?.get(y);
+                    const masked = metric.maskFy05 && PI_MASK_FYS.has(y);
+                    return (
+                      <td key={u.sk} className="py-2 px-3 text-right tnum">
+                        {masked ? (
+                          <span
+                            className="text-text-tertiary italic"
+                            title="FY2005 masked: dim_institution entity-resolution discontinuity"
+                          >
+                            masked
+                          </span>
+                        ) : (
+                          formatMetricValue(
+                            v === undefined || v === null ? null : v,
+                            metric.format,
+                          )
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+/** Escape a CSV cell — quote if it contains comma, quote, or newline. */
+function csvCell(s: string): string {
+  if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+    return `"${s.replace(/"/g, '""')}"`;
+  }
+  return s;
 }
