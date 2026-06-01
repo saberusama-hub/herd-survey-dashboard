@@ -26,12 +26,8 @@ import { ChartFrame } from '@/components/editorial/ChartFrame';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/Card';
 import { formatCount, formatDollars, formatFy, formatPercent } from '@/lib/format';
-import {
-  type UniversityProfile,
-  getUniversityProfile,
-  searchInstitutions,
-} from '@/lib/queries';
-import { Search, X, Download } from 'lucide-react';
+import { type UniversityProfile, getUniversityProfile, searchInstitutions } from '@/lib/queries';
+import { Download, Search, X } from 'lucide-react';
 
 const MIN_PICKS = 2;
 const MAX_PICKS = 5;
@@ -163,8 +159,7 @@ const METRICS: MetricDef[] = [
     description: 'HERD-reported total R&D expenditure per fiscal year, nominal dollars.',
     format: 'dollars',
     source: 'agg_uni_total_rd.total_rd_nominal',
-    series: (p) =>
-      p.totalRd.map((r) => ({ fiscal_year: r.fiscal_year, value: Number(r.total_rd_nominal) || 0 })),
+    series: (p) => p.totalRd.map((r) => ({ fiscal_year: r.fiscal_year, value: Number(r.total_rd_nominal) || 0 })),
   },
   {
     key: 'totalRdReal',
@@ -172,8 +167,7 @@ const METRICS: MetricDef[] = [
     description: 'Total R&D in constant FY2024 dollars (CPI-U deflated).',
     format: 'dollars',
     source: 'agg_uni_total_rd.total_rd_real',
-    series: (p) =>
-      p.totalRd.map((r) => ({ fiscal_year: r.fiscal_year, value: Number(r.total_rd_real) || 0 })),
+    series: (p) => p.totalRd.map((r) => ({ fiscal_year: r.fiscal_year, value: Number(r.total_rd_real) || 0 })),
   },
   {
     key: 'federal',
@@ -182,8 +176,12 @@ const METRICS: MetricDef[] = [
     format: 'dollars',
     source: "agg_uni_source_split where source_category='federal'",
     series: (p) =>
-      byFyShareSum(p.sources, (r) => r.fiscal_year, (r) => Number(r.amount_nominal) || 0, isCat('federal'))
-        .map((x) => ({ fiscal_year: x.fy, value: x.num })),
+      byFyShareSum(
+        p.sources,
+        (r) => r.fiscal_year,
+        (r) => Number(r.amount_nominal) || 0,
+        isCat('federal'),
+      ).map((x) => ({ fiscal_year: x.fy, value: x.num })),
   },
   {
     key: 'state',
@@ -192,8 +190,12 @@ const METRICS: MetricDef[] = [
     format: 'dollars',
     source: "agg_uni_source_split where source_category='state'",
     series: (p) =>
-      byFyShareSum(p.sources, (r) => r.fiscal_year, (r) => Number(r.amount_nominal) || 0, isCat('state'))
-        .map((x) => ({ fiscal_year: x.fy, value: x.num })),
+      byFyShareSum(
+        p.sources,
+        (r) => r.fiscal_year,
+        (r) => Number(r.amount_nominal) || 0,
+        isCat('state'),
+      ).map((x) => ({ fiscal_year: x.fy, value: x.num })),
   },
   {
     key: 'industry',
@@ -202,18 +204,26 @@ const METRICS: MetricDef[] = [
     format: 'dollars',
     source: "agg_uni_source_split where source_category='industry'",
     series: (p) =>
-      byFyShareSum(p.sources, (r) => r.fiscal_year, (r) => Number(r.amount_nominal) || 0, isCat('industry'))
-        .map((x) => ({ fiscal_year: x.fy, value: x.num })),
+      byFyShareSum(
+        p.sources,
+        (r) => r.fiscal_year,
+        (r) => Number(r.amount_nominal) || 0,
+        isCat('industry'),
+      ).map((x) => ({ fiscal_year: x.fy, value: x.num })),
   },
   {
     key: 'institutional',
     label: 'Institutional R&D ($)',
-    description: "HERD institutional (own funds) R&D dollars per fiscal year.",
+    description: 'HERD institutional (own funds) R&D dollars per fiscal year.',
     format: 'dollars',
     source: "agg_uni_source_split where source_category='institutional'",
     series: (p) =>
-      byFyShareSum(p.sources, (r) => r.fiscal_year, (r) => Number(r.amount_nominal) || 0, isCat('institutional'))
-        .map((x) => ({ fiscal_year: x.fy, value: x.num })),
+      byFyShareSum(
+        p.sources,
+        (r) => r.fiscal_year,
+        (r) => Number(r.amount_nominal) || 0,
+        isCat('institutional'),
+      ).map((x) => ({ fiscal_year: x.fy, value: x.num })),
   },
   {
     key: 'nonprofit',
@@ -222,8 +232,12 @@ const METRICS: MetricDef[] = [
     format: 'dollars',
     source: "agg_uni_source_split where source_category='nonprofit'",
     series: (p) =>
-      byFyShareSum(p.sources, (r) => r.fiscal_year, (r) => Number(r.amount_nominal) || 0, isCat('nonprofit'))
-        .map((x) => ({ fiscal_year: x.fy, value: x.num })),
+      byFyShareSum(
+        p.sources,
+        (r) => r.fiscal_year,
+        (r) => Number(r.amount_nominal) || 0,
+        isCat('nonprofit'),
+      ).map((x) => ({ fiscal_year: x.fy, value: x.num })),
   },
   {
     key: 'federalShare',
@@ -232,8 +246,12 @@ const METRICS: MetricDef[] = [
     format: 'percent',
     source: 'agg_uni_source_split',
     series: (p) =>
-      byFyShareSum(p.sources, (r) => r.fiscal_year, (r) => Number(r.amount_nominal) || 0, isCat('federal'))
-        .map((x) => ({ fiscal_year: x.fy, value: x.den > 0 ? x.num / x.den : 0 })),
+      byFyShareSum(
+        p.sources,
+        (r) => r.fiscal_year,
+        (r) => Number(r.amount_nominal) || 0,
+        isCat('federal'),
+      ).map((x) => ({ fiscal_year: x.fy, value: x.den > 0 ? x.num / x.den : 0 })),
   },
   {
     key: 'stemShare',
@@ -242,8 +260,12 @@ const METRICS: MetricDef[] = [
     format: 'percent',
     source: 'agg_uni_field_mix',
     series: (p) =>
-      byFyShareSum(p.fieldMix, (r) => r.fiscal_year, (r) => Number(r.amount_nominal) || 0, (r) => Boolean(r.is_stem))
-        .map((x) => ({ fiscal_year: x.fy, value: x.den > 0 ? x.num / x.den : 0 })),
+      byFyShareSum(
+        p.fieldMix,
+        (r) => r.fiscal_year,
+        (r) => Number(r.amount_nominal) || 0,
+        (r) => Boolean(r.is_stem),
+      ).map((x) => ({ fiscal_year: x.fy, value: x.den > 0 ? x.num / x.den : 0 })),
   },
   {
     key: 'piCount',
@@ -258,21 +280,20 @@ const METRICS: MetricDef[] = [
     series: (p) =>
       p.piMetrics.map((r) => ({
         fiscal_year: r.fiscal_year,
-        value: PI_MASK_FYS.has(r.fiscal_year) ? null : (Number(r.distinct_pi_count) || 0),
+        value: PI_MASK_FYS.has(r.fiscal_year) ? null : Number(r.distinct_pi_count) || 0,
       })),
   },
   {
     key: 'amountPerPi',
     label: 'Federal $ per PI',
-    description:
-      'Total NSF + NIH dollars divided by distinct PI count. FY2005 masked.',
+    description: 'Total NSF + NIH dollars divided by distinct PI count. FY2005 masked.',
     format: 'dollars',
     source: 'agg_uni_pi_universe.amount_per_pi',
     maskFy05: true,
     series: (p) =>
       p.piMetrics.map((r) => ({
         fiscal_year: r.fiscal_year,
-        value: PI_MASK_FYS.has(r.fiscal_year) ? null : (Number(r.amount_per_pi) || 0),
+        value: PI_MASK_FYS.has(r.fiscal_year) ? null : Number(r.amount_per_pi) || 0,
       })),
   },
   {
@@ -298,8 +319,7 @@ const METRICS: MetricDef[] = [
   {
     key: 'fieldShannon',
     label: 'Field-mix entropy',
-    description:
-      'Shannon entropy of HERD field-of-science mix (nats). Higher = more diverse research portfolio.',
+    description: 'Shannon entropy of HERD field-of-science mix (nats). Higher = more diverse research portfolio.',
     format: 'index',
     source: 'agg_uni_field_mix (computed at query time)',
     series: (p) => {
@@ -331,16 +351,13 @@ const METRICS: MetricDef[] = [
   {
     key: 'shareOfState',
     label: 'Share of state R&D (%)',
-    description:
-      "This university's HERD R&D as a share of the state's total HERD R&D, per fiscal year.",
+    description: "This university's HERD R&D as a share of the state's total HERD R&D, per fiscal year.",
     format: 'percent',
     source: 'agg_uni_state_context.share_of_state',
     series: (p) =>
       p.stateContext.map((r) => ({
         fiscal_year: r.fiscal_year,
-        value: r.share_of_state === null || r.share_of_state === undefined
-          ? null
-          : Number(r.share_of_state),
+        value: r.share_of_state === null || r.share_of_state === undefined ? null : Number(r.share_of_state),
       })),
   },
 ];
@@ -468,9 +485,7 @@ export default function ComparePage() {
             loadError={loadError}
           />
 
-          {!ready && picks.length === 0 && (
-            <p className="text-xs text-text-tertiary">Loading data layer…</p>
-          )}
+          {!ready && picks.length === 0 && <p className="text-xs text-text-tertiary">Loading data layer…</p>}
         </CardContent>
       </Card>
 
@@ -485,12 +500,7 @@ export default function ComparePage() {
             startFy={startFy}
             endFy={endFy}
           />
-          <CompareTable
-            unis={orderedUnis}
-            metric={activeMetric}
-            startFy={startFy}
-            endFy={endFy}
-          />
+          <CompareTable unis={orderedUnis} metric={activeMetric} startFy={startFy} endFy={endFy} />
         </>
       )}
     </div>
@@ -510,10 +520,7 @@ function MetricPicker({
   const description = METRIC_BY_KEY.get(value)?.description ?? '';
   return (
     <div className="flex flex-col gap-2">
-      <label
-        htmlFor={id}
-        className="text-[11px] uppercase tracking-wider text-text-tertiary"
-      >
+      <label htmlFor={id} className="text-[11px] uppercase tracking-wider text-text-tertiary">
         Metric
       </label>
       <select
@@ -524,7 +531,9 @@ function MetricPicker({
       >
         <optgroup label="Funding totals (HERD)">
           {METRICS.filter((m) =>
-            ['totalRdNominal', 'totalRdReal', 'federal', 'state', 'industry', 'institutional', 'nonprofit'].includes(m.key),
+            ['totalRdNominal', 'totalRdReal', 'federal', 'state', 'industry', 'institutional', 'nonprofit'].includes(
+              m.key,
+            ),
           ).map((m) => (
             <option key={m.key} value={m.key}>
               {m.label}
@@ -575,9 +584,7 @@ function YearRangePicker({
 
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-[11px] uppercase tracking-wider text-text-tertiary">
-        Year range
-      </span>
+      <span className="text-[11px] uppercase tracking-wider text-text-tertiary">Year range</span>
       <div className="flex items-center gap-2">
         <label htmlFor={startId} className="sr-only">
           Start fiscal year
@@ -644,16 +651,15 @@ function CohortPicker({
   loadError: string | null;
 }) {
   const remaining = MAX_PICKS - picks.length;
-  const placeholder = remaining > 0
-    ? `Search universities… (${remaining} slot${remaining === 1 ? '' : 's'} remaining)`
-    : `${MAX_PICKS} universities selected — remove one to add another`;
+  const placeholder =
+    remaining > 0
+      ? `Search universities… (${remaining} slot${remaining === 1 ? '' : 's'} remaining)`
+      : `${MAX_PICKS} universities selected — remove one to add another`;
 
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2 min-h-[34px]">
-        {picks.length === 0 && (
-          <span className="text-xs text-text-tertiary">No universities selected yet.</span>
-        )}
+        {picks.length === 0 && <span className="text-xs text-text-tertiary">No universities selected yet.</span>}
         {picks.map((sk) => {
           const name = loaded[sk]?.name ?? (sk === loadingSk ? 'Loading…' : sk);
           return (
@@ -662,11 +668,7 @@ function CohortPicker({
               className="inline-flex items-center gap-2 rounded-md border border-rule bg-surface-elevated px-3 py-1.5 text-sm"
             >
               <span className="font-medium tnum">{name}</span>
-              {loaded[sk]?.state && (
-                <span className="text-[11px] text-text-tertiary tnum">
-                  {loaded[sk].state}
-                </span>
-              )}
+              {loaded[sk]?.state && <span className="text-[11px] text-text-tertiary tnum">{loaded[sk].state}</span>}
               <button
                 type="button"
                 onClick={() => onRemove(sk)}
@@ -681,17 +683,10 @@ function CohortPicker({
       </div>
 
       {picks.length < MAX_PICKS && (
-        <SearchTypeahead
-          excludeSks={picks}
-          onPick={onAdd}
-          disabled={disabled}
-          placeholder={placeholder}
-        />
+        <SearchTypeahead excludeSks={picks} onPick={onAdd} disabled={disabled} placeholder={placeholder} />
       )}
 
-      {loadError && (
-        <p className="text-xs text-negative">Couldn&apos;t load that university: {loadError}</p>
-      )}
+      {loadError && <p className="text-xs text-negative">Couldn&apos;t load that university: {loadError}</p>}
     </div>
   );
 }
@@ -780,11 +775,10 @@ function SearchTypeahead({
       {showDropdown && (
         <ul
           id={listboxId}
-          role="listbox"
           className="absolute z-20 left-0 right-0 mt-1 max-h-72 overflow-y-auto rounded-md border border-rule bg-surface-elevated shadow-md divide-y divide-rule"
         >
           {filtered.map((r) => (
-            <li key={r.sk} role="option" aria-selected={false}>
+            <li key={r.sk} aria-selected={false}>
               <button
                 type="button"
                 onMouseDown={(e) => {
@@ -797,9 +791,7 @@ function SearchTypeahead({
                 className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-accent-soft/40 focus:bg-accent-soft/40 focus:outline-none"
               >
                 <span className="truncate font-medium">{r.name}</span>
-                {r.state && (
-                  <span className="text-[11px] text-text-tertiary tnum">{r.state}</span>
-                )}
+                {r.state && <span className="text-[11px] text-text-tertiary tnum">{r.state}</span>}
               </button>
             </li>
           ))}
@@ -821,12 +813,10 @@ function EmptyState({ minPicks, currentPicks }: { minPicks: number; currentPicks
   return (
     <div className="rounded-md border border-dashed border-rule bg-surface p-10 text-center">
       <p className="text-sm text-text-secondary">
-        Add {need === 1 ? 'one more university' : `at least ${need} more universities`} to start
-        comparing.
+        Add {need === 1 ? 'one more university' : `at least ${need} more universities`} to start comparing.
       </p>
       <p className="mt-2 text-[11px] text-text-tertiary">
-        Don&rsquo;t know where to start? Try a marquee R1 like Johns Hopkins, Michigan, or MIT —
-        or jump to the{' '}
+        Don&rsquo;t know where to start? Try a marquee R1 like Johns Hopkins, Michigan, or MIT — or jump to the{' '}
         <Link href="/universities" className="underline hover:text-text-secondary">
           full directory
         </Link>
@@ -868,9 +858,10 @@ function SmallMultiples({
 
   const sharedMax = useMemo(() => {
     let m = 0;
-    for (const u of seriesPerUni) for (const p of u.points) {
-      if (p.value !== null && p.value > m) m = p.value;
-    }
+    for (const u of seriesPerUni)
+      for (const p of u.points) {
+        if (p.value !== null && p.value > m) m = p.value;
+      }
     return m;
   }, [seriesPerUni]);
 
@@ -1030,10 +1021,7 @@ function CompareTable({
           <table className="w-full text-sm">
             <thead className="border-b border-rule">
               <tr>
-                <th
-                  scope="col"
-                  className="py-2 pr-3 text-left text-[11px] uppercase tracking-wider text-text-tertiary"
-                >
+                <th scope="col" className="py-2 pr-3 text-left text-[11px] uppercase tracking-wider text-text-tertiary">
                   Fiscal year
                 </th>
                 {unis.map((u) => (
@@ -1071,10 +1059,7 @@ function CompareTable({
                             masked
                           </span>
                         ) : (
-                          formatMetricValue(
-                            v === undefined || v === null ? null : v,
-                            metric.format,
-                          )
+                          formatMetricValue(v === undefined || v === null ? null : v, metric.format)
                         )}
                       </td>
                     );

@@ -131,34 +131,31 @@ export default function MethodologyPage() {
       <section className="space-y-4">
         <h2 className="h-section">Three data landmines</h2>
         <p className="text-text-secondary">
-          Three structural quirks in the source data shape what this dashboard can — and cannot — say.
-          They are surfaced here because every analyst working with federal R&amp;D data eventually trips on
-          them.
+          Three structural quirks in the source data shape what this dashboard can — and cannot — say. They are surfaced
+          here because every analyst working with federal R&amp;D data eventually trips on them.
         </p>
         <Card>
           <CardContent className="space-y-4 text-sm">
             <Caveat title="Vol 70 → Vol 71 taxonomy break (FY2015–FY2016)">
-              NCSES Federal Funds switched obligation taxonomies between Vol&nbsp;70 (through FY2015) and
-              Vol&nbsp;71 (FY2016 onward). Many agency categories were renamed and a few sub-agency rollups
-              changed parents. National NSF Federal Funds totals are flagged at the year level so charts can
-              indicate the discontinuity; per-institution streams (HERD Q09) do not carry this flag because
-              HERD itself is internally consistent.
+              NCSES Federal Funds switched obligation taxonomies between Vol&nbsp;70 (through FY2015) and Vol&nbsp;71
+              (FY2016 onward). Many agency categories were renamed and a few sub-agency rollups changed parents.
+              National NSF Federal Funds totals are flagged at the year level so charts can indicate the discontinuity;
+              per-institution streams (HERD Q09) do not carry this flag because HERD itself is internally consistent.
             </Caveat>
             <Caveat title="ARDES era — zero nonprofit dollars before FY2010">
-              The Academic R&amp;D Expenditure Survey (ARDES) that preceded HERD did not break out
-              nonprofit-source dollars at all. Source-of-funds rows where{' '}
+              The Academic R&amp;D Expenditure Survey (ARDES) that preceded HERD did not break out nonprofit-source
+              dollars at all. Source-of-funds rows where{' '}
               <code className="text-xs bg-accent-muted/40 rounded px-1">source = 'nonprofit'</code> and{' '}
-              <code className="text-xs bg-accent-muted/40 rounded px-1">fiscal_year &lt; 2010</code> are
-              structurally zero — not missing, not suppressed, simply not asked for. Sections 3 and 7
-              indicate the ARDES boundary where relevant.
+              <code className="text-xs bg-accent-muted/40 rounded px-1">fiscal_year &lt; 2010</code> are structurally
+              zero — not missing, not suppressed, simply not asked for. Sections 3 and 7 indicate the ARDES boundary
+              where relevant.
             </Caveat>
             <Caveat title="USAS PIID collision">
-              USASpending.gov keys contracts by{' '}
-              <code className="text-xs bg-accent-muted/40 rounded px-1">PIID</code> (procurement
-              instrument identifier). PIIDs are reused across agencies and sometimes across years for
-              modifications — collisions inflate naïve sum-by-PIID counts. The fact tables resolve this by
-              aggregating award-level outlays from the underlying transactions, not by counting distinct
-              PIIDs. Reconciliation deltas (§5) can still surface where the source-side join was imperfect.
+              USASpending.gov keys contracts by <code className="text-xs bg-accent-muted/40 rounded px-1">PIID</code>{' '}
+              (procurement instrument identifier). PIIDs are reused across agencies and sometimes across years for
+              modifications — collisions inflate naïve sum-by-PIID counts. The fact tables resolve this by aggregating
+              award-level outlays from the underlying transactions, not by counting distinct PIIDs. Reconciliation
+              deltas (§5) can still surface where the source-side join was imperfect.
             </Caveat>
           </CardContent>
         </Card>
@@ -167,11 +164,14 @@ export default function MethodologyPage() {
       <section className="space-y-4">
         <h2 className="h-section">30-topic research taxonomy</h2>
         <p className="text-text-secondary">
-          Section 7 of every profile and the <a className="text-accent hover:underline" href="/national#topics">/national #topics</a>{' '}
+          Section 7 of every profile and the{' '}
+          <a className="text-accent hover:underline" href="/national#topics">
+            /national #topics
+          </a>{' '}
           panel use a 30-topic taxonomy applied to grant text. For NSF the matcher reads
           <code className="text-xs bg-accent-muted/40 rounded px-1 mx-1">awd_titl_txt</code>+
-          <code className="text-xs bg-accent-muted/40 rounded px-1 mx-1">awd_abstr_narration</code> (full abstract text);
-          for NIH it reads
+          <code className="text-xs bg-accent-muted/40 rounded px-1 mx-1">awd_abstr_narration</code> (full abstract
+          text); for NIH it reads
           <code className="text-xs bg-accent-muted/40 rounded px-1 mx-1">project_title</code>+
           <code className="text-xs bg-accent-muted/40 rounded px-1 mx-1">project_terms</code>
           (structured MeSH-like terms). Topics are <strong>not</strong> mutually exclusive — a grant can match multiple,
@@ -180,7 +180,7 @@ export default function MethodologyPage() {
         <Card>
           <CardContent className="text-sm">
             <pre className="text-xs leading-relaxed overflow-x-auto">
-{`TOPICS = {
+              {`TOPICS = {
   "Artificial intelligence & ML":      \\b(artificial intelligence|machine learning|deep learning|
                                          neural network|transformer|large language model|LLM|
                                          reinforcement learning)\\b
@@ -239,14 +239,11 @@ export default function MethodologyPage() {
             </pre>
             <p className="text-text-secondary mt-3">
               Matching is case-insensitive (
-              <code className="text-xs bg-accent-muted/40 rounded px-1">
-                regexp_matches(text, pattern, 'i')
-              </code>{' '}
-              in DuckDB). One grant can carry multiple topics. Topic dollar totals attribute the grant's
-              full FY amount to every matching topic — overlap is intentional. Patterns are intentionally
-              conservative: a grant whose title and abstract never mention "machine learning" or
-              "artificial intelligence" will not register under <em>AI &amp; ML</em>, even if the
-              underlying method is ML.
+              <code className="text-xs bg-accent-muted/40 rounded px-1">regexp_matches(text, pattern, 'i')</code> in
+              DuckDB). One grant can carry multiple topics. Topic dollar totals attribute the grant's full FY amount to
+              every matching topic — overlap is intentional. Patterns are intentionally conservative: a grant whose
+              title and abstract never mention "machine learning" or "artificial intelligence" will not register under{' '}
+              <em>AI &amp; ML</em>, even if the underlying method is ML.
             </p>
           </CardContent>
         </Card>
@@ -255,31 +252,38 @@ export default function MethodologyPage() {
       <section className="space-y-4">
         <h2 className="h-section">Team-size methodology</h2>
         <p className="text-text-secondary">
-          Section 6 of every profile and <a className="text-accent hover:underline" href="/national#team-size">/national #team-size</a>{' '}
+          Section 6 of every profile and{' '}
+          <a className="text-accent hover:underline" href="/national#team-size">
+            /national #team-size
+          </a>{' '}
           bucket every grant by the number of PIs on it. The bucketing is identical for NSF and NIH:
         </p>
         <Card>
           <CardContent className="text-sm text-text-secondary space-y-2">
             <p>
-              <strong className="text-text-primary">NSF</strong>: each award has one row in
-              {' '}<code className="text-xs bg-accent-muted/40 rounded px-1">fact_nsf_award</code>; the
-              <code className="text-xs bg-accent-muted/40 rounded px-1 mx-1">n_pi</code> column counts the
-              full team (lead + co-PIs). NSF does NOT store individual co-PI surrogate keys per row, only
-              the lead PI's <code className="text-xs bg-accent-muted/40 rounded px-1">pi_sk</code>.
+              <strong className="text-text-primary">NSF</strong>: each award has one row in{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">fact_nsf_award</code>; the
+              <code className="text-xs bg-accent-muted/40 rounded px-1 mx-1">n_pi</code> column counts the full team
+              (lead + co-PIs). NSF does NOT store individual co-PI surrogate keys per row, only the lead PI's{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">pi_sk</code>.
             </p>
             <p>
-              <strong className="text-text-primary">NIH</strong>: each project has a row in
-              {' '}<code className="text-xs bg-accent-muted/40 rounded px-1">fact_nih_project</code> AND
-              one row per PI in
-              {' '}<code className="text-xs bg-accent-muted/40 rounded px-1">fact_nih_project_pi_bridge</code>.
-              Team size = <code className="text-xs bg-accent-muted/40 rounded px-1">COUNT(DISTINCT pi_sk) GROUP BY application_id</code>{' '}
+              <strong className="text-text-primary">NIH</strong>: each project has a row in{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">fact_nih_project</code> AND one row per PI in{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">fact_nih_project_pi_bridge</code>. Team size ={' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">
+                COUNT(DISTINCT pi_sk) GROUP BY application_id
+              </code>{' '}
               on the bridge.
             </p>
             <p>
-              <strong className="text-text-primary">Buckets</strong>: <code className="text-xs bg-accent-muted/40 rounded px-1">1</code> (single PI),
-              {' '}<code className="text-xs bg-accent-muted/40 rounded px-1">2-5</code>, <code className="text-xs bg-accent-muted/40 rounded px-1">6-10</code>,
-              {' '}<code className="text-xs bg-accent-muted/40 rounded px-1">11-20</code>, <code className="text-xs bg-accent-muted/40 rounded px-1">21+</code>.
-              Each grant's full FY $ goes to its team-size bucket (no sub-allocation).
+              <strong className="text-text-primary">Buckets</strong>:{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">1</code> (single PI),{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">2-5</code>,{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">6-10</code>,{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">11-20</code>,{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">21+</code>. Each grant's full FY $ goes to its
+              team-size bucket (no sub-allocation).
             </p>
           </CardContent>
         </Card>
@@ -288,12 +292,11 @@ export default function MethodologyPage() {
       <section className="space-y-4">
         <h2 className="h-section">Federal-grants ↔ HERD-survey SK crosswalk</h2>
         <p className="text-text-secondary">
-          The federal grants system (NSF Awards, NIH RePORTER) and the HERD survey use{' '}
-          <em>different</em> institution surrogate keys for the same university. Johns Hopkins is{' '}
-          <code className="text-xs bg-accent-muted/40 rounded px-1">INST0000079</code> in NSF/NIH raw
-          data and <code className="text-xs bg-accent-muted/40 rounded px-1">INST0001086</code> in the
-          HERD panel — both rows live in the unified{' '}
-          <code className="text-xs bg-accent-muted/40 rounded px-1">dim_institution</code>, but they
+          The federal grants system (NSF Awards, NIH RePORTER) and the HERD survey use <em>different</em> institution
+          surrogate keys for the same university. Johns Hopkins is{' '}
+          <code className="text-xs bg-accent-muted/40 rounded px-1">INST0000079</code> in NSF/NIH raw data and{' '}
+          <code className="text-xs bg-accent-muted/40 rounded px-1">INST0001086</code> in the HERD panel — both rows
+          live in the unified <code className="text-xs bg-accent-muted/40 rounded px-1">dim_institution</code>, but they
           never natural-join.
         </p>
         <Card>
@@ -303,35 +306,36 @@ export default function MethodologyPage() {
             </p>
             <ol className="list-decimal pl-6 space-y-1">
               <li>
-                <strong>Self-identity</strong> — HERD sk already appears in NSF/NIH raw (884 of 1,014
-                = 87.2% of HERD sks).
+                <strong>Self-identity</strong> — HERD sk already appears in NSF/NIH raw (884 of 1,014 = 87.2% of HERD
+                sks).
               </li>
               <li>
-                <strong>UEI match</strong> — both sides have
-                {' '}<code className="text-xs bg-accent-muted/40 rounded px-1">primary_uei</code> in
-                {' '}<code className="text-xs bg-accent-muted/40 rounded px-1">dim_institution</code>{' '}
-                (catches a handful of UEI-tagged matches).
+                <strong>UEI match</strong> — both sides have{' '}
+                <code className="text-xs bg-accent-muted/40 rounded px-1">primary_uei</code> in{' '}
+                <code className="text-xs bg-accent-muted/40 rounded px-1">dim_institution</code> (catches a handful of
+                UEI-tagged matches).
               </li>
               <li>
                 <strong>IPEDS unitid match</strong> (catches a handful where IPEDS is populated).
               </li>
               <li>
-                <strong>Normalized canonical_name + state match</strong> — lowercase, strip
-                punctuation, drop suffix noise (<em>the</em>, <em>inc</em>, <em>university</em>,{' '}
-                <em>college</em>). Picks up JHU and similar institutions where one row lacks UEI.
+                <strong>Normalized canonical_name + state match</strong> — lowercase, strip punctuation, drop suffix
+                noise (<em>the</em>, <em>inc</em>, <em>university</em>, <em>college</em>). Picks up JHU and similar
+                institutions where one row lacks UEI.
               </li>
             </ol>
             <p>
-              <strong className="text-text-primary">Result</strong>: 899 of 1,014 HERD sks
-              ({' '}<strong>88.7%</strong>) are matched to a federal-grants sk. The remaining 115
-              unmatched are mostly small/historical institutions without UEI or IPEDS in
-              dim_institution.
+              <strong className="text-text-primary">Result</strong>: 899 of 1,014 HERD sks ( <strong>88.7%</strong>) are
+              matched to a federal-grants sk. The remaining 115 unmatched are mostly small/historical institutions
+              without UEI or IPEDS in dim_institution.
             </p>
             <p>
-              The crosswalk is materialized as
-              {' '}<code className="text-xs bg-accent-muted/40 rounded px-1">dim_institution_crosswalk.parquet</code>{' '}
-              and is applied at aggregation time:
-              {' '}<code className="text-xs bg-accent-muted/40 rounded px-1">{`COALESCE(crosswalk.herd_sk, raw.institution_sk)`}</code>{' '}
+              The crosswalk is materialized as{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">dim_institution_crosswalk.parquet</code> and is
+              applied at aggregation time:{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">
+                {'COALESCE(crosswalk.herd_sk, raw.institution_sk)'}
+              </code>{' '}
               gives every NSF + NIH row a HERD-side SK when one exists.
             </p>
           </CardContent>
@@ -342,44 +346,42 @@ export default function MethodologyPage() {
         <h2 className="h-section">PI deduplication</h2>
         <p className="text-text-secondary">
           Each principal investigator gets a stable surrogate key (
-          <code className="text-xs bg-accent-muted/40 rounded px-1">pi_sk</code>) via a cross-walk that
-          merges NIH PI Profile ID, NSF{' '}
-          <code className="text-xs bg-accent-muted/40 rounded px-1">nsf_id</code>, name string, and host
-          institution. The cross-walk is conservative — two PIs with the same name at different
-          institutions are kept separate. Phase D NSF builder couldn't populate{' '}
-          <code className="text-xs bg-accent-muted/40 rounded px-1">pi_sk</code> for ~62.6% of NSF
-          records (see caveats), so the union NIH+NSF PI count is a <strong>floor</strong>.
+          <code className="text-xs bg-accent-muted/40 rounded px-1">pi_sk</code>) via a cross-walk that merges NIH PI
+          Profile ID, NSF <code className="text-xs bg-accent-muted/40 rounded px-1">nsf_id</code>, name string, and host
+          institution. The cross-walk is conservative — two PIs with the same name at different institutions are kept
+          separate. Phase D NSF builder couldn't populate{' '}
+          <code className="text-xs bg-accent-muted/40 rounded px-1">pi_sk</code> for ~62.6% of NSF records (see
+          caveats), so the union NIH+NSF PI count is a <strong>floor</strong>.
         </p>
         <Card>
           <CardContent className="text-sm text-text-secondary space-y-2">
             <p>
-              <strong className="text-text-primary">What the PI counts mean (Phase R, current).</strong>{' '}
-              Section 6 reports the full federal-PI universe — every distinct{' '}
-              <code className="text-xs bg-accent-muted/40 rounded px-1">pi_sk</code> with any NSF or
-              NIH grant that fiscal year, summed across both agencies. NIH co-PIs come from
-              {' '}<code className="text-xs bg-accent-muted/40 rounded px-1">fact_nih_project_pi_bridge</code>
-              {' '}(one row per project × PI); NSF contributes the lead PI per award. Counts include
-              PIs at HERD-matched institutions plus federal-grants-only institutions that didn't match
-              the crosswalk (their funding still appears in the national rollups, but the institutional
-              profile shows only HERD-matched dollars).
+              <strong className="text-text-primary">What the PI counts mean (Phase R, current).</strong> Section 6
+              reports the full federal-PI universe — every distinct{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">pi_sk</code> with any NSF or NIH grant that
+              fiscal year, summed across both agencies. NIH co-PIs come from{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">fact_nih_project_pi_bridge</code> (one row per
+              project × PI); NSF contributes the lead PI per award. Counts include PIs at HERD-matched institutions plus
+              federal-grants-only institutions that didn't match the crosswalk (their funding still appears in the
+              national rollups, but the institutional profile shows only HERD-matched dollars).
             </p>
             <p>
-              <strong className="text-text-primary">What reconciliation compares.</strong> Section 5
-              (HERD vs bottom-up streams) is{' '}
-              <em>not</em> the Vol 70/71 reconciliation. It compares institution-reported HERD federal
-              R&amp;D against the sum of NIH RePORTER + NSF Awards + USASpending contracts +
-              USASpending assistance, year by year. Gaps reflect timing (expenditures vs obligations),
-              sub-agency allocation methodology, and PIID resolution — see the Three data landmines
-              section above.
+              <strong className="text-text-primary">What reconciliation compares.</strong> Section 5 (HERD vs bottom-up
+              streams) is <em>not</em> the Vol 70/71 reconciliation. It compares institution-reported HERD federal
+              R&amp;D against the sum of NIH RePORTER + NSF Awards + USASpending contracts + USASpending assistance,
+              year by year. Gaps reflect timing (expenditures vs obligations), sub-agency allocation methodology, and
+              PIID resolution — see the Three data landmines section above.
             </p>
             <p>
               <strong className="text-text-primary">NSF co-PI recovery status (S1.5).</strong>{' '}
-              <code className="text-xs bg-accent-muted/40 rounded px-1">fact_nsf_award</code> stores
-              only the lead PI per row (266K rows for 266K awards; all rows have{' '}
-              <code className="text-xs bg-accent-muted/40 rounded px-1">pi_role = &apos;Principal Investigator&apos;</code>);
-              an aggregate <code className="text-xs bg-accent-muted/40 rounded px-1">n_pi</code>{' '}
-              column counts the full team but does not provide individual co-PI surrogate keys. NSF
-              does not publish a co-PI bridge in the public API. Consequence:
+              <code className="text-xs bg-accent-muted/40 rounded px-1">fact_nsf_award</code> stores only the lead PI
+              per row (266K rows for 266K awards; all rows have{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">
+                pi_role = &apos;Principal Investigator&apos;
+              </code>
+              ); an aggregate <code className="text-xs bg-accent-muted/40 rounded px-1">n_pi</code> column counts the
+              full team but does not provide individual co-PI surrogate keys. NSF does not publish a co-PI bridge in the
+              public API. Consequence:
               <code className="text-xs bg-accent-muted/40 rounded px-1 mx-1">agg_uni_pi_universe</code>
               undercounts NSF; team-size bucketing (
               <code className="text-xs bg-accent-muted/40 rounded px-1">agg_uni_team_size</code>) uses
@@ -387,28 +389,27 @@ export default function MethodologyPage() {
             </p>
             <p>
               <strong className="text-text-primary">FY2005 + FY2016 entity-resolution breaks.</strong>{' '}
-              <code className="text-xs bg-accent-muted/40 rounded px-1">dim_institution</code>{' '}
-              consolidated some multi-campus institutions (notably Harvard) into a single surrogate
-              key in FY2005 and split them back out in FY2006. A smaller break occurred at the
-              FY2016 boundary. 81 institutions (16.7%) show &gt;100% YoY swings at FY05→06.
-              Both <code className="text-xs bg-accent-muted/40 rounded px-1">agg_uni_pi_universe</code>{' '}
-              and <code className="text-xs bg-accent-muted/40 rounded px-1">agg_uni_team_size</code>{' '}
-              now carry a <code className="text-xs bg-accent-muted/40 rounded px-1">data_quality</code>{' '}
-              column (<code className="text-xs bg-accent-muted/40 rounded px-1">fy05_entity_resolution_break</code>{' '}
-              / <code className="text-xs bg-accent-muted/40 rounded px-1">fy16_minor_break</code> /{' '}
-              <code className="text-xs bg-accent-muted/40 rounded px-1">clean</code>). Charts mask
-              or label affected years.
+              <code className="text-xs bg-accent-muted/40 rounded px-1">dim_institution</code> consolidated some
+              multi-campus institutions (notably Harvard) into a single surrogate key in FY2005 and split them back out
+              in FY2006. A smaller break occurred at the FY2016 boundary. 81 institutions (16.7%) show &gt;100% YoY
+              swings at FY05→06. Both{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">agg_uni_pi_universe</code> and{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">agg_uni_team_size</code> now carry a{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">data_quality</code> column (
+              <code className="text-xs bg-accent-muted/40 rounded px-1">fy05_entity_resolution_break</code> /{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">fy16_minor_break</code> /{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">clean</code>). Charts mask or label affected
+              years.
             </p>
             <p>
-              <strong className="text-text-primary">Topic regex precision (S1.5).</strong> Topic
-              tagging uses RE2-compatible regex over title + abstract. Two patterns were tightened:
+              <strong className="text-text-primary">Topic regex precision (S1.5).</strong> Topic tagging uses
+              RE2-compatible regex over title + abstract. Two patterns were tightened:
               <em>Neuroscience &amp; brain</em> no longer matches the bare word{' '}
-              <code className="text-xs bg-accent-muted/40 rounded px-1">neural</code> (which
-              over-matched AI/ML &ldquo;neural networks&rdquo;); <em>Earth observation</em> no
-              longer matches bare <code className="text-xs bg-accent-muted/40 rounded px-1">geospatial</code>{' '}
-              (over-matched GIS-tangential work). Cancer keeps the broader pattern (cancer / oncology
-              / tumor / carcinoma / malignan / metasta) with an acknowledged precision-vs-recall
-              trade-off in favor of recall.
+              <code className="text-xs bg-accent-muted/40 rounded px-1">neural</code> (which over-matched AI/ML
+              &ldquo;neural networks&rdquo;); <em>Earth observation</em> no longer matches bare{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">geospatial</code> (over-matched GIS-tangential
+              work). Cancer keeps the broader pattern (cancer / oncology / tumor / carcinoma / malignan / metasta) with
+              an acknowledged precision-vs-recall trade-off in favor of recall.
             </p>
           </CardContent>
         </Card>

@@ -609,7 +609,14 @@ export interface UniversityProfile extends Row {
     federal_amount_total: number;
     amount_per_pi: number;
   }>;
-  piDistribution: Array<{ fiscal_year: number; decile: number; min_amount: number; max_amount: number; avg_amount: number; pi_count: number }>;
+  piDistribution: Array<{
+    fiscal_year: number;
+    decile: number;
+    min_amount: number;
+    max_amount: number;
+    avg_amount: number;
+    pi_count: number;
+  }>;
   teamSize: Array<{
     fiscal_year: number;
     team_size_bucket: string;
@@ -627,7 +634,12 @@ export interface UniversityProfile extends Row {
   concentration: Array<{ fiscal_year: number; hhi: number; shannon_entropy: number; cov_5yr: number | null }>;
   stateContext: Array<{ fiscal_year: number; uni_total: number; state_total: number; share_of_state: number }>;
   peers: Array<{ peer_sk: string; peer_rank: number }>;
-  patents: Array<{ fiscal_year: number; award_count: number; patent_count: number | null; patents_per_award: number | null }>;
+  patents: Array<{
+    fiscal_year: number;
+    award_count: number;
+    patent_count: number | null;
+    patents_per_award: number | null;
+  }>;
 }
 
 export async function getUniversityProfile(sk: string): Promise<UniversityProfile> {
@@ -789,19 +801,19 @@ export async function getNationalTopics(): Promise<NationalTopicRow[]> {
 // ─────────── National view ───────────
 export async function getNationalOverview() {
   return query<{ fiscal_year: number; source_category: string; amount_nominal: number; amount_real: number }>(
-    `SELECT * FROM agg_national_overview ORDER BY fiscal_year, source_category`,
+    'SELECT * FROM agg_national_overview ORDER BY fiscal_year, source_category',
   );
 }
 
 export async function getNationalAgencyTrend() {
   return query<{ fiscal_year: number; agency_bucket: string; amount_nominal: number; amount_real: number }>(
-    `SELECT * FROM agg_national_agency_trend ORDER BY fiscal_year, agency_bucket`,
+    'SELECT * FROM agg_national_agency_trend ORDER BY fiscal_year, agency_bucket',
   );
 }
 
 export async function getNationalConcentration() {
   return query<{ fiscal_year: number; bucket: string; share: number }>(
-    `SELECT * FROM agg_national_concentration ORDER BY fiscal_year, bucket`,
+    'SELECT * FROM agg_national_concentration ORDER BY fiscal_year, bucket',
   );
 }
 
@@ -820,10 +832,7 @@ export interface NationalStateRollupRow extends Row {
 
 export async function getNationalStateRollup(fy?: number): Promise<NationalStateRollupRow[]> {
   // Latest FY fallback: subquery picks MAX(fiscal_year) from agg_uni_total_rd.
-  const fyClause =
-    fy !== undefined && fy !== null
-      ? `${fy}`
-      : `(SELECT MAX(fiscal_year) FROM agg_uni_total_rd)`;
+  const fyClause = fy !== undefined && fy !== null ? `${fy}` : '(SELECT MAX(fiscal_year) FROM agg_uni_total_rd)';
   return query<NationalStateRollupRow>(`
     SELECT
       i.state_code,
@@ -1020,7 +1029,9 @@ export async function getUniversityIndex(): Promise<UniversityIndexRow[]> {
  * old /universities/[sk] direct-link path; in practice that path is also
  * driven by HERD-tracked SKs).
  */
-export async function searchInstitutions(q: string): Promise<Array<{ sk: string; name: string; state: string | null }>> {
+export async function searchInstitutions(
+  q: string,
+): Promise<Array<{ sk: string; name: string; state: string | null }>> {
   const safe = sq(q);
   return query<{ sk: string; name: string; state: string | null }>(`
     SELECT i.institution_sk AS sk, i.canonical_name AS name, i.state_code AS state
@@ -1043,10 +1054,7 @@ export interface UniversityRank extends Row {
   total_ranked: number;
 }
 
-export async function getUniversityRank(
-  sk: string,
-  fy: number,
-): Promise<UniversityRank | null> {
+export async function getUniversityRank(sk: string, fy: number): Promise<UniversityRank | null> {
   const safe = sq(sk);
   return queryOne<UniversityRank>(`
     WITH ranked AS (
