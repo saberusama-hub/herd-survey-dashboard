@@ -907,6 +907,12 @@ function SmallMultiples({
                     ? `Peak FY${peak.fy} · ${formatMetricValue(peak.v, metric.format)}`
                     : undefined
                 }
+                methodology={{
+                  what: `One bar per fiscal year showing this university’s ${metric.label.toLowerCase()} over the selected window — easy to eyeball next to the other universities you picked.`,
+                  how: `${metric.label} is pulled from this university’s profile bundle and filtered to FY${startFy}–FY${endFy}. The y-axis is shared across all small-multiple panels so bar heights are directly comparable across institutions.`,
+                  caveats:
+                    'A missing year means the institution did not report (or did not exist in the source dataset) for that fiscal year — not zero.',
+                }}
               >
                 {data.length === 0 ? (
                   <div className="flex h-[220px] items-center justify-center rounded-md border border-dashed border-rule text-xs text-text-tertiary">

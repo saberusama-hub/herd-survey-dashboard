@@ -536,6 +536,14 @@ export default function NationalPage() {
               ? `Peak FY${overviewSummary.peak.x} at ${formatDollars(overviewSummary.peak.y)}. Biggest year-on-year change: FY${overviewSummary.jump.x} (${overviewSummary.jump.label}).`
               : undefined
           }
+          methodology={{
+            what:
+              'Twenty years of total U.S. university research spending, sliced into who paid for it: federal, state, industry, the schools themselves, nonprofits, and other.',
+            how:
+              'We sum HERD Q01 "Source of Funds" across every HERD-tracked university for each fiscal year and source category. Each stacked bar therefore equals the nationwide R&D total for that year.',
+            caveats:
+              'Pre-FY2010 "nonprofit" bars are conservative — HERD did not collect that category in the ARDES non-response window (FY2005–FY2009).',
+          }}
         >
           <ResponsiveSvg height={400}>
             {(w, h) => (
@@ -587,6 +595,14 @@ export default function NationalPage() {
               ? `${agencyLeader.key} was the dominant funder in FY${agencyLeader.fy} at ${formatDollars(agencyLeader.amount)}.`
               : undefined
           }
+          methodology={{
+            what:
+              'How much each federal agency (NIH, NSF, DOD, DOE, NASA, USDA, other) paid U.S. universities for research each year over the last 20 years.',
+            how:
+              'For every year we sum HERD Q09 ("Federal R&D by agency") across all HERD-tracked universities, grouped into the seven canonical agency buckets. One line per agency.',
+            caveats:
+              'HERD Q09 rolls sub-agencies into their parent department. HHS = NIH + other; Defense = ARO + ONR + AFOSR + DARPA + sub-commands. For sub-agency detail, see the Reconciliation page.',
+          }}
         >
           <LineChart
             data={agencyWide as unknown as Array<Record<string, unknown>>}
@@ -621,6 +637,14 @@ export default function NationalPage() {
               ? `Top-10 share: ${concSummary.top10First.toFixed(1)}% in FY${concSummary.firstFy} → ${concSummary.top10Last.toFixed(1)}% in FY${concSummary.lastFy}. Top-100 in FY${concSummary.lastFy}: ${concSummary.top100Last.toFixed(1)}%.`
               : undefined
           }
+          methodology={{
+            what:
+              'Whether a small group of elite universities dominates U.S. research spending, or whether the money is spread broadly — and how that balance has shifted over 20 years.',
+            how:
+              'For each fiscal year we rank all HERD-tracked universities by total R&D, then compute the % of the national total taken by the top 10, top 25, and top 100. Three lines, one per cohort.',
+            caveats:
+              'Cohort membership can change year over year — "top 10" in FY2005 is not necessarily the same set as in FY2024.',
+          }}
         >
           <LineChart
             data={concentrationWide as unknown as Array<Record<string, unknown>>}
@@ -656,6 +680,14 @@ export default function NationalPage() {
               ? `${stateSummary.nStates} states reported R&D in FY${stateSummary.fy}, totalling ${formatDollars(stateSummary.total)}.`
               : undefined
           }
+          methodology={{
+            what:
+              'Where the U.S. university research money is geographically — which states host the biggest research economies.',
+            how:
+              'For the latest reported fiscal year we sum total HERD R&D across all HERD-tracked universities in each state (joining `agg_uni_total_rd` to `dim_institution.state_code`). Darker fill = higher total.',
+            caveats:
+              'Counts a university’s spending in its headquarters state, even if research is performed at branch campuses elsewhere.',
+          }}
         >
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
             <div className="min-h-[360px]">
@@ -708,6 +740,14 @@ export default function NationalPage() {
           title="National trend, FY2005 – FY2024"
           dek="One line, one national rollup. Use the selector to flip between dollar totals, the federal $ share of all R&D, and the distinct-PI count behind NIH+NSF top grants."
           source="agg_uni_total_rd · agg_uni_source_split · agg_uni_pi_metrics"
+          methodology={{
+            what:
+              'Three different ways to slice the 20-year national story — total dollars, federal dependence, and how many researchers were on the federal payroll each year.',
+            how:
+              'Total R&D = sum of `agg_uni_total_rd.total_rd_nominal` across all universities per FY. Federal share = federal-source dollars ÷ all-source dollars per FY. # PIs = sum of distinct-PI counts across institutions per FY (from `agg_uni_pi_universe`).',
+            caveats:
+              'FY2005 PI count is masked (entity-resolution discontinuity affecting 81 institutions). Federal share denominator includes non-federal HERD sources (state, industry, institutional, nonprofit, other).',
+          }}
         >
           <div className="mb-3 flex flex-wrap gap-2" role="tablist" aria-label="National metric">
             {TREND_METRICS.map((m) => {
@@ -770,6 +810,14 @@ export default function NationalPage() {
               ? `STEM share in FY${stemSummary.fy}: ${formatPercent(stemSummary.stemShare)} of national HERD R&D.`
               : undefined
           }
+          methodology={{
+            what:
+              'How much of U.S. university research goes to science, technology, engineering, and math (STEM) versus humanities and social sciences.',
+            how:
+              'For each fiscal year we sum HERD Q03 R&D across all universities, then split by the `is_stem` flag attached to each of the eight HERD field-of-science categories. Stacked bar: STEM on bottom (accent), non-STEM on top (gray).',
+            caveats:
+              'The "STEM" flag follows HERD’s field classification — fields like "Psychology" land in non-STEM here even though they are STEM under other taxonomies.',
+          }}
         >
           <ResponsiveSvg height={340}>
             {(w, h) => (
@@ -826,6 +874,14 @@ export default function NationalPage() {
           dek="Total tagged dollars per topic in the most recent fiscal year. Ranking is by dollar amount; share is of total federal $ that FY (sum can exceed 100% — topics overlap)."
           source="agg_national_topic (regex-matched, non-exclusive)"
           note="Topics use word-boundary regex on title + abstract / project terms. See /methodology for the exact pattern list."
+          methodology={{
+            what:
+              'A nationwide ranking of 30 concrete research topics — Cancer, AI/ML, Climate, Quantum, etc. — sorted by how many federal dollars matched each topic in the most recent year.',
+            how:
+              'Each NSF and NIH grant is scanned for keyword matches against a hand-tuned 30-topic regex taxonomy (titles + NSF abstracts + NIH project terms). We sum the tagged dollars per topic nationally for the latest FY.',
+            caveats:
+              'Topics are NOT mutually exclusive — one grant can match multiple topics (e.g., "Cancer" and "AI/ML"). Patterns were tightened in May 2026 to reduce false positives. Shares can sum above 100% by design.',
+          }}
         >
           <ResponsiveSvg height={Math.max(420, topicsView.ranked.length * 22 + 40)}>
             {(w, h) => (
@@ -839,6 +895,14 @@ export default function NationalPage() {
           title="Top 10 topics: share of national federal $ over time"
           dek="Share of all NSF + NIH federal dollars matching each topic, FY2005 – FY2024. Higher = topic captured a larger slice of the agency portfolio that year."
           source="agg_national_topic"
+          methodology={{
+            what:
+              'Whether the 10 most-funded research topics have grown or shrunk relative to the rest of the federal research portfolio over 20 years.',
+            how:
+              'For each FY we compute each topic’s share = topic dollars ÷ total federal $ that year. One line per topic, using the top-10 latest-FY ranking.',
+            caveats:
+              'Topic overlap means shares are not exclusive (a grant can match several topics). A rising line reflects either growing absolute funding or shrinking competition from other topics — read alongside the ranking above.',
+          }}
         >
           <LineChart
             data={topicsView.shareTrend as unknown as Array<Record<string, unknown>>}
@@ -889,6 +953,14 @@ export default function NationalPage() {
               ? `Single-PI grants captured ${formatPercent(teamSizeView.latestRows[0].share)} of federal $ in FY${teamSizeView.latestFy}. Multi-PI teams (2+ PIs) took the rest.`
               : undefined
           }
+          methodology={{
+            what:
+              'Nationally, how much research money is going to lone-investigator grants versus larger collaborative teams in the most recent year.',
+            how:
+              'Each NSF + NIH grant is bucketed by team size (1, 2-5, 6-10, 11-20, 21+ PIs) using the NSF `n_pi` field and the NIH `PI_IDS` array. We sum federal dollars per bucket for the latest fiscal year.',
+            caveats:
+              'NSF does not publish the full co-PI roster, so grants are placed in their reported team-size bucket but co-PIs are not counted individually — slightly conservative on the larger buckets.',
+          }}
         >
           <ResponsiveSvg height={280}>
             {(w, h) => (
@@ -902,6 +974,14 @@ export default function NationalPage() {
           title="Federal $ by team size, FY2005 – FY2024"
           dek="Stacked bar per FY: single-PI grants on the bottom in accent. Larger team buckets stack on top in graduated greys."
           source="agg_national_team_size"
+          methodology={{
+            what:
+              'Whether U.S. research has shifted from solo PIs toward larger team grants over 20 years.',
+            how:
+              'For each FY we sum federal $ in the five team-size buckets and stack them. The accent slice at the bottom is single-PI; bigger teams stack progressively above.',
+            caveats:
+              'Team-size bucketing depends on what each agency publishes (NSF `n_pi`, NIH `PI_IDS`). NSF co-PI counts are reported, but individual co-PIs are not enumerated, so multi-PI team counts are conservative.',
+          }}
         >
           <ResponsiveSvg height={340}>
             {(w, h) => (
@@ -953,6 +1033,14 @@ export default function NationalPage() {
               ? `Top decile averages ${formatDollars(piDistLatest.rows[piDistLatest.rows.length - 1].avg_amount)} per PI, vs. ${formatDollars(piDistLatest.rows[0].avg_amount)} in the bottom decile.`
               : undefined
           }
+          methodology={{
+            what:
+              'Whether federal research funding is shared evenly across PIs nationwide, or concentrated in a small slice of top-funded researchers.',
+            how:
+              'At each university we sort PIs into ten equal $/PI buckets (deciles). We then average each decile across institutions — a "decile of deciles." Decile 1 = lowest-funded 10%, decile 10 = highest-funded.',
+            caveats:
+              'Averaging deciles across institutions is a coarse but defensible national lens. PIs holding grants at multiple universities are counted once per institution.',
+          }}
         >
           <ResponsiveSvg height={280}>
             {(w, h) => (
