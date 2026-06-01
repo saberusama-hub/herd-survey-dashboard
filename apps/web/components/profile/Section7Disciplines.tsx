@@ -3,7 +3,7 @@
 import { AxisBottom, AxisLeft } from '@visx/axis';
 import { Group } from '@visx/group';
 import { scaleBand, scaleLinear } from '@visx/scale';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import { ResponsiveSvg } from '@/components/charts/ResponsiveSvg';
 import { Sparkline } from '@/components/charts/Sparkline';
@@ -17,45 +17,32 @@ interface Props {
   profile: UniversityProfile;
 }
 
-const SUBJECT_ORDER = ['AI', 'biomedical', 'materials', 'climate', 'quantum'] as const;
-type SubjectKey = (typeof SUBJECT_ORDER)[number];
-
-const SUBJECT_LABEL: Record<SubjectKey, string> = {
-  AI: 'Artificial intelligence',
-  biomedical: 'Biomedical',
-  materials: 'Materials',
-  climate: 'Climate & sustainability',
-  quantum: 'Quantum',
-};
-
 /**
  * Section 7 — Discipline mix.
  *
- *   - KpiStrip: STEM share %, Non-STEM share %, Shannon-entropy proxy
- *     (computed inline over the field shares).
+ *   - KpiStrip: STEM share %, Non-STEM share %, Shannon-entropy proxy.
  *   - Horizontal bar chart: 8 HERD field categories, latest FY.
- *   - Below: 5 subject-area buckets (AI, biomedical, materials, climate,
- *     quantum) — keyword-tagged from grant *titles only* (no abstract text
- *     in source data), each with a small sparkline.
+ *   - Top-10 (expand to 30) of the new RESEARCH TOPICS taxonomy with
+ *     20-year sparkline per topic. Title + (NSF) abstract / (NIH) terms
+ *     pattern-matched into 30 buckets — see /methodology.
  */
 export function Section7Disciplines({ profile }: Props) {
-  const { fieldMix, subjectTags } = profile;
+  const { fieldMix, topics } = profile;
+  const [showAllTopics, setShowAllTopics] = useState(false);
 
-  const { tiles, fieldBars, subjectRows, subjectSpark, latestFy } = useMemo(() => {
-    if (fieldMix.length === 0) {
-      return {
-        tiles: [] as KpiTile[],
-        fieldBars: [],
-        subjectRows: [],
-        subjectSpark: {} as Record<string, Array<{ x: number; y: number }>>,
-        latestFy: null,
-      };
+  const view = useMemo(() => {
+    if (fieldMix.length === 0 && topics.length === 0) {
+      return null;
     }
-    const latestFy = fieldMix.reduce(
-      (m, r) => (r.fiscal_year > m ? r.fiscal_year : m),
-      fieldMix[0].fiscal_year,
-    );
+    // Latest FY across the two sources.
+    const allFys = [
+      ...fieldMix.map((r) => r.fiscal_year),
+      ...topics.map((r) => r.fiscal_year),
+    ];
+    if (allFys.length === 0) return null;
+    const latestFy = allFys.reduce((m, fy) => (fy > m ? fy : m), allFys[0]);
 
+    // Field mix bars (8 HERD categories, latest FY).
     const latestFieldRows = fieldMix.filter((r) => r.fiscal_year === latestFy);
     const totalAmt = latestFieldRows.reduce((s, r) => s + (Number(r.amount_nominal) || 0), 0);
     const stemAmt = latestFieldRows
@@ -63,7 +50,6 @@ export function Section7Disciplines({ profile }: Props) {
       .reduce((s, r) => s + (Number(r.amount_nominal) || 0), 0);
     const stemShare = totalAmt > 0 ? stemAmt / totalAmt : null;
 
-    // Shannon entropy proxy across the field categories (natural log).
     let shannon = 0;
     if (totalAmt > 0) {
       for (const r of latestFieldRows) {
@@ -90,7 +76,6 @@ export function Section7Disciplines({ profile }: Props) {
       },
     ];
 
-    // Field-category bars (top-12 by amount, descending).
     const fieldBars = latestFieldRows
       .map((r) => ({
         label: r.field_category,
@@ -102,96 +87,109 @@ export function Section7Disciplines({ profile }: Props) {
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 12);
 
-    // Subject-tag bars + sparkline per tag.
-    const latestSubject = subjectTags.filter((r) => r.fiscal_year === latestFy);
-    const subjectTotal = latestSubject.reduce((s, r) => s + (Number(r.tagged_amount) || 0), 0);
-    const subjectRows = SUBJECT_ORDER.map((k) => {
-      const row = latestSubject.find((r) => r.subject_tag === k);
-      const amount = Number(row?.tagged_amount) || 0;
-      return {
-        key: k,
-        label: SUBJECT_LABEL[k],
-        amount,
-        share: subjectTotal > 0 ? amount / subjectTotal : 0,
-      };
-    });
+    // Topic rollup — latest FY ranking + 20-year sparkline per topic.
+    const latestTopics = topics.filter((r) => r.fiscal_year === latestFy);
+    const sortedTopics = [...latestTopics]
+      .map((r) => ({
+        topic: r.topic,
+        amount: Number(r.tagged_amount) || 0,
+        grants: Number(r.grant_count) || 0,
+      }))
+      .sort((a, b) => b.amount - a.amount);
 
-    const subjectSpark: Record<string, Array<{ x: number; y: number }>> = {};
-    for (const k of SUBJECT_ORDER) {
-      subjectSpark[k] = subjectTags
-        .filter((r) => r.subject_tag === k)
+    const topicSpark: Record<string, Array<{ x: number; y: number }>> = {};
+    for (const t of sortedTopics) {
+      topicSpark[t.topic] = topics
+        .filter((r) => r.topic === t.topic)
         .sort((a, b) => a.fiscal_year - b.fiscal_year)
         .map((r) => ({ x: r.fiscal_year, y: Number(r.tagged_amount) || 0 }));
     }
 
-    return { tiles, fieldBars, subjectRows, subjectSpark, latestFy };
-  }, [fieldMix, subjectTags]);
+    return { tiles, fieldBars, sortedTopics, topicSpark, latestFy };
+  }, [fieldMix, topics]);
 
-  if (fieldBars.length === 0 || latestFy === null) {
+  if (!view) {
     return (
       <section aria-labelledby="profile-section-7">
         <SectionDivider
           eyebrow="Section 7 · Disciplines"
           title="What research the money funded"
-          dek="No HERD field-of-science breakdown was reported for this institution."
+          dek="No HERD field-of-science breakdown or NSF/NIH topic data was found for this institution."
           color="hsl(var(--agency-dod))"
         />
       </section>
     );
   }
 
+  const { tiles, fieldBars, sortedTopics, topicSpark, latestFy } = view;
+  const topicsToShow = showAllTopics ? sortedTopics : sortedTopics.slice(0, 10);
+
   return (
     <section aria-labelledby="profile-section-7">
       <SectionDivider
         eyebrow="Section 7 · Disciplines"
         title="What research the money funded"
-        dek="STEM share, the 8 HERD field-of-science categories, and emerging-subject keyword tags. Subjects are title-tagged (no abstract text in source data)."
+        dek="STEM share, the 8 HERD field-of-science categories, and a 30-topic taxonomy over NSF + NIH grant titles and abstracts. Topics are NOT mutually exclusive — a grant can match multiple."
         color="hsl(var(--agency-dod))"
       />
 
       <KpiStrip tiles={tiles} cols={3} />
 
       <div className="mt-8 space-y-10">
-        <ChartFrame
-          eyebrow={`FY${latestFy} field mix`}
-          title="R&D spending by HERD field of science"
-          dek="Latest reported year. Bars are sorted descending and direct-labeled with the dollar amount."
-          source="HERD Q03 · agg_uni_field_mix"
-        >
-          <ResponsiveSvg height={Math.max(280, fieldBars.length * 32 + 40)}>
-            {(w, h) => <FieldBars width={w} height={h} bars={fieldBars} />}
-          </ResponsiveSvg>
-        </ChartFrame>
+        {fieldBars.length > 0 && (
+          <ChartFrame
+            eyebrow={`FY${latestFy} field mix`}
+            title="R&D spending by HERD field of science"
+            dek="Latest reported year. Bars are sorted descending and direct-labeled with the dollar amount."
+            source="HERD Q03 · agg_uni_field_mix"
+          >
+            <ResponsiveSvg height={Math.max(280, fieldBars.length * 32 + 40)}>
+              {(w, h) => <FieldBars width={w} height={h} bars={fieldBars} />}
+            </ResponsiveSvg>
+          </ChartFrame>
+        )}
 
-        <ChartFrame
-          eyebrow={`FY${latestFy} subject tags`}
-          title="Emerging subject areas — title-tagged"
-          dek="Five keyword buckets applied to NIH + NSF top-grant titles. Sparkline shows the 20-year trajectory."
-          source="agg_uni_subject_tag (title-only)"
-          note="Title-only tagging — full grant abstracts are not present in the source data, so tagged dollars are a lower bound."
-        >
-          <ul className="divide-y divide-rule/60">
-            {subjectRows.map((r) => (
-              <li
-                key={r.key}
-                className="flex items-center justify-between gap-4 py-2.5"
+        {sortedTopics.length > 0 && (
+          <ChartFrame
+            eyebrow={`FY${latestFy} research topics`}
+            title={`Top ${showAllTopics ? sortedTopics.length : Math.min(10, sortedTopics.length)} research topics by federal $`}
+            dek="30-topic taxonomy over NSF + NIH grant text (titles + NSF abstracts + NIH project terms). Sparkline = 20-year topic trajectory."
+            source="agg_uni_topic (regex-matched, non-exclusive)"
+          >
+            <ul className="divide-y divide-rule/60">
+              {topicsToShow.map((r) => (
+                <li
+                  key={r.topic}
+                  className="flex items-center justify-between gap-4 py-2.5"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-text-primary">{r.topic}</p>
+                    <p className="text-[11px] text-text-tertiary tnum">
+                      {formatDollars(r.amount)} &middot; {r.grants.toLocaleString()} grants
+                    </p>
+                  </div>
+                  <Sparkline
+                    data={topicSpark[r.topic] ?? []}
+                    color="hsl(var(--accent))"
+                    width={120}
+                    height={30}
+                  />
+                </li>
+              ))}
+            </ul>
+            {sortedTopics.length > 10 && (
+              <button
+                type="button"
+                onClick={() => setShowAllTopics((v) => !v)}
+                className="mt-3 text-[12px] text-accent hover:underline"
               >
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-text-primary">{r.label}</p>
-                  <p className="text-[11px] text-text-tertiary tnum">
-                    {formatDollars(r.amount)} &middot; {formatPercent(r.share)} of tagged
-                  </p>
-                </div>
-                <Sparkline
-                  data={subjectSpark[r.key] ?? []}
-                  color="hsl(var(--accent))"
-                  width={120}
-                  height={30}
-                />
-              </li>
-            ))}
-          </ul>
-        </ChartFrame>
+                {showAllTopics
+                  ? 'Show top 10'
+                  : `Show all ${sortedTopics.length} topics`}
+              </button>
+            )}
+          </ChartFrame>
+        )}
       </div>
     </section>
   );

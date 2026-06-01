@@ -165,30 +165,76 @@ export default function MethodologyPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="h-section">Subject-area tagging</h2>
+        <h2 className="h-section">30-topic research taxonomy</h2>
         <p className="text-text-secondary">
-          Subject tags (AI, biomedical, materials, climate, quantum) come from
-          regex matching against grant <em>titles</em> only — NSF and NIH abstracts are not in the source
-          ledger, so the tagger sees only{' '}
-          <code className="text-xs bg-accent-muted/40 rounded px-1">project_title</code>. The patterns are
-          intentionally conservative: a grant on "computational linguistics" without one of the listed
-          keywords will not register as AI. Treat the tag counts as a directional, not exhaustive, signal.
+          Section 7 of every profile and the <a className="text-accent hover:underline" href="/national#topics">/national #topics</a>{' '}
+          panel use a 30-topic taxonomy applied to grant text. For NSF the matcher reads
+          <code className="text-xs bg-accent-muted/40 rounded px-1 mx-1">awd_titl_txt</code>+
+          <code className="text-xs bg-accent-muted/40 rounded px-1 mx-1">awd_abstr_narration</code> (full abstract text);
+          for NIH it reads
+          <code className="text-xs bg-accent-muted/40 rounded px-1 mx-1">project_title</code>+
+          <code className="text-xs bg-accent-muted/40 rounded px-1 mx-1">project_terms</code>
+          (structured MeSH-like terms). Topics are <strong>not</strong> mutually exclusive — a grant can match multiple,
+          so the dollar shares can sum to more than 100%.
         </p>
         <Card>
           <CardContent className="text-sm">
             <pre className="text-xs leading-relaxed overflow-x-auto">
-{`SUBJECT_PATTERNS = {
-  "AI":         r"\\b(artificial intelligence|machine learning|deep learning|
-                  neural network|transformer|LLM|computer vision|NLP|
-                  natural language processing)\\b",
-  "biomedical": r"\\b(biomedical|biomedicine|therapeutic|clinical trial|
-                  disease|cancer|immunology|oncology)\\b",
-  "materials":  r"\\b(materials science|nanomaterial|polymer|composite|
-                  alloy|semiconductor)\\b",
-  "climate":    r"\\b(climate change|carbon|greenhouse|sustainability|
-                  renewable|emission)\\b",
-  "quantum":    r"\\b(quantum computing|quantum information|qubit|
-                  quantum cryptography)\\b",
+{`TOPICS = {
+  "Artificial intelligence & ML":      \\b(artificial intelligence|machine learning|deep learning|
+                                         neural network|transformer|large language model|LLM|
+                                         reinforcement learning)\\b
+  "Computer vision":                    \\b(computer vision|image recognition|object detection|
+                                         visual recognition)\\b
+  "Natural language processing":        \\b(natural language processing|NLP|language model|
+                                         speech recognition|machine translation)\\b
+  "Cancer research":                    \\b(cancer|oncology|tumor|carcinoma|malignan(t|cy)|
+                                         metasta(sis|tic|sized))\\b
+  "Neuroscience & brain":               \\b(neuroscience|brain|neural|neuro(n|nal)|cognitive|cortex)\\b
+  "Cardiovascular":                     \\b(cardiovascular|cardiac|heart disease|coronary|
+                                         stroke|hypertension)\\b
+  "Infectious disease & vaccines":      \\b(infectious disease|virus|viral|bacteria(l)?|pathogen|
+                                         vaccine|antimicrobial|pandemic)\\b
+  "Immunology":                         \\b(immunology|immune|autoimmune|antibody|antigen|
+                                         T cell|B cell)\\b
+  "Genomics & genetics":                \\b(genom(e|ic|ics)|genetic|DNA|RNA sequenc|CRISPR|
+                                         gene editing|gene therapy)\\b
+  "Drug discovery & pharmacology":      \\b(drug discovery|pharmacolog|small molecule|
+                                         therapeutic agent|medicinal chemistry)\\b
+  "Mental health & psychiatry":         \\b(mental health|psychiatr|depression|anxiety|PTSD|
+                                         schizophrenia|addiction|substance abuse)\\b
+  "Aging & longevity":                  \\b(aging|longevity|Alzheimer|dementia|Parkinson|senescence)\\b
+  "Diabetes & metabolic":               \\b(diabetes|obesity|metabolic|insulin)\\b
+  "Regenerative medicine":              \\b(stem cell|regenerative medicine|tissue engineering)\\b
+  "Bioengineering & synthetic biology": \\b(bioengineering|synthetic biology|biomanufacturing|
+                                         bioreactor)\\b
+  "Public health & epidemiology":       \\b(public health|epidemiolog|health disparit|health equity|
+                                         population health)\\b
+  "Quantum information":                \\b(quantum computing|quantum information|qubit|
+                                         quantum cryptography|quantum sens)\\b
+  "Materials science":                  \\b(materials science|polymer|composite|alloy|
+                                         semiconductor|nanomaterial)\\b
+  "Nanotechnology":                     \\b(nanotechnolog|nanoparticle|nanostructure|nanoscale)\\b
+  "Climate & sustainability":           \\b(climate change|greenhouse|carbon dioxide|sustainability|
+                                         decarbonization|emission)\\b
+  "Renewable energy":                   \\b(solar|wind|geothermal|renewable energy|photovoltaic)\\b
+  "Energy storage & batteries":         \\b(battery|lithium ion|energy storage|fuel cell)\\b
+  "Cybersecurity":                      \\b(cybersecurity|cyber security|network security|
+                                         cryptograph|encryption)\\b
+  "Robotics & autonomy":                \\b(robot(ic|s)?|autonomous (vehicle|system)|
+                                         self-driving|drone)\\b
+  "Earth observation":                  \\b(remote sensing|satellite (data|imagery)|
+                                         earth observation|geospatial)\\b
+  "Astrophysics & cosmology":           \\b(astrophysic|cosmolog|galaxy|exoplanet|
+                                         dark (matter|energy)|gravitational wave)\\b
+  "Agriculture & food":                 \\b(agricultur|crop|soil|food security|
+                                         sustainable agriculture)\\b
+  "Water resources":                    \\b(water resource|hydrolog|watershed|
+                                         drinking water|wastewater)\\b
+  "Education research":                 \\b(STEM education|science education|curriculum|pedagog|
+                                         teacher training|broadening participation)\\b
+  "Social & behavioral science":        \\b(behavioral science|sociolog|economic policy|
+                                         social network|inequality)\\b
 }`}
             </pre>
             <p className="text-text-secondary mt-3">
@@ -196,8 +242,97 @@ export default function MethodologyPage() {
               <code className="text-xs bg-accent-muted/40 rounded px-1">
                 regexp_matches(text, pattern, 'i')
               </code>{' '}
-              in DuckDB). One grant can carry multiple tags. Tag dollar totals are computed by attributing
-              the grant's full FY amount to every matching tag — overlap is intentional.
+              in DuckDB). One grant can carry multiple topics. Topic dollar totals attribute the grant's
+              full FY amount to every matching topic — overlap is intentional. Patterns are intentionally
+              conservative: a grant whose title and abstract never mention "machine learning" or
+              "artificial intelligence" will not register under <em>AI &amp; ML</em>, even if the
+              underlying method is ML.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="h-section">Team-size methodology</h2>
+        <p className="text-text-secondary">
+          Section 6 of every profile and <a className="text-accent hover:underline" href="/national#team-size">/national #team-size</a>{' '}
+          bucket every grant by the number of PIs on it. The bucketing is identical for NSF and NIH:
+        </p>
+        <Card>
+          <CardContent className="text-sm text-text-secondary space-y-2">
+            <p>
+              <strong className="text-text-primary">NSF</strong>: each award has one row in
+              {' '}<code className="text-xs bg-accent-muted/40 rounded px-1">fact_nsf_award</code>; the
+              <code className="text-xs bg-accent-muted/40 rounded px-1 mx-1">n_pi</code> column counts the
+              full team (lead + co-PIs). NSF does NOT store individual co-PI surrogate keys per row, only
+              the lead PI's <code className="text-xs bg-accent-muted/40 rounded px-1">pi_sk</code>.
+            </p>
+            <p>
+              <strong className="text-text-primary">NIH</strong>: each project has a row in
+              {' '}<code className="text-xs bg-accent-muted/40 rounded px-1">fact_nih_project</code> AND
+              one row per PI in
+              {' '}<code className="text-xs bg-accent-muted/40 rounded px-1">fact_nih_project_pi_bridge</code>.
+              Team size = <code className="text-xs bg-accent-muted/40 rounded px-1">COUNT(DISTINCT pi_sk) GROUP BY application_id</code>{' '}
+              on the bridge.
+            </p>
+            <p>
+              <strong className="text-text-primary">Buckets</strong>: <code className="text-xs bg-accent-muted/40 rounded px-1">1</code> (single PI),
+              {' '}<code className="text-xs bg-accent-muted/40 rounded px-1">2-5</code>, <code className="text-xs bg-accent-muted/40 rounded px-1">6-10</code>,
+              {' '}<code className="text-xs bg-accent-muted/40 rounded px-1">11-20</code>, <code className="text-xs bg-accent-muted/40 rounded px-1">21+</code>.
+              Each grant's full FY $ goes to its team-size bucket (no sub-allocation).
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="h-section">Federal-grants ↔ HERD-survey SK crosswalk</h2>
+        <p className="text-text-secondary">
+          The federal grants system (NSF Awards, NIH RePORTER) and the HERD survey use{' '}
+          <em>different</em> institution surrogate keys for the same university. Johns Hopkins is{' '}
+          <code className="text-xs bg-accent-muted/40 rounded px-1">INST0000079</code> in NSF/NIH raw
+          data and <code className="text-xs bg-accent-muted/40 rounded px-1">INST0001086</code> in the
+          HERD panel — both rows live in the unified{' '}
+          <code className="text-xs bg-accent-muted/40 rounded px-1">dim_institution</code>, but they
+          never natural-join.
+        </p>
+        <Card>
+          <CardContent className="text-sm text-text-secondary space-y-2">
+            <p>
+              <strong className="text-text-primary">Crosswalk method (priority order):</strong>
+            </p>
+            <ol className="list-decimal pl-6 space-y-1">
+              <li>
+                <strong>Self-identity</strong> — HERD sk already appears in NSF/NIH raw (884 of 1,014
+                = 87.2% of HERD sks).
+              </li>
+              <li>
+                <strong>UEI match</strong> — both sides have
+                {' '}<code className="text-xs bg-accent-muted/40 rounded px-1">primary_uei</code> in
+                {' '}<code className="text-xs bg-accent-muted/40 rounded px-1">dim_institution</code>{' '}
+                (catches a handful of UEI-tagged matches).
+              </li>
+              <li>
+                <strong>IPEDS unitid match</strong> (catches a handful where IPEDS is populated).
+              </li>
+              <li>
+                <strong>Normalized canonical_name + state match</strong> — lowercase, strip
+                punctuation, drop suffix noise (<em>the</em>, <em>inc</em>, <em>university</em>,{' '}
+                <em>college</em>). Picks up JHU and similar institutions where one row lacks UEI.
+              </li>
+            </ol>
+            <p>
+              <strong className="text-text-primary">Result</strong>: 899 of 1,014 HERD sks
+              ({' '}<strong>88.7%</strong>) are matched to a federal-grants sk. The remaining 115
+              unmatched are mostly small/historical institutions without UEI or IPEDS in
+              dim_institution.
+            </p>
+            <p>
+              The crosswalk is materialized as
+              {' '}<code className="text-xs bg-accent-muted/40 rounded px-1">dim_institution_crosswalk.parquet</code>{' '}
+              and is applied at aggregation time:
+              {' '}<code className="text-xs bg-accent-muted/40 rounded px-1">{`COALESCE(crosswalk.herd_sk, raw.institution_sk)`}</code>{' '}
+              gives every NSF + NIH row a HERD-side SK when one exists.
             </p>
           </CardContent>
         </Card>
@@ -218,12 +353,15 @@ export default function MethodologyPage() {
         <Card>
           <CardContent className="text-sm text-text-secondary space-y-2">
             <p>
-              <strong className="text-text-primary">What the PI counts mean.</strong> Section 6 (PI
-              metrics) reports the distinct{' '}
-              <code className="text-xs bg-accent-muted/40 rounded px-1">pi_sk</code> count from the
-              top-20K NIH+NSF grants ledger, not the full universe. Counts are coverage floors — the
-              true distinct-PI population is higher. This is good enough for trend and ranking analysis;
-              treat absolute counts as lower bounds.
+              <strong className="text-text-primary">What the PI counts mean (Phase R, current).</strong>{' '}
+              Section 6 reports the full federal-PI universe — every distinct{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">pi_sk</code> with any NSF or
+              NIH grant that fiscal year, summed across both agencies. NIH co-PIs come from
+              {' '}<code className="text-xs bg-accent-muted/40 rounded px-1">fact_nih_project_pi_bridge</code>
+              {' '}(one row per project × PI); NSF contributes the lead PI per award. Counts include
+              PIs at HERD-matched institutions plus federal-grants-only institutions that didn't match
+              the crosswalk (their funding still appears in the national rollups, but the institutional
+              profile shows only HERD-matched dollars).
             </p>
             <p>
               <strong className="text-text-primary">What reconciliation compares.</strong> Section 5

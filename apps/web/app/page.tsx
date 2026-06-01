@@ -57,11 +57,12 @@ export default function HomePage() {
       // Real counts (replacing the plan's hard-coded 800 / 250000 approximations).
       // - unis: total HERD-tracked institutions from dim_institution
       // - pis: total FY2024 distinct-PI count summed across universities from
-      //   agg_uni_pi_metrics (sum of per-institution unique-PI counts).
+      //   agg_uni_pi_universe (full federal-PI universe per institution × FY,
+      //   pulled from raw NSF awards + NIH RePORTER bridge tables).
       query<MetaRow>(`
         SELECT
           (SELECT COUNT(*) FROM dim_institution) AS unis,
-          (SELECT SUM(pi_count) FROM agg_uni_pi_metrics WHERE fiscal_year = 2024) AS pis
+          (SELECT SUM(distinct_pi_count) FROM agg_uni_pi_universe WHERE fiscal_year = 2024) AS pis
       `),
     ]).then(([idx, ov, metaRows]) => {
       if (cancelled) return;

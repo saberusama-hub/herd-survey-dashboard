@@ -1,5 +1,8 @@
 'use client';
 
+import { AxisBottom, AxisLeft } from '@visx/axis';
+import { Group } from '@visx/group';
+import { scaleBand, scaleLinear } from '@visx/scale';
 import { useEffect, useMemo, useState } from 'react';
 
 import { useDuckDB } from '@/app/providers';
@@ -20,10 +23,14 @@ import {
   getNationalOverview,
   getNationalPiDistribution,
   getNationalStateRollup,
+  getNationalTeamSize,
+  getNationalTopics,
   getNationalTrends,
   type NationalFieldMixRow,
   type NationalPiDistributionRow,
   type NationalStateRollupRow,
+  type NationalTeamSizeRow,
+  type NationalTopicRow,
   type NationalTrendRow,
 } from '@/lib/queries';
 
@@ -34,8 +41,29 @@ const SECTIONS = [
   { id: 'geography', label: 'Geography' },
   { id: 'trends', label: 'Trends' },
   { id: 'disciplines', label: 'Disciplines' },
+  { id: 'topics', label: 'Topics' },
+  { id: 'team-size', label: 'Team size' },
   { id: 'pi-distribution', label: 'PI distribution' },
 ];
+
+const TEAM_BUCKET_ORDER = ['1', '2-5', '6-10', '11-20', '21+'] as const;
+type TeamBucket = (typeof TEAM_BUCKET_ORDER)[number];
+
+const TEAM_BUCKET_LABEL: Record<TeamBucket, string> = {
+  '1': 'Single PI',
+  '2-5': '2-5 PIs',
+  '6-10': '6-10 PIs',
+  '11-20': '11-20 PIs',
+  '21+': '21+ PIs',
+};
+
+const TEAM_BUCKET_COLOR: Record<TeamBucket, string> = {
+  '1': 'hsl(var(--accent))',
+  '2-5': 'hsl(var(--seq-3))',
+  '6-10': 'hsl(var(--seq-5))',
+  '11-20': 'hsl(var(--agency-doe))',
+  '21+': 'hsl(var(--mute-1))',
+};
 
 const SOURCE_ORDER = [
   'federal',
@@ -127,6 +155,8 @@ export default function NationalPage() {
   const [fieldMix, setFieldMix] = useState<NationalFieldMixRow[]>([]);
   const [piDist, setPiDist] = useState<NationalPiDistributionRow[]>([]);
   const [trends, setTrends] = useState<NationalTrendRow[]>([]);
+  const [teamSize, setTeamSize] = useState<NationalTeamSizeRow[]>([]);
+  const [topics, setTopics] = useState<NationalTopicRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -145,8 +175,10 @@ export default function NationalPage() {
       getNationalFieldMix(),
       getNationalPiDistribution(),
       getNationalTrends(),
+      getNationalTeamSize(),
+      getNationalTopics(),
     ])
-      .then(([o, a, c, s, f, p, t]) => {
+      .then(([o, a, c, s, f, p, t, ts, tp]) => {
         if (cancelled) return;
         setOverview(o as OverviewRow[]);
         setAgencies(a as AgencyRow[]);
@@ -155,6 +187,8 @@ export default function NationalPage() {
         setFieldMix(f);
         setPiDist(p);
         setTrends(t);
+        setTeamSize(ts);
+        setTopics(tp);
         setLoading(false);
       })
       .catch((e: Error) => {
@@ -365,6 +399,89 @@ export default function NationalPage() {
       .map((r) => ({ decile: r.decile, avg_amount: Number(r.avg_amount) || 0 }));
     return { fy: latestFy, rows };
   }, [piDist]);
+
+  /* ─── §8 Topics: latest FY ranking + 20-year share for the top 10 ─── */
+  const topicsView = useMemo(() => {
+    if (topics.length === 0) {
+      return {
+        latestFy: null as number | null,
+        ranked: [] as Array<{ topic: string; amount: number; share: number }>,
+        top10: [] as string[],
+        shareTrend: [] as Array<Record<string, number>>,
+      };
+    }
+    const latestFy = topics.reduce(
+      (m, r) => (r.fiscal_year > m ? r.fiscal_year : m),
+      topics[0].fiscal_year,
+    );
+    const latest = topics.filter((r) => r.fiscal_year === latestFy);
+    const ranked = latest
+      .map((r) => ({
+        topic: r.topic,
+        amount: Number(r.tagged_amount) || 0,
+        share: Number(r.share_of_total) || 0,
+      }))
+      .sort((a, b) => b.amount - a.amount);
+    const top10 = ranked.slice(0, 10).map((r) => r.topic);
+
+    // Pivot: wide per-FY rows for the top-10 only, as % share.
+    const byFy = new Map<number, Record<string, number>>();
+    for (const r of topics) {
+      if (!top10.includes(r.topic)) continue;
+      const row = byFy.get(r.fiscal_year) ?? {};
+      row[r.topic] = (Number(r.share_of_total) || 0) * 100;
+      byFy.set(r.fiscal_year, row);
+    }
+    const shareTrend = Array.from(byFy.keys())
+      .sort((a, b) => a - b)
+      .map((fy) => {
+        const v = byFy.get(fy) ?? {};
+        const row: Record<string, number> = { fiscal_year: fy };
+        for (const t of top10) row[t] = v[t] ?? 0;
+        return row;
+      });
+    return { latestFy, ranked, top10, shareTrend };
+  }, [topics]);
+
+  /* ─── §9 Team size: pivot to wide per-FY with 5 bucket columns ─── */
+  const teamSizeView = useMemo(() => {
+    if (teamSize.length === 0) {
+      return {
+        latestFy: null as number | null,
+        latestRows: [] as Array<{ bucket: TeamBucket; amount: number; share: number; grants: number }>,
+        trend: [] as Array<Record<string, number>>,
+      };
+    }
+    const latestFy = teamSize.reduce(
+      (m, r) => (r.fiscal_year > m ? r.fiscal_year : m),
+      teamSize[0].fiscal_year,
+    );
+    const latest = teamSize.filter((r) => r.fiscal_year === latestFy);
+    const latestRows = TEAM_BUCKET_ORDER.map((b) => {
+      const row = latest.find((r) => r.team_size_bucket === b);
+      return {
+        bucket: b,
+        amount: Number(row?.total_amount) || 0,
+        share: Number(row?.share_of_total) || 0,
+        grants: Number(row?.grant_count) || 0,
+      };
+    });
+    const byFy = new Map<number, Record<string, number>>();
+    for (const r of teamSize) {
+      const row = byFy.get(r.fiscal_year) ?? {};
+      row[r.team_size_bucket] = Number(r.total_amount) || 0;
+      byFy.set(r.fiscal_year, row);
+    }
+    const trend = Array.from(byFy.keys())
+      .sort((a, b) => a - b)
+      .map((fy) => {
+        const v = byFy.get(fy) ?? {};
+        const row: Record<string, number> = { fiscal_year: fy };
+        for (const b of TEAM_BUCKET_ORDER) row[b] = v[b] ?? 0;
+        return row;
+      });
+    return { latestFy, latestRows, trend };
+  }, [teamSize]);
 
   return (
     <div className="container-wide pt-10 pb-24 md:pt-14 md:pb-32 space-y-6">
@@ -691,7 +808,130 @@ export default function NationalPage() {
         </ChartFrame>
       </section>
 
-      {/* ─── §7 PI distribution ─── */}
+      {/* ─── §7 Topics: 30-topic taxonomy ─── */}
+      <section
+        id="topics"
+        aria-labelledby="national-section-topics"
+        className="scroll-mt-24"
+      >
+        <SectionDivider
+          eyebrow="National · Topics"
+          title="What is U.S. research about?"
+          dek="A 30-topic taxonomy applied to every NSF award title + abstract and every NIH project title + terms. Topics are NOT mutually exclusive — a grant can match multiple."
+          color="hsl(var(--agency-doe))"
+        />
+        <ChartFrame
+          eyebrow={topicsView.latestFy ? `FY${topicsView.latestFy} ranking` : 'Research topics'}
+          title="All 30 research topics by federal $"
+          dek="Total tagged dollars per topic in the most recent fiscal year. Ranking is by dollar amount; share is of total federal $ that FY (sum can exceed 100% — topics overlap)."
+          source="agg_national_topic (regex-matched, non-exclusive)"
+          note="Topics use word-boundary regex on title + abstract / project terms. See /methodology for the exact pattern list."
+        >
+          <ResponsiveSvg height={Math.max(420, topicsView.ranked.length * 22 + 40)}>
+            {(w, h) => (
+              <TopicBars width={w} height={h} bars={topicsView.ranked} />
+            )}
+          </ResponsiveSvg>
+        </ChartFrame>
+
+        <ChartFrame
+          eyebrow="20-year topic share trend"
+          title="Top 10 topics: share of national federal $ over time"
+          dek="Share of all NSF + NIH federal dollars matching each topic, FY2005 – FY2024. Higher = topic captured a larger slice of the agency portfolio that year."
+          source="agg_national_topic"
+        >
+          <LineChart
+            data={topicsView.shareTrend as unknown as Array<Record<string, unknown>>}
+            xKey="fiscal_year"
+            series={topicsView.top10.map((t, i) => ({
+              key: t,
+              label: t,
+              color: [
+                'hsl(var(--accent))',
+                'hsl(var(--agency-nih))',
+                'hsl(var(--agency-nsf))',
+                'hsl(var(--agency-dod))',
+                'hsl(var(--agency-doe))',
+                'hsl(var(--agency-nasa))',
+                'hsl(var(--agency-usda))',
+                'hsl(var(--seq-3))',
+                'hsl(var(--seq-5))',
+                'hsl(var(--mute-1))',
+              ][i % 10],
+            }))}
+            yFormat={(v) => `${v.toFixed(1)}%`}
+            height={380}
+            directLabels
+            showLegend={false}
+          />
+        </ChartFrame>
+      </section>
+
+      {/* ─── §8 Team size ─── */}
+      <section
+        id="team-size"
+        aria-labelledby="national-section-team-size"
+        className="scroll-mt-24"
+      >
+        <SectionDivider
+          eyebrow="National · Team size"
+          title="How federal funding flows by PI team size"
+          dek="Five buckets — single PI, 2-5, 6-10, 11-20, 21+ — by total federal $. Single-PI grants still dominate, but multi-PI teams have grown."
+          color="hsl(var(--agency-dod))"
+        />
+        <ChartFrame
+          eyebrow={teamSizeView.latestFy ? `FY${teamSizeView.latestFy} mix` : 'Team size'}
+          title="Federal $ by PI team size, latest fiscal year"
+          dek="Each bar is one team-size bucket of NSF + NIH grants. Width is the bucket's total federal funding for the year."
+          source="agg_national_team_size (NSF n_pi ∪ NIH PI bridge count)"
+          note={
+            teamSizeView.latestRows.length > 0
+              ? `Single-PI grants captured ${formatPercent(teamSizeView.latestRows[0].share)} of federal $ in FY${teamSizeView.latestFy}. Multi-PI teams (2+ PIs) took the rest.`
+              : undefined
+          }
+        >
+          <ResponsiveSvg height={280}>
+            {(w, h) => (
+              <TeamSizeBars width={w} height={h} bars={teamSizeView.latestRows} />
+            )}
+          </ResponsiveSvg>
+        </ChartFrame>
+
+        <ChartFrame
+          eyebrow="20-year team-size mix"
+          title="Federal $ by team size, FY2005 – FY2024"
+          dek="Stacked bar per FY: single-PI grants on the bottom in accent. Larger team buckets stack on top in graduated greys."
+          source="agg_national_team_size"
+        >
+          <ResponsiveSvg height={340}>
+            {(w, h) => (
+              <StackedBar
+                data={teamSizeView.trend}
+                keys={[...TEAM_BUCKET_ORDER]}
+                xKey="fiscal_year"
+                colors={TEAM_BUCKET_COLOR}
+                width={w}
+                height={h}
+                orientation="vertical"
+              />
+            )}
+          </ResponsiveSvg>
+          <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] text-text-secondary">
+            {TEAM_BUCKET_ORDER.map((k) => (
+              <li key={k} className="inline-flex items-center gap-1.5">
+                <span
+                  aria-hidden
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ background: TEAM_BUCKET_COLOR[k] }}
+                />
+                <span>{TEAM_BUCKET_LABEL[k]}</span>
+              </li>
+            ))}
+          </ul>
+        </ChartFrame>
+      </section>
+
+      {/* ─── §9 PI distribution ─── */}
       <section
         id="pi-distribution"
         aria-labelledby="national-section-pis"
@@ -699,19 +939,19 @@ export default function NationalPage() {
       >
         <SectionDivider
           eyebrow="National · PIs"
-          title="PI count + $/PI distribution"
-          dek="National-level decile distribution of $/PI from the top-20K NIH+NSF grants ledger. Decile 1 = lowest-funded PIs, decile 10 = highest-funded."
+          title="$/PI distribution"
+          dek="National-level decile distribution of $/PI. Decile 1 = lowest-funded PIs, decile 10 = highest-funded. Counts come from the full federal-PI universe (NSF awards ∪ NIH PI bridge)."
           color="hsl(var(--agency-nih))"
         />
         <ChartFrame
           eyebrow={piDistLatest.fy ? `FY${piDistLatest.fy} distribution` : 'PI $ distribution'}
           title="How federal $ spreads across PIs nationally"
           dek="Average dollar amount per PI in each decile of the latest-year roster, averaged across institutions (decile-of-deciles)."
-          source="agg_uni_pi_distribution (top-20K NIH+NSF ledger)"
+          source="agg_uni_pi_distribution"
           note={
             piDistLatest.rows.length > 0
               ? `Top decile averages ${formatDollars(piDistLatest.rows[piDistLatest.rows.length - 1].avg_amount)} per PI, vs. ${formatDollars(piDistLatest.rows[0].avg_amount)} in the bottom decile.`
-              : 'Coverage floor — full-universe PI distributions are higher because the ledger truncates at the top 20K grants.'
+              : undefined
           }
         >
           <ResponsiveSvg height={280}>
@@ -722,5 +962,154 @@ export default function NationalPage() {
         </ChartFrame>
       </section>
     </div>
+  );
+}
+
+/* ───────────── Inline visx components (kept local to the file) ──────────── */
+
+function TopicBars({
+  bars,
+  width,
+  height,
+}: {
+  bars: Array<{ topic: string; amount: number; share: number }>;
+  width: number;
+  height: number;
+}) {
+  const margin = { top: 8, right: 90, bottom: 28, left: 220 };
+  const innerW = Math.max(0, width - margin.left - margin.right);
+  const innerH = Math.max(0, height - margin.top - margin.bottom);
+  const y = scaleBand({
+    domain: bars.map((b) => b.topic),
+    range: [0, innerH],
+    padding: 0.15,
+  });
+  const x = scaleLinear({
+    domain: [0, Math.max(1, ...bars.map((b) => b.amount))],
+    range: [0, innerW],
+    nice: true,
+  });
+  return (
+    <svg width={width} height={height} role="img">
+      <Group left={margin.left} top={margin.top}>
+        {bars.map((b) => {
+          const by = y(b.topic) ?? 0;
+          const bw = x(b.amount);
+          const bh = y.bandwidth();
+          return (
+            <g key={b.topic}>
+              <rect x={0} y={by} width={bw} height={bh} fill="hsl(var(--accent))" rx={2} />
+              <text
+                x={bw + 6}
+                y={by + bh / 2}
+                dy="0.35em"
+                className="fill-text-secondary text-[11px] tnum"
+              >
+                {formatDollars(b.amount)} · {formatPercent(b.share)}
+              </text>
+            </g>
+          );
+        })}
+        <AxisBottom
+          top={innerH}
+          scale={x}
+          numTicks={4}
+          tickFormat={(v) => formatDollars(Number(v))}
+          tickLabelProps={() => ({
+            className: 'fill-text-tertiary text-[11px] tnum',
+            textAnchor: 'middle',
+          })}
+        />
+        <AxisLeft
+          scale={y}
+          tickLabelProps={() => ({
+            className: 'fill-text-primary text-[11px]',
+            textAnchor: 'end',
+            dx: -6,
+            dy: 4,
+          })}
+          hideAxisLine
+          hideTicks
+        />
+      </Group>
+    </svg>
+  );
+}
+
+function TeamSizeBars({
+  bars,
+  width,
+  height,
+}: {
+  bars: Array<{ bucket: TeamBucket; amount: number; share: number; grants: number }>;
+  width: number;
+  height: number;
+}) {
+  const margin = { top: 8, right: 90, bottom: 28, left: 110 };
+  const innerW = Math.max(0, width - margin.left - margin.right);
+  const innerH = Math.max(0, height - margin.top - margin.bottom);
+  const filtered = bars.filter((b) => b.amount > 0);
+  const y = scaleBand({
+    domain: filtered.map((b) => b.bucket),
+    range: [0, innerH],
+    padding: 0.2,
+  });
+  const x = scaleLinear({
+    domain: [0, Math.max(1, ...filtered.map((b) => b.amount))],
+    range: [0, innerW],
+    nice: true,
+  });
+  return (
+    <svg width={width} height={height} role="img">
+      <Group left={margin.left} top={margin.top}>
+        {filtered.map((b) => {
+          const by = y(b.bucket) ?? 0;
+          const bw = x(b.amount);
+          const bh = y.bandwidth();
+          return (
+            <g key={b.bucket}>
+              <rect
+                x={0}
+                y={by}
+                width={bw}
+                height={bh}
+                fill={TEAM_BUCKET_COLOR[b.bucket]}
+                rx={2}
+              />
+              <text
+                x={bw + 6}
+                y={by + bh / 2}
+                dy="0.35em"
+                className="fill-text-secondary text-[11px] tnum"
+              >
+                {formatDollars(b.amount)} · {formatPercent(b.share)}
+              </text>
+            </g>
+          );
+        })}
+        <AxisBottom
+          top={innerH}
+          scale={x}
+          numTicks={4}
+          tickFormat={(v) => formatDollars(Number(v))}
+          tickLabelProps={() => ({
+            className: 'fill-text-tertiary text-[11px] tnum',
+            textAnchor: 'middle',
+          })}
+        />
+        <AxisLeft
+          scale={y}
+          tickFormat={(t: unknown) => TEAM_BUCKET_LABEL[t as TeamBucket]}
+          tickLabelProps={() => ({
+            className: 'fill-text-primary text-[12px]',
+            textAnchor: 'end',
+            dx: -6,
+            dy: 4,
+          })}
+          hideAxisLine
+          hideTicks
+        />
+      </Group>
+    </svg>
   );
 }

@@ -71,12 +71,13 @@ const METRICS: MetricDef[] = [
   {
     key: 'piCount',
     label: '# of PIs',
-    description: 'Distinct federally-funded PIs counted in the top-20K NIH+NSF grants ledger.',
+    description:
+      'Distinct federally-funded PIs receiving any NSF or NIH grant in the fiscal year. Full universe — includes co-PIs via the NIH PI bridge.',
     format: 'count',
     series: (p) =>
       p.piMetrics.map((r) => ({
         fiscal_year: r.fiscal_year,
-        value: Number(r.pi_count) || 0,
+        value: Number(r.distinct_pi_count) || 0,
       })),
   },
   {
