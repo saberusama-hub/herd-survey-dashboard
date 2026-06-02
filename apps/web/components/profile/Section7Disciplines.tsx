@@ -268,7 +268,7 @@ function FieldBars({
   });
 
   return (
-    <svg width={width} height={height} role="img">
+    <svg width={width} height={height} role="img" aria-label="Research topics by federal funding amount">
       <Group left={margin.left} top={margin.top}>
         {bars.map((b) => {
           const by = y(b.label) ?? 0;

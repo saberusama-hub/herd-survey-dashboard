@@ -852,12 +852,11 @@ export default function NationalPage() {
                   role="tab"
                   aria-selected={active}
                   onClick={() => setTrendMetric(m.key)}
-                  className={
-                    'rounded border px-3 py-1.5 text-xs ' +
-                    (active
+                  className={`rounded border px-3 py-1.5 text-xs ${
+                    active
                       ? 'border-accent bg-accent text-paper'
-                      : 'border-border text-text-secondary hover:border-accent hover:text-accent')
-                  }
+                      : 'border-border text-text-secondary hover:border-accent hover:text-accent'
+                  }`}
                 >
                   {m.label}
                 </button>
@@ -1254,7 +1253,7 @@ function IcBars({
     nice: true,
   });
   return (
-    <svg width={width} height={height} role="img">
+    <svg width={width} height={height} role="img" aria-label="National NIH funding by Institute or Center">
       <Group left={margin.left} top={margin.top}>
         {bars.map((b) => {
           const by = y(b.ic_full_name) ?? 0;
@@ -1376,7 +1375,7 @@ function TopicBars({
     nice: true,
   });
   return (
-    <svg width={width} height={height} role="img">
+    <svg width={width} height={height} role="img" aria-label="Top research topics by national federal funding">
       <Group left={margin.left} top={margin.top}>
         {bars.map((b) => {
           const by = y(b.topic) ?? 0;
@@ -1441,7 +1440,7 @@ function TeamSizeBars({
     nice: true,
   });
   return (
-    <svg width={width} height={height} role="img">
+    <svg width={width} height={height} role="img" aria-label="Distribution of universities by team-size bucket">
       <Group left={margin.left} top={margin.top}>
         {filtered.map((b) => {
           const by = y(b.bucket) ?? 0;

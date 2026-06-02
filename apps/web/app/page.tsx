@@ -392,6 +392,7 @@ export default function HomePage() {
                   bars={topicBars}
                   color="hsl(var(--accent))"
                   href="/national#topics"
+                  ariaLabel="Top research topics by federal funding"
                 />
               )}
             </ResponsiveSvg>
@@ -419,7 +420,15 @@ export default function HomePage() {
             <p className="text-sm text-text-tertiary">Loading…</p>
           ) : (
             <ResponsiveSvg height={Math.max(220, agencyBars.length * 36 + 40)}>
-              {(w, h) => <HorizontalBarChart width={w} height={h} bars={agencyBars} href="/national#agencies" />}
+              {(w, h) => (
+                <HorizontalBarChart
+                  width={w}
+                  height={h}
+                  bars={agencyBars}
+                  href="/national#agencies"
+                  ariaLabel="Largest federal funding agencies"
+                />
+              )}
             </ResponsiveSvg>
           )}
           <p className="mt-3 text-[11px] text-text-tertiary">
@@ -445,7 +454,14 @@ export default function HomePage() {
             <p className="text-sm text-text-tertiary">Loading…</p>
           ) : (
             <ResponsiveSvg height={Math.max(220, sourceBars.length * 36 + 40)}>
-              {(w, h) => <HorizontalBarChart width={w} height={h} bars={sourceBars} />}
+              {(w, h) => (
+                <HorizontalBarChart
+                  width={w}
+                  height={h}
+                  bars={sourceBars}
+                  ariaLabel="University R&D by funding source"
+                />
+              )}
             </ResponsiveSvg>
           )}
         </ChartFrame>
@@ -473,6 +489,7 @@ export default function HomePage() {
                   bars={stateBars}
                   color="hsl(var(--accent))"
                   href="/national#geography"
+                  ariaLabel="Top states by federal research funding"
                 />
               )}
             </ResponsiveSvg>
@@ -520,6 +537,7 @@ function HorizontalBarChart({
   height,
   color = 'hsl(var(--accent))',
   href,
+  ariaLabel,
 }: {
   bars: HBarRow[];
   width: number;
@@ -527,6 +545,7 @@ function HorizontalBarChart({
   color?: string;
   /** Optional click-through target — the whole chart becomes a link. */
   href?: string;
+  ariaLabel?: string;
 }) {
   // Longer state labels are short (2 chars); topic labels can stretch ~30 chars.
   // Pick a left-margin that gives the longest label headroom but doesn't
@@ -549,7 +568,7 @@ function HorizontalBarChart({
   });
 
   const svg = (
-    <svg width={width} height={height} role="img">
+    <svg width={width} height={height} role="img" aria-label={ariaLabel ?? 'Horizontal bar chart'}>
       <Group left={margin.left} top={margin.top}>
         {bars.map((b) => {
           const by = y(b.label) ?? 0;

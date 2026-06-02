@@ -181,8 +181,8 @@ export function LineChart({
         {annotations && annotations.length > 0 && (
           <div className="pointer-events-none absolute inset-0">
             <svg className="h-full w-full" role="presentation">
-              {annotations.map((a, ai) => (
-                <Annotation key={ai} x={a.x} y={a.y} label={a.label} />
+              {annotations.map((a) => (
+                <Annotation key={`${a.label}-${a.x}-${a.y}`} x={a.x} y={a.y} label={a.label} />
               ))}
             </svg>
           </div>

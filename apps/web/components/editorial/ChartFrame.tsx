@@ -64,9 +64,8 @@ export function ChartFrame({ eyebrow, title, dek, source, note, methodology, chi
         </div>
         {dek && <p className="text-sm italic text-text-secondary max-w-prose">{dek}</p>}
         {methodology && open && (
-          <div
+          <section
             id={panelId}
-            role="region"
             aria-label="Chart methodology"
             className="mt-2 rounded border border-rule bg-mute-3 px-3 py-2 text-[12px] leading-relaxed text-text-secondary max-w-prose space-y-1.5"
           >
@@ -81,7 +80,7 @@ export function ChartFrame({ eyebrow, title, dek, source, note, methodology, chi
                 <span className="font-semibold text-text-primary">Caveats:</span> {methodology.caveats}
               </p>
             )}
-          </div>
+          </section>
         )}
       </header>
       <div>{children}</div>

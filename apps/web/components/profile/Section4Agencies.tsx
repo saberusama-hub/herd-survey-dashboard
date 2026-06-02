@@ -264,7 +264,7 @@ function IcBars({
   });
 
   return (
-    <svg width={width} height={height} role="img">
+    <svg width={width} height={height} role="img" aria-label="NIH funding by Institute or Center">
       <Group left={margin.left} top={margin.top}>
         {bars.map((b) => {
           const label = b.ic_full_name || b.ic_code;
@@ -331,7 +331,7 @@ function AgencyBars({
   });
 
   return (
-    <svg width={width} height={height} role="img">
+    <svg width={width} height={height} role="img" aria-label="Federal R&D funding by agency">
       <Group left={margin.left} top={margin.top}>
         {bars.map((b) => {
           const by = y(b.label) ?? 0;

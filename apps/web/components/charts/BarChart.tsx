@@ -124,8 +124,11 @@ export function BarChart({
                 isAnimationActive={false}
               >
                 {useHighlight && i === 0
-                  ? data.map((_, di) => (
-                      <Cell key={`cell-${di}`} fill={di === highlightIndex ? accentColor : muteColor} />
+                  ? data.map((d, di) => (
+                      <Cell
+                        key={`cell-${String(d[xKey] ?? di)}`}
+                        fill={di === highlightIndex ? accentColor : muteColor}
+                      />
                     ))
                   : null}
               </Bar>
@@ -137,8 +140,8 @@ export function BarChart({
       {annotations && annotations.length > 0 && (
         <div className="pointer-events-none absolute inset-0">
           <svg className="h-full w-full" role="presentation">
-            {annotations.map((a, ai) => (
-              <Annotation key={ai} x={a.x} y={a.y} label={a.label} />
+            {annotations.map((a) => (
+              <Annotation key={`${a.label}-${a.x}-${a.y}`} x={a.x} y={a.y} label={a.label} />
             ))}
           </svg>
         </div>

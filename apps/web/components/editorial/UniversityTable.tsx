@@ -170,23 +170,22 @@ export function UniversityTable({ rows }: Props) {
                     key={c.key}
                     scope="col"
                     aria-sort={isActive ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
-                    className={`py-2 px-3 font-semibold whitespace-nowrap cursor-pointer select-none hover:text-accent ${
+                    className={`py-2 px-3 whitespace-nowrap ${
                       c.align === 'right' ? 'text-right' : 'text-left'
-                    } ${c.align === 'right' ? 'tnum' : ''} ${isActive ? 'text-accent' : 'text-text-primary'}`}
-                    onClick={() => onHeaderClick(c)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        onHeaderClick(c);
-                      }
-                    }}
-                    tabIndex={0}
-                    role="columnheader button"
+                    } ${c.align === 'right' ? 'tnum' : ''}`}
                   >
-                    {c.label}
-                    <span aria-hidden="true" className="ml-1 inline-block w-3">
-                      {isActive ? (sortDir === 'asc' ? '▲' : '▼') : ''}
-                    </span>
+                    <button
+                      type="button"
+                      onClick={() => onHeaderClick(c)}
+                      className={`inline-flex items-center w-full ${
+                        c.align === 'right' ? 'justify-end' : 'justify-start'
+                      } font-medium ${isActive ? 'text-accent' : 'text-text-primary'} hover:text-accent focus:outline-none focus:underline`}
+                    >
+                      {c.label}
+                      <span aria-hidden="true" className="ml-1 inline-block w-3">
+                        {isActive ? (sortDir === 'asc' ? '▲' : '▼') : ''}
+                      </span>
+                    </button>
                   </th>
                 );
               })}

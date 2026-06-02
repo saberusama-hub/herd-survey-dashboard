@@ -94,13 +94,21 @@ export function UniversitySearchBox({
         className="w-full px-4 py-3 text-base border border-border rounded bg-surface text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent"
       />
       {showDropdown && (
-        <ul
+        <div
           id={listboxId}
+          // biome-ignore lint/a11y/useSemanticElements: ARIA combobox pattern; native <select> can't host <Link> per-option
           role="listbox"
+          tabIndex={-1}
           className="absolute z-20 left-0 right-0 mt-1 max-h-80 overflow-y-auto bg-surface border border-border rounded shadow-md divide-y divide-rule"
         >
           {results.map((r) => (
-            <li key={r.sk} role="option" aria-selected={false}>
+            <div
+              key={r.sk}
+              // biome-ignore lint/a11y/useSemanticElements: ARIA listbox option pattern; native <option> can't host <Link>
+              role="option"
+              aria-selected={false}
+              tabIndex={-1}
+            >
               <Link
                 href={`/universities/${r.sk}`}
                 onClick={() => setOpen(false)}
@@ -109,9 +117,9 @@ export function UniversitySearchBox({
                 <span className="font-medium text-text-primary">{r.name}</span>
                 {r.state && <span className="ml-2 text-text-tertiary tnum">({r.state})</span>}
               </Link>
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
       {open && ready && q.trim().length >= 2 && results.length === 0 && (
         <p className="absolute z-20 left-0 right-0 mt-1 px-4 py-2 text-xs text-text-tertiary bg-surface border border-border rounded">
