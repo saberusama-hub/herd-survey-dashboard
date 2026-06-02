@@ -84,3 +84,44 @@ jobs:
             fi
           done
           exit $fail
+
+      # Lighthouse: perf / a11y / best-practices / seo with hard thresholds.
+      # Conservative perf threshold (0.5) because the WASM + parquet bundle is
+      # heavier than a typical static site on simulated slow-4G.
+      - name: Lighthouse audit
+        run: |
+          npm install --silent --no-save lighthouse@12 chrome-launcher@1
+          CHROME_PATH="$(command -v google-chrome || command -v google-chrome-stable)" \
+            node scripts/qa/lighthouse_ci.js
+        env:
+          THRESH_PERFORMANCE: '0.5'
+          THRESH_ACCESSIBILITY: '0.9'
+          THRESH_BEST_PRACTICES: '0.9'
+          THRESH_SEO: '0.9'
+
+  cross-browser:
+    runs-on: ubuntu-latest
+    needs: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+      - name: Install Playwright browsers
+        run: pnpm dlx playwright@1.49 install --with-deps chromium firefox webkit
+
+      - name: Serve static export
+        run: |
+          python3 -m http.server -d apps/web/out 3000 &
+          for i in {1..20}; do
+            curl -sf http://localhost:3000/ > /dev/null && break
+            sleep 1
+          done
+
+      - name: Cross-browser smoke (chromium + firefox + webkit)
+        run: pnpm dlx playwright@1.49 -- node scripts/qa/cross_browser.js

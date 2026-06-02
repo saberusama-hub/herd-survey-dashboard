@@ -19,6 +19,8 @@
     "qa:probe": "node scripts/qa/probe_pages.js",
     "qa:axe": "node scripts/qa/axe_smoke.js",
     "qa:links": "node scripts/qa/check_links.js",
+    "qa:lighthouse": "node scripts/qa/lighthouse_ci.js",
+    "qa:cross": "node scripts/qa/cross_browser.js",
     "qa:all": "bash scripts/qa/run_all.sh"
   },
   "engines": {
