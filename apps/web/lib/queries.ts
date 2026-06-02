@@ -955,6 +955,7 @@ export interface UniversityIndexRow extends Row {
   state: string;
   total_rd_fy2024: number;
   cagr_20yr: number | null;
+  cagr_5yr: number | null;
   federal_share: number | null;
   pi_count: number;
   stem_share: number | null;
@@ -997,6 +998,9 @@ export async function getUniversityIndex(): Promise<UniversityIndexRow[]> {
       FROM agg_uni_field_mix
       WHERE fiscal_year = 2024
       GROUP BY institution_sk
+    ),
+    growth AS (
+      SELECT institution_sk, cagr_5yr FROM agg_uni_growth
     )
     SELECT
       l.institution_sk,
@@ -1004,6 +1008,7 @@ export async function getUniversityIndex(): Promise<UniversityIndexRow[]> {
       i.state_code AS state,
       l.total_rd_fy2024,
       c.cagr_20yr,
+      g.cagr_5yr,
       f.federal_share,
       COALESCE(pi.pi_count, 0) AS pi_count,
       s.stem_share
@@ -1013,6 +1018,7 @@ export async function getUniversityIndex(): Promise<UniversityIndexRow[]> {
     LEFT JOIN fed f USING (institution_sk)
     LEFT JOIN pi USING (institution_sk)
     LEFT JOIN stem s USING (institution_sk)
+    LEFT JOIN growth g USING (institution_sk)
     ORDER BY l.total_rd_fy2024 DESC
   `);
 }

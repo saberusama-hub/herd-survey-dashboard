@@ -30,6 +30,13 @@ const COLS: ColumnDef[] = [
     fmt: (v) => (typeof v === 'number' ? formatDollars(v) : '—'),
   },
   {
+    key: 'cagr_5yr',
+    label: '5-yr growth %',
+    align: 'right',
+    defaultDir: 'desc',
+    fmt: (v) => (typeof v === 'number' ? formatPercent(v) : '—'),
+  },
+  {
     key: 'cagr_20yr',
     label: '20-yr CAGR',
     align: 'right',
