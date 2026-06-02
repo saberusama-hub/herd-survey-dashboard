@@ -93,14 +93,21 @@ git push
 
 ## Hugging Face Space — MCP server
 
-The MCP server lives at `apps/mcp/` and is mirrored to `samsiddy/herd-survey-mcp` on HF Spaces (Docker SDK, cpu-basic).
+The MCP server lives at `apps/mcp/` (with its own HF Space YAML frontmatter in `apps/mcp/README.md`). It's deployed to `samsiddy/herd-survey-mcp` on HF Spaces (Docker SDK, cpu-basic).
 
-1. https://huggingface.co/new-space — Docker, name `herd-survey-mcp`, public, free CPU.
-2. Get an HF access token: Settings → Access Tokens → New token with `write` scope.
-3. In GitHub repo Settings → Secrets:
-   - `HF_TOKEN` = (paste token)
-4. Push triggers the mirror workflow.
-5. In a Claude client, add the SSE endpoint: `https://samsiddy-herd-survey-mcp.hf.space/sse`
+**There is no automated GitHub → HF mirror workflow.** Deployment is a manual git push to the HF Space's own git remote:
+
+1. One-time: https://huggingface.co/new-space — Docker, name `herd-survey-mcp`, public, free CPU.
+2. From the repo root:
+
+   ```bash
+   # Subtree-push apps/mcp/ contents to the HF Space git remote.
+   git subtree push --prefix apps/mcp \
+     https://USER:HF_TOKEN@huggingface.co/spaces/samsiddy/herd-survey-mcp main
+   ```
+
+3. The HF Space picks up the push and rebuilds the Docker image automatically.
+4. In a Claude client, add the SSE endpoint: `https://samsiddy-herd-survey-mcp.hf.space/sse`
 
 To verify the space is alive:
 

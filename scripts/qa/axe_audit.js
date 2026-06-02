@@ -68,11 +68,12 @@ const ROUTES = [
     await page.close();
   }
 
-  await browser.close();
+  if (failures.length) console.error(`\nFAIL: ${failures.length} route(s) with violations or errors.`);
+  else console.log(`\nOK: 0 serious/critical a11y violations across ${ROUTES.length} routes`);
 
-  if (failures.length) {
-    console.error(`\nFAIL: ${failures.length} route(s) with violations or errors.`);
-    process.exit(1);
-  }
-  console.log(`\nOK: 0 serious/critical a11y violations across ${ROUTES.length} routes`);
+  await Promise.race([
+    browser.close().catch(() => {}),
+    new Promise((r) => setTimeout(r, 5000)),
+  ]);
+  process.exit(failures.length ? 1 : 0);
 })();

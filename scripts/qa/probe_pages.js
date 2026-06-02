@@ -164,8 +164,8 @@ function safeName(route) {
     }
   }
 
-  await browser.close();
-
+  // Write the report BEFORE close — Chrome's macOS cleanup occasionally
+  // deadlocks at browser.close() and would otherwise lose the report.
   const reportPath = path.resolve(__dirname, '..', '..', 'qa-probe-report.json');
   fs.writeFileSync(
     reportPath,
@@ -186,9 +186,13 @@ function safeName(route) {
   );
 
   console.log(`OK: ${okCount} / ${ROUTES.length * VIEWPORTS.length} clean`);
-  if (allFailures.length) {
-    console.error(`FAIL: ${allFailures.length} groups — see ${reportPath}`);
-    process.exit(1);
-  }
+  if (allFailures.length) console.error(`FAIL: ${allFailures.length} groups — see ${reportPath}`);
   console.log(`Report: ${reportPath}`);
+
+  // Close with 5s timeout; force-exit if cleanup hangs.
+  await Promise.race([
+    browser.close().catch(() => {}),
+    new Promise((r) => setTimeout(r, 5000)),
+  ]);
+  process.exit(allFailures.length ? 1 : 0);
 })();

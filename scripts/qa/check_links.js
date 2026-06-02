@@ -99,12 +99,16 @@ const IGNORE_URL_RE = /\/favicon\.ico$|\/apple-touch-icon.*\.png$/;
     await page.close();
   }
 
-  await browser.close();
-
   if (failures.length) {
     console.error(`FAIL: ${failures.length} link(s) broken`);
     failures.forEach((f) => console.error(' - ' + f));
-    process.exit(1);
+  } else {
+    console.log(`OK: ${visited.size} internal links resolve (no 4xx/5xx)`);
   }
-  console.log(`OK: ${visited.size} internal links resolve (no 4xx/5xx)`);
+
+  await Promise.race([
+    browser.close().catch(() => {}),
+    new Promise((r) => setTimeout(r, 5000)),
+  ]);
+  process.exit(failures.length ? 1 : 0);
 })();

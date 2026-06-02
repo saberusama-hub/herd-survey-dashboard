@@ -80,7 +80,7 @@ docs/
     specs/                    Design specs (latest: 2026-05-31-research-data-platform-restructure-design.md)
     plans/                    Implementation plans (latest: 2026-05-31-research-data-platform-restructure-plan.md)
     research/                 Design + data + architecture research
-  qa/                         QA run outputs (latest: qa-report-2026-06-01.md)
+  qa/                         QA run outputs (latest: qa-report-2026-06-02.md)
   deployment.md               First-time Cloudflare + HF Spaces setup
 .github/workflows/
   ci.yml                      typecheck + lint + test on PRs
