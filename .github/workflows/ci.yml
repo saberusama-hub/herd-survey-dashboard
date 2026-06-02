@@ -90,8 +90,16 @@ jobs:
       # heavier than a typical static site on simulated slow-4G.
       - name: Lighthouse audit
         run: |
-          npm install --silent --no-save lighthouse@12 chrome-launcher@1
+          set -x
+          # Use pnpm dlx (resolves through pnpm's store — npm install collides
+          # with pnpm's symlink node_modules layout). dlx caches per-version.
+          mkdir -p /tmp/lh-bin
+          cd /tmp/lh-bin
+          pnpm init -y >/dev/null
+          pnpm add lighthouse@12 chrome-launcher@1
+          cd "${GITHUB_WORKSPACE}"
           CHROME_PATH="$(command -v google-chrome || command -v google-chrome-stable)" \
+          NODE_PATH=/tmp/lh-bin/node_modules \
             node scripts/qa/lighthouse_ci.js
         env:
           THRESH_PERFORMANCE: '0.5'

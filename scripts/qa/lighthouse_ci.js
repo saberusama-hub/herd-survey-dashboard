@@ -26,8 +26,24 @@ const THRESHOLDS = {
 const ROUTES = ['/', '/national/', '/methodology/', '/downloads/'];
 
 (async () => {
-  const { default: lighthouse } = await import('lighthouse');
-  const chromeLauncher = await import('chrome-launcher');
+  // Allow NODE_PATH-style resolution when installed to a sidecar dir.
+  const requireFrom = (specifier) => {
+    if (process.env.NODE_PATH) {
+      const path = require('path');
+      const Module = require('module');
+      const local = path.resolve(process.env.NODE_PATH, specifier);
+      try {
+        return import(Module.createRequire(local + '/').resolve(specifier));
+      } catch (_) {
+        // fall through
+      }
+    }
+    return import(specifier);
+  };
+
+  const lhMod = await requireFrom('lighthouse');
+  const chromeLauncher = await requireFrom('chrome-launcher');
+  const lighthouse = lhMod.default || lhMod;
 
   const chrome = await chromeLauncher.launch({
     chromeFlags: ['--headless', '--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
