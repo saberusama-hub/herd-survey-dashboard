@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [main]
 
+# Opt in early to the Node 24 actions runtime ahead of GitHub's forced
+# migration on 2026-06-16. Catches any incompatibility now rather than
+# waking up to a broken pipeline.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   web:
     runs-on: ubuntu-latest
