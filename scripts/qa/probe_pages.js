@@ -86,6 +86,11 @@ function safeName(route) {
   const browser = await puppeteer.launch({
     executablePath: CHROME,
     headless: 'new',
+    // --no-sandbox: macOS sandbox can deadlock under the curly-apostrophe
+    //   `Documents - Usama's MacBook Pro/` repo path
+    // --disable-dev-shm-usage: /dev/shm is tiny on CI / restricted on macOS
+    // --disable-gpu: headless doesn't need it, avoids GPU process timeouts
+    args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--disable-setuid-sandbox'],
   });
 
   const allFailures = [];
@@ -122,11 +127,14 @@ function safeName(route) {
       });
 
       try {
+        // domcontentloaded, not networkidle0: DuckDB-WASM streams parquets
+        // continuously after page load, so the network never goes idle and
+        // the probe would hang past timeout.
         await page.goto(`${BASE}${route}`, {
-          waitUntil: 'networkidle0',
+          waitUntil: 'domcontentloaded',
           timeout: 45000,
         });
-        // Wait for chart hydration.
+        // Wait for chart hydration (DuckDB-WASM bootstrap + first query).
         await new Promise((r) => setTimeout(r, 2500));
 
         // Horizontal-overflow check.

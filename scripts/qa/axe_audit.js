@@ -28,13 +28,16 @@ const ROUTES = [
   const browser = await puppeteer.launch({
     executablePath: CHROME,
     headless: 'new',
+    // See probe_pages.js for arg rationale.
+    args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--disable-setuid-sandbox'],
   });
   const failures = [];
 
   for (const r of ROUTES) {
     const page = await browser.newPage();
     try {
-      await page.goto(`${BASE}${r}`, { waitUntil: 'networkidle0', timeout: 30000 });
+      // domcontentloaded, not networkidle0 — DuckDB-WASM keeps streaming.
+      await page.goto(`${BASE}${r}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
       await new Promise((res) => setTimeout(res, 1500));
       const results = await new AxePuppeteer(page).analyze();
       const serious = results.violations.filter((v) =>

@@ -1,77 +1,131 @@
 # Deployment Guide
 
-This dashboard runs entirely on free tiers. First-time setup takes ~15 minutes.
+Free-tier deployment to Cloudflare Workers Static Assets + Hugging Face Spaces.
 
-## Accounts you need (all free, no credit card)
+## Architecture
 
-1. **GitHub** — you already have this (`saberusama-hub`)
-2. **Cloudflare** — sign up at https://dash.cloudflare.com/sign-up
-3. **Hugging Face** — sign up at https://huggingface.co/join (only needed for the MCP server, Plan 03)
+```
+GitHub (saberusama-hub/herd-survey-dashboard)
+  ├─ push → main
+  │       ├─ CI workflow:    typecheck + lint + test + build
+  │       └─ Deploy workflow: pnpm dlx wrangler@4.95.0 deploy
+  │                           → Cloudflare Workers Static Assets
+  │                           → https://herd-survey-dashboard.saber-usama.workers.dev/
+  │
+  └─ HF Space mirror (apps/mcp/)
+          → docker build on push
+          → samsiddy/herd-survey-mcp (HF Spaces)
+          → https://samsiddy-herd-survey-mcp.hf.space/sse
+```
 
-## Cloudflare Pages setup
+Both auto-deploy on push to `main`. Typical cycle: **~1m15s** for the dashboard, ~3min for the MCP space.
 
-1. Log in to the [Cloudflare dashboard](https://dash.cloudflare.com).
-2. Workers & Pages → Create → Pages → Connect to Git → Authorize GitHub → pick `saberusama-hub/herd-survey-dashboard`.
-3. Build settings:
-   - **Framework preset**: Next.js (Static HTML Export)
-   - **Build command**: `pnpm install --frozen-lockfile && pnpm build`
-   - **Build output directory**: `apps/web/out`
-   - **Root directory**: `/` (repo root)
-   - **Environment variables**: none required for Phase 1
-4. Save and deploy. First build takes 3–4 min. Subsequent builds with cache: ~1 min.
-5. **Custom domain (optional)**: Pages project → Custom domains → Add. You can buy a `.com` from Cloudflare for ~$9/yr inside the same dashboard.
+## Accounts (all free)
 
-After connecting GitHub, every push to `main` auto-deploys. PRs get preview URLs.
+- **GitHub** — `saberusama-hub`
+- **Cloudflare** — https://dash.cloudflare.com/sign-up (no credit card)
+- **Hugging Face** — https://huggingface.co/join (only for the MCP server)
 
-## Cloudflare API token (for GitHub Actions deploy step)
+## Cloudflare Workers Static Assets — one-time setup
 
-Only needed if you want GitHub Actions to deploy (instead of Cloudflare's built-in Git integration):
+This project uses **Workers Static Assets**, not Cloudflare Pages. The deploy is driven by a `wrangler.toml` (in repo root) + the `pnpm dlx wrangler@4.95.0 deploy` step in `.github/workflows/deploy.yml`.
 
-1. Cloudflare dashboard → My Profile → API Tokens → Create Token
-2. Use template "Edit Cloudflare Workers" or create a custom token with `Account → Cloudflare Pages: Edit`.
+The legacy `cloudflare/wrangler-action@v3` had a recurring `Cannot read properties of null (reading 'matches')` crash on this project; the direct `pnpm dlx wrangler` invocation is reliable.
+
+1. Cloudflare dashboard → My Profile → API Tokens → Create Token.
+2. Use the **Edit Cloudflare Workers** template (or build a custom token with `Account → Workers Scripts: Edit` + `Workers R2 Storage: Edit` if you plan to add R2).
 3. Copy the token.
 4. In this repo: Settings → Secrets and variables → Actions → New secret:
    - `CF_API_TOKEN` = (paste token)
-   - `CF_ACCOUNT_ID` = (from CF dashboard right sidebar)
+   - `CF_ACCOUNT_ID` = (from the right sidebar of the CF dashboard home)
 
-The default `deploy.yml` uses these secrets. If you use Cloudflare's Git integration instead, you can delete `deploy.yml`.
+The deploy workflow reads both from the environment.
 
-## Cloudflare R2 (only needed for Plan 02, the raw fact-table tier)
+## Deploy workflow
 
-1. Cloudflare dashboard → R2 → Create bucket → name `herd-survey`.
-2. R2 → Manage API tokens → Create token → R2 read+write to bucket `herd-survey`.
-3. Copy `Access Key ID` and `Secret Access Key`.
-4. Add to GitHub repo secrets:
-   - `R2_ACCESS_KEY_ID`
-   - `R2_SECRET_ACCESS_KEY`
-   - `R2_BUCKET_NAME` = `herd-survey`
+`.github/workflows/deploy.yml`:
 
-Plan 02 will add an upload script that pushes raw fact-table parquet to R2 and registers them with DuckDB-WASM at runtime.
+```yaml
+- name: Build web (static export)
+  run: pnpm build
+- name: Publish to Cloudflare Workers (Static Assets)
+  env:
+    CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+    CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+  run: pnpm dlx wrangler@4.95.0 deploy
+```
+
+`FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true` is set at the workflow level so we run on the Node 24 actions runtime ahead of GitHub's forced migration on 2026-06-16.
+
+## CI workflow
+
+`.github/workflows/ci.yml` runs on every push + PR. Five checks:
+
+1. `pnpm install --frozen-lockfile`
+2. `pnpm typecheck` — TypeScript correctness
+3. `pnpm lint` — biome (0 errors gate)
+4. `pnpm test` — vitest unit tests
+5. `pnpm build` — Next.js static export
+
+All five must pass.
 
 ## Data refresh workflow
 
-1. Rebuild data lake (sister repo).
-2. In this repo:
-   ```bash
-   pnpm data:build
-   pnpm data:verify
-   ```
-3. Inspect `apps/web/public/manifest.json` for the new build timestamp and KPI values.
-4. Commit + push → Cloudflare Pages auto-deploys.
+The parquet bundle in `apps/web/public/data/` is committed to git (CI does not rebuild it — the source data lake isn't reachable from the GitHub runner). To refresh:
 
-## Hugging Face Spaces (Plan 03 — MCP server for claude.ai)
+```bash
+# 1. Rebuild the source data lake (sister repo: /Users/Usama/Documents/Claude Projects/Herd Survey/)
+# ...
 
-1. https://huggingface.co/new-space — choose Docker, name `herd-survey-mcp`, public, free CPU.
+# 2. In this repo, rebuild the pre-aggregations:
+bash scripts/aggregations/run_all.sh
+# (runs 31 aggregation scripts in dependency order, then refresh_manifest.py)
+
+# 3. Verify
+/private/tmp/herd_venv/bin/python scripts/qa/verify_facts.py    # 30/30 facts
+bash scripts/qa/run_all.sh                                       # full QA harness
+
+# 4. Commit + push → auto-deploy
+git add apps/web/public/data/ apps/web/public/manifest.json
+git commit -m "data: refresh parquet bundle"
+git push
+```
+
+## Hugging Face Space — MCP server
+
+The MCP server lives at `apps/mcp/` and is mirrored to `samsiddy/herd-survey-mcp` on HF Spaces (Docker SDK, cpu-basic).
+
+1. https://huggingface.co/new-space — Docker, name `herd-survey-mcp`, public, free CPU.
 2. Get an HF access token: Settings → Access Tokens → New token with `write` scope.
 3. In GitHub repo Settings → Secrets:
    - `HF_TOKEN` = (paste token)
-4. Push triggers a GitHub Action that mirrors `apps/mcp/` to the Space.
-5. In claude.ai → Settings → Connectors → Add → URL = `https://huggingface.co/spaces/saberusama-hub/herd-survey-mcp/` (or the SSE endpoint when ready).
+4. Push triggers the mirror workflow.
+5. In a Claude client, add the SSE endpoint: `https://samsiddy-herd-survey-mcp.hf.space/sse`
 
-(Details fleshed out in Plan 03.)
+To verify the space is alive:
+
+```bash
+curl https://huggingface.co/api/spaces/samsiddy/herd-survey-mcp \
+  | python3 -c "import json,sys; print(json.load(sys.stdin)['runtime']['stage'])"
+# → RUNNING
+```
+
+## Local DNS gotcha
+
+If `curl https://herd-survey-dashboard.saber-usama.workers.dev/` returns "Could not resolve host", the local DNS resolver is filtering `*.workers.dev`. Bypass:
+
+```bash
+URL="https://herd-survey-dashboard.saber-usama.workers.dev"
+HOST="${URL#https://}"
+IP=$(dig @1.1.1.1 +short "$HOST" | head -1)
+curl --resolve "$HOST:443:$IP" "$URL/"
+```
 
 ## Troubleshooting
 
-- **Build fails with "out of memory"**: Add `--max-old-space-size=4096` to the Next.js build step in CF Pages settings.
-- **DuckDB-WASM fails to load in browser**: Open devtools console. Most likely the parquet files aren't being served. Verify `apps/web/out/data/*.parquet` after a local `pnpm build`.
-- **GitHub Actions deploy step fails**: Confirm `CF_API_TOKEN` is set and the token has Pages edit permission.
+- **CI lint failure**: `pnpm --filter @herd/web lint:fix` to auto-fix what biome can; the rest are accessibility/structural fixes (see `apps/web/biome.json` ruleset).
+- **CI build out-of-memory**: rare; add `--max-old-space-size=4096` to the build step.
+- **Deploy fails with `null.matches`**: that's the legacy `cloudflare/wrangler-action@v3` crash — confirm the workflow uses the direct `pnpm dlx wrangler@4.95.0 deploy` invocation.
+- **Local `pnpm build` hangs at 0% CPU**: known SWC worker deadlock on this filesystem (curly-apostrophe `Documents - Usama's MacBook Pro/` path). Skip local build and rely on CI. Vitest hits the same deadlock; use CI for unit-test verification.
+- **Puppeteer probe hangs on DuckDB-WASM init**: chrome sandbox issue. The QA scripts pass `--no-sandbox --disable-dev-shm-usage --disable-gpu` and use `waitUntil: 'domcontentloaded'` (DuckDB-WASM streams parquets continuously so `networkidle0` never fires).
+- **DuckDB-WASM fails to load in browser**: open devtools network tab. Most likely a parquet file 404'd. Verify the file exists in `apps/web/out/data/` after a build, and that `manifest.json` enumerates it.
