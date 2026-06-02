@@ -12,6 +12,8 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/universities', label: 'Universities' },
   { href: '/compare', label: 'Compare' },
   { href: '/national', label: 'National view' },
+  { href: '/topics', label: 'Topics' },
+  { href: '/sbir', label: 'SBIR / STTR' },
   { href: '/methodology', label: 'Methodology' },
   { href: '/downloads', label: 'Downloads' },
 ];

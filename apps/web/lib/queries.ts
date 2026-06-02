@@ -1359,3 +1359,308 @@ export async function getGrowthByInstitution(): Promise<Array<{ institution_sk: 
     FROM agg_uni_growth
   `);
 }
+
+/* ============================================================================
+ * SBIR / STTR — sheet_06_sbir_sttr direct queries (125K rows, fast in WASM)
+ * ==========================================================================*/
+
+export interface SbirOverview extends Row {
+  fy_min: number;
+  fy_max: number;
+  n_awards: number;
+  n_firms: number;
+  n_ri_unis: number;
+  n_agencies: number;
+  total_real_b: number;
+  fy24_total_real_m: number;
+  fy24_n_awards: number;
+}
+
+export async function getSbirOverview(): Promise<SbirOverview | null> {
+  return queryOne<SbirOverview>(`
+    SELECT
+      MIN(fiscal_year) AS fy_min,
+      MAX(fiscal_year) AS fy_max,
+      COUNT(*)::DOUBLE AS n_awards,
+      COUNT(DISTINCT firm_name)::DOUBLE AS n_firms,
+      COUNT(DISTINCT ri_canonical_name)::DOUBLE AS n_ri_unis,
+      COUNT(DISTINCT agency_name)::DOUBLE AS n_agencies,
+      SUM(award_amount_real_2024) / 1e9 AS total_real_b,
+      SUM(CASE WHEN fiscal_year = 2024 THEN award_amount_real_2024 ELSE 0 END) / 1e6 AS fy24_total_real_m,
+      SUM(CASE WHEN fiscal_year = 2024 THEN 1 ELSE 0 END)::DOUBLE AS fy24_n_awards
+    FROM sheet_06_sbir_sttr
+  `);
+}
+
+export interface SbirYearStack extends Row {
+  fiscal_year: number;
+  program: string;
+  phase: string;
+  amount_real_m: number;
+  n_awards: number;
+}
+
+/** Stacked-bar timeline: amount per FY split by program × phase. */
+export async function getSbirYearStack(): Promise<SbirYearStack[]> {
+  return query<SbirYearStack>(`
+    SELECT
+      fiscal_year,
+      program,
+      phase,
+      SUM(award_amount_real_2024) / 1e6 AS amount_real_m,
+      COUNT(*)::DOUBLE AS n_awards
+    FROM sheet_06_sbir_sttr
+    WHERE program IS NOT NULL AND phase IS NOT NULL
+    GROUP BY fiscal_year, program, phase
+    ORDER BY fiscal_year, program, phase
+  `);
+}
+
+export interface SbirAgency extends Row {
+  agency_name: string;
+  n_awards: number;
+  amount_real_b: number;
+  share_pct: number;
+}
+
+export async function getSbirAgencies(fyMin = 2020, fyMax = 2024): Promise<SbirAgency[]> {
+  return query<SbirAgency>(`
+    WITH base AS (
+      SELECT agency_name, COUNT(*) AS n_awards, SUM(award_amount_real_2024) AS amount
+      FROM sheet_06_sbir_sttr
+      WHERE fiscal_year BETWEEN ${fyMin} AND ${fyMax}
+      GROUP BY agency_name
+    ),
+    total AS (SELECT SUM(amount) AS t FROM base)
+    SELECT
+      agency_name,
+      n_awards::DOUBLE AS n_awards,
+      amount / 1e9 AS amount_real_b,
+      amount / (SELECT t FROM total) * 100 AS share_pct
+    FROM base
+    ORDER BY amount DESC
+  `);
+}
+
+export interface SbirFirm extends Row {
+  firm_name: string;
+  firm_state: string | null;
+  n_awards: number;
+  amount_real_m: number;
+}
+
+export async function getSbirTopFirms(fyMin = 2020, fyMax = 2024, topN = 15): Promise<SbirFirm[]> {
+  return query<SbirFirm>(`
+    SELECT
+      firm_name,
+      firm_state,
+      COUNT(*)::DOUBLE AS n_awards,
+      SUM(award_amount_real_2024) / 1e6 AS amount_real_m
+    FROM sheet_06_sbir_sttr
+    WHERE fiscal_year BETWEEN ${fyMin} AND ${fyMax}
+      AND firm_name IS NOT NULL
+    GROUP BY firm_name, firm_state
+    ORDER BY amount_real_m DESC
+    LIMIT ${topN}
+  `);
+}
+
+export interface SbirRiUni extends Row {
+  ri_canonical_name: string;
+  n_awards: number;
+  amount_real_m: number;
+}
+
+/** Top university research-institution partners (STTR mandatory, SBIR optional). */
+export async function getSbirTopRiUnis(fyMin = 2020, fyMax = 2024, topN = 15): Promise<SbirRiUni[]> {
+  return query<SbirRiUni>(`
+    SELECT
+      ri_canonical_name,
+      COUNT(*)::DOUBLE AS n_awards,
+      SUM(award_amount_real_2024) / 1e6 AS amount_real_m
+    FROM sheet_06_sbir_sttr
+    WHERE fiscal_year BETWEEN ${fyMin} AND ${fyMax}
+      AND ri_canonical_name IS NOT NULL
+      AND TRIM(ri_canonical_name) <> ''
+    GROUP BY ri_canonical_name
+    ORDER BY amount_real_m DESC
+    LIMIT ${topN}
+  `);
+}
+
+export interface SbirState extends Row {
+  firm_state: string;
+  n_awards: number;
+  amount_real_m: number;
+}
+
+export async function getSbirStates(fy = 2024): Promise<SbirState[]> {
+  return query<SbirState>(`
+    SELECT
+      firm_state,
+      COUNT(*)::DOUBLE AS n_awards,
+      SUM(award_amount_real_2024) / 1e6 AS amount_real_m
+    FROM sheet_06_sbir_sttr
+    WHERE fiscal_year = ${fy} AND firm_state IS NOT NULL
+    GROUP BY firm_state
+    ORDER BY amount_real_m DESC
+  `);
+}
+
+export interface SbirDemographics extends Row {
+  total_awards: number;
+  woman_owned: number;
+  hubzone: number;
+  disadvantaged: number;
+  woman_pct: number;
+  hubzone_pct: number;
+  disadvantaged_pct: number;
+}
+
+export async function getSbirDemographics(fyMin = 2020, fyMax = 2024): Promise<SbirDemographics | null> {
+  return queryOne<SbirDemographics>(`
+    WITH base AS (
+      SELECT
+        COUNT(*) AS total_awards,
+        SUM(CASE WHEN is_woman_owned = 'True' THEN 1 ELSE 0 END) AS woman_owned,
+        SUM(CASE WHEN is_hubzone = 'True' THEN 1 ELSE 0 END) AS hubzone,
+        SUM(CASE WHEN is_socially_economically_disadvantaged = 'True' THEN 1 ELSE 0 END) AS disadvantaged
+      FROM sheet_06_sbir_sttr
+      WHERE fiscal_year BETWEEN ${fyMin} AND ${fyMax}
+    )
+    SELECT
+      total_awards::DOUBLE AS total_awards,
+      woman_owned::DOUBLE AS woman_owned,
+      hubzone::DOUBLE AS hubzone,
+      disadvantaged::DOUBLE AS disadvantaged,
+      woman_owned * 100.0 / NULLIF(total_awards, 0) AS woman_pct,
+      hubzone * 100.0 / NULLIF(total_awards, 0) AS hubzone_pct,
+      disadvantaged * 100.0 / NULLIF(total_awards, 0) AS disadvantaged_pct
+    FROM base
+  `);
+}
+
+/* ============================================================================
+ * /topics page — per-topic deep dives over agg_national_topic + state + spec
+ * ==========================================================================*/
+
+export interface TopicSummary extends Row {
+  topic: string;
+  fy24_amount_m: number;
+  fy24_share: number;
+  fy24_grant_count: number;
+  cagr_5yr_pct: number | null;
+  top_uni_name: string | null;
+}
+
+/** Per-topic FY24 totals + 5yr CAGR + top uni for the topic. */
+export async function getTopicSummaries(): Promise<TopicSummary[]> {
+  return query<TopicSummary>(`
+    WITH fy24 AS (
+      SELECT topic, tagged_amount AS amount_24, share_of_total AS share_24, grant_count AS gc_24
+      FROM agg_national_topic
+      WHERE fiscal_year = 2024
+    ),
+    fy19 AS (
+      SELECT topic, tagged_amount AS amount_19
+      FROM agg_national_topic
+      WHERE fiscal_year = 2019
+    ),
+    topu AS (
+      SELECT topic, institution_sk
+      FROM (
+        SELECT topic, institution_sk,
+               ROW_NUMBER() OVER (PARTITION BY topic ORDER BY uni_topic_amount DESC) AS rn
+        FROM agg_uni_specialization
+        WHERE fiscal_year = 2024
+      ) WHERE rn = 1
+    )
+    SELECT
+      fy24.topic,
+      fy24.amount_24 / 1e6 AS fy24_amount_m,
+      fy24.share_24 * 100 AS fy24_share,
+      fy24.gc_24::DOUBLE AS fy24_grant_count,
+      CASE WHEN fy19.amount_19 > 0
+        THEN (POW(fy24.amount_24 / fy19.amount_19, 1.0 / 5.0) - 1) * 100
+        ELSE NULL END AS cagr_5yr_pct,
+      di.canonical_name AS top_uni_name
+    FROM fy24
+    LEFT JOIN fy19 USING (topic)
+    LEFT JOIN topu USING (topic)
+    LEFT JOIN dim_institution di ON di.institution_sk = topu.institution_sk
+    ORDER BY fy24.amount_24 DESC
+  `);
+}
+
+export interface TopicTimeline extends Row {
+  fiscal_year: number;
+  tagged_amount_m: number;
+  grant_count: number;
+  share_pct: number;
+}
+
+export async function getTopicTimeline(topic: string): Promise<TopicTimeline[]> {
+  // Escape single quotes in topic to prevent SQL injection
+  const safeTopic = topic.replace(/'/g, "''");
+  return query<TopicTimeline>(`
+    SELECT
+      fiscal_year,
+      tagged_amount / 1e6 AS tagged_amount_m,
+      grant_count::DOUBLE AS grant_count,
+      share_of_total * 100 AS share_pct
+    FROM agg_national_topic
+    WHERE topic = '${safeTopic}'
+    ORDER BY fiscal_year
+  `);
+}
+
+export interface TopicTopUni extends Row {
+  institution_sk: string;
+  canonical_name: string;
+  state_code: string | null;
+  uni_topic_amount_m: number;
+  uni_topic_share: number;
+  specialization_score: number;
+  topic_rank_national: number;
+}
+
+export async function getTopicTopUnis(topic: string, topN = 15): Promise<TopicTopUni[]> {
+  const safeTopic = topic.replace(/'/g, "''");
+  return query<TopicTopUni>(`
+    SELECT
+      s.institution_sk,
+      di.canonical_name,
+      di.state_code,
+      s.uni_topic_amount / 1e6 AS uni_topic_amount_m,
+      s.uni_topic_share * 100 AS uni_topic_share,
+      s.specialization_score,
+      s.topic_rank_national::DOUBLE AS topic_rank_national
+    FROM agg_uni_specialization s
+    LEFT JOIN dim_institution di ON di.institution_sk = s.institution_sk
+    WHERE s.topic = '${safeTopic}' AND s.fiscal_year = 2024
+    ORDER BY s.uni_topic_amount DESC
+    LIMIT ${topN}
+  `);
+}
+
+export interface TopicTopState extends Row {
+  state_code: string;
+  state_topic_amount_m: number;
+  state_topic_share: number;
+  top_uni_in_state: string | null;
+}
+
+export async function getTopicTopStates(topic: string, topN = 10): Promise<TopicTopState[]> {
+  const safeTopic = topic.replace(/'/g, "''");
+  return query<TopicTopState>(`
+    SELECT
+      state_code,
+      state_topic_amount / 1e6 AS state_topic_amount_m,
+      state_topic_share * 100 AS state_topic_share,
+      top_uni_in_state
+    FROM agg_state_topic
+    WHERE topic = '${safeTopic}' AND fiscal_year = 2024
+    ORDER BY state_topic_amount DESC
+    LIMIT ${topN}
+  `);
+}
