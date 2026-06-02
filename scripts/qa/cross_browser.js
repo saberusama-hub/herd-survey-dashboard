@@ -20,7 +20,21 @@ const BROWSERS = (process.env.BROWSERS || 'chromium,firefox,webkit').split(',').
 const ROUTES = ['/', '/universities/', '/national/', '/methodology/', '/downloads/'];
 
 (async () => {
-  const { chromium, firefox, webkit } = await import('playwright');
+  const requireFrom = async (specifier) => {
+    if (process.env.NODE_PATH) {
+      const path = require('path');
+      const Module = require('module');
+      const local = path.resolve(process.env.NODE_PATH, specifier);
+      try {
+        return await import(Module.createRequire(local + '/').resolve(specifier));
+      } catch (_) {
+        // fall through to default resolution
+      }
+    }
+    return import(specifier);
+  };
+
+  const { chromium, firefox, webkit } = await requireFrom('playwright');
   const ENGINES = { chromium, firefox, webkit };
 
   const failures = [];

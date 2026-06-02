@@ -123,8 +123,15 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
 
-      - name: Install Playwright browsers
-        run: pnpm dlx playwright@1.49 install --with-deps chromium firefox webkit
+      - name: Install Playwright package + browsers (sidecar)
+        run: |
+          set -x
+          mkdir -p /tmp/pw-bin
+          cd /tmp/pw-bin
+          printf '{"name":"pw-sidecar","version":"0.0.0","private":true}\n' > package.json
+          npm install --no-fund --no-audit --loglevel=error playwright@1.49
+          # Install browser binaries via the local playwright cli
+          npx playwright install --with-deps chromium firefox webkit
 
       - name: Serve static export
         run: |
@@ -135,4 +142,4 @@ jobs:
           done
 
       - name: Cross-browser smoke (chromium + firefox + webkit)
-        run: pnpm dlx playwright@1.49 -- node scripts/qa/cross_browser.js
+        run: NODE_PATH=/tmp/pw-bin/node_modules node scripts/qa/cross_browser.js
