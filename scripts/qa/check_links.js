@@ -81,9 +81,25 @@ const IGNORE_URL_RE = /\/favicon\.ico$|\/apple-touch-icon.*\.png$/;
   }
 
   // Visit each unique internal link, record the status.
+  // Skip binary asset URLs (parquet, etc.) — puppeteer aborts non-HTML
+  // responses with ERR_ABORTED which is a documented false-positive.
+  // For those, use a HEAD request to confirm the file is served.
+  const BINARY_URL_RE = /\.(parquet|csv|json|zip|tar|gz|png|jpg|svg|ico|woff2?)(?:$|[?#])/i;
   console.log(`Visiting ${visited.size} unique internal links ...`);
   for (const l of visited) {
     if (IGNORE_URL_RE.test(l)) continue;
+    if (BINARY_URL_RE.test(l)) {
+      // HEAD-check binary assets (parquets are streamed by DuckDB-WASM,
+      // not by the page's main fetch graph; puppeteer can't load them
+      // via goto() because the response isn't text/html).
+      try {
+        const res = await fetch(`${BASE}${l}`, { method: 'HEAD' });
+        if (!res.ok) failures.push(`${l}: HTTP ${res.status}`);
+      } catch (e) {
+        failures.push(`${l}: HEAD ${e.message}`);
+      }
+      continue;
+    }
     const page = await browser.newPage();
     try {
       const resp = await page.goto(`${BASE}${l}`, {
@@ -96,7 +112,12 @@ const IGNORE_URL_RE = /\/favicon\.ico$|\/apple-touch-icon.*\.png$/;
     } catch (e) {
       failures.push(`${l}: ${e.message}`);
     }
-    await page.close();
+    // page.close() can hang on macOS Chrome when DuckDB-WASM workers are
+    // mid-init; race with a 2s timeout so the loop keeps moving.
+    await Promise.race([
+      page.close().catch(() => {}),
+      new Promise((r) => setTimeout(r, 2000)),
+    ]);
   }
 
   if (failures.length) {

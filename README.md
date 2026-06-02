@@ -122,26 +122,35 @@ Cloudflare Workers Static Assets auto-deploys on push to `main` via GitHub Actio
 
 ## QA
 
-The QA harness lives in `scripts/qa/`:
+The QA harness lives in `scripts/qa/` and is surfaced via root `pnpm run` commands:
 
 ```bash
-# Start a static server, then run all probes
+# Per-dimension
+pnpm qa:facts     # 30-fact parquet verification (no server needed)
+pnpm qa:probe     # puppeteer page probe (11 routes × 4 viewports)
+pnpm qa:axe       # axe-core a11y on 6 main routes (best-effort locally; runs in CI)
+pnpm qa:links     # internal link integrity crawler
+
+# Full orchestrator → docs/qa/qa-report-YYYY-MM-DD.md
 python3 -m http.server -d apps/web/out 3000 &
-bash scripts/qa/run_all.sh   # writes docs/qa/qa-report-YYYY-MM-DD.md
+pnpm qa:all
 ```
 
 Coverage:
 
-| Dimension | Tool | Status |
-|---|---|---|
-| Page probe (errors, overflow, screenshots — 11 routes × 4 viewports) | Puppeteer | 44/44 PASS |
-| Fact verification (30 known-true assertions against parquets) | DuckDB | 30/30 PASS |
-| Link integrity | Puppeteer | PASS |
-| Accessibility (axe-core, 6 routes) | axe + Puppeteer | 0 serious/critical |
-| Lighthouse | Lighthouse CLI | manual on demand |
-| Manual dimensions (cross-browser, screen-reader, real-device, print, editorial voice) | — | user-gated |
+| Dimension | Tool | Local | CI |
+|---|---|:-:|:-:|
+| Page probe (errors, overflow, screenshots — 11 routes × 4 viewports) | Puppeteer | 44/44 PASS | — |
+| Fact verification (30 known-true assertions against parquets) | DuckDB | 30/30 PASS | — |
+| Link integrity | Puppeteer | PASS | — |
+| Accessibility (axe-core, 6 routes) | axe + Puppeteer | best-effort¹ | **6/6 PASS** in CI |
+| Bundle size budget (≤ 250 KB gz/chunk, ≤ 50 MB/parquet) | gzip + stat | — | **PASS** in CI |
+| Lighthouse | Lighthouse CLI | manual on demand | — |
+| Manual (cross-browser, screen-reader, real-device, print, editorial voice) | — | user-gated | — |
 
-The 30-fact baseline is recalibrated whenever the data pipeline materially changes (most recently 2026-06-02 after the S5.5 v3 raw-source rebuild). See [docs/qa/qa-report-2026-06-01.md](docs/qa/qa-report-2026-06-01.md) for the latest run.
+¹ Axe-core deadlocks on macOS Chrome's interaction with DuckDB-WASM workers when run locally; the CI Linux runner is unaffected. axe + bundle-budget are gated CI checks: a regression in either fails the build.
+
+The 30-fact baseline is recalibrated whenever the data pipeline materially changes (most recently 2026-06-02 after the S5.5 v3 raw-source rebuild). See [docs/qa/qa-report-2026-06-02.md](docs/qa/qa-report-2026-06-02.md) for the latest run.
 
 ## Documentation
 
