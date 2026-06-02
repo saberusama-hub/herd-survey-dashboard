@@ -20,30 +20,42 @@ import {
   getNationalAgencyTrend,
   getNationalConcentration,
   getNationalFieldMix,
+  getNationalNihICs,
   getNationalOverview,
   getNationalPiDistribution,
   getNationalStateRollup,
   getNationalTeamSize,
+  getNationalTopicLeaders,
   getNationalTopics,
   getNationalTrends,
+  getStateTopicLeaders,
+  getTopClimbers,
+  getTopFallers,
+  type GrowthRow,
   type NationalFieldMixRow,
+  type NationalNihIcRow,
   type NationalPiDistributionRow,
   type NationalStateRollupRow,
   type NationalTeamSizeRow,
   type NationalTopicRow,
   type NationalTrendRow,
+  type StateTopicRow,
+  type TopicLeaderRow,
 } from '@/lib/queries';
 
 const SECTIONS = [
   { id: 'overview', label: 'Overview' },
   { id: 'agencies', label: 'Agencies' },
+  { id: 'nih-ics', label: 'NIH Institutes' },
   { id: 'concentration', label: 'Concentration' },
   { id: 'geography', label: 'Geography' },
   { id: 'trends', label: 'Trends' },
   { id: 'disciplines', label: 'Disciplines' },
   { id: 'topics', label: 'Topics' },
+  { id: 'state-specialization', label: 'State specialization' },
   { id: 'team-size', label: 'Team size' },
   { id: 'pi-distribution', label: 'PI distribution' },
+  { id: 'climbers-fallers', label: 'Climbers & fallers' },
 ];
 
 const TEAM_BUCKET_ORDER = ['1', '2-5', '6-10', '11-20', '21+'] as const;
@@ -157,6 +169,11 @@ export default function NationalPage() {
   const [trends, setTrends] = useState<NationalTrendRow[]>([]);
   const [teamSize, setTeamSize] = useState<NationalTeamSizeRow[]>([]);
   const [topics, setTopics] = useState<NationalTopicRow[]>([]);
+  const [nihIcs, setNihIcs] = useState<NationalNihIcRow[]>([]);
+  const [topicLeaders, setTopicLeaders] = useState<TopicLeaderRow[]>([]);
+  const [stateTopics, setStateTopics] = useState<StateTopicRow[]>([]);
+  const [climbers, setClimbers] = useState<GrowthRow[]>([]);
+  const [fallers, setFallers] = useState<GrowthRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -177,8 +194,13 @@ export default function NationalPage() {
       getNationalTrends(),
       getNationalTeamSize(),
       getNationalTopics(),
+      getNationalNihICs(),
+      getNationalTopicLeaders(5),
+      getStateTopicLeaders(10),
+      getTopClimbers('5yr', 10),
+      getTopFallers('5yr', 10),
     ])
-      .then(([o, a, c, s, f, p, t, ts, tp]) => {
+      .then(([o, a, c, s, f, p, t, ts, tp, ic, tl, st, cl, fa]) => {
         if (cancelled) return;
         setOverview(o as OverviewRow[]);
         setAgencies(a as AgencyRow[]);
@@ -189,6 +211,11 @@ export default function NationalPage() {
         setTrends(t);
         setTeamSize(ts);
         setTopics(tp);
+        setNihIcs(ic);
+        setTopicLeaders(tl);
+        setStateTopics(st);
+        setClimbers(cl);
+        setFallers(fa);
         setLoading(false);
       })
       .catch((e: Error) => {
@@ -483,6 +510,79 @@ export default function NationalPage() {
     return { latestFy, latestRows, trend };
   }, [teamSize]);
 
+  /* ─── §S5.1 NIH IC view: latest-FY 27-IC ranking + top-5 20yr trends ─── */
+  const nihIcView = useMemo(() => {
+    if (nihIcs.length === 0) {
+      return {
+        latestFy: null as number | null,
+        ranked: [] as Array<{ ic_code: string; ic_full_name: string; amount: number; pct: number }>,
+        top5: [] as string[],
+        trend: [] as Array<Record<string, number>>,
+      };
+    }
+    const latestFy = nihIcs.reduce(
+      (m, r) => (r.fiscal_year > m ? r.fiscal_year : m),
+      nihIcs[0].fiscal_year,
+    );
+    const ranked = nihIcs
+      .filter((r) => r.fiscal_year === latestFy)
+      .map((r) => ({
+        ic_code: r.ic_code,
+        ic_full_name: r.ic_full_name || r.ic_code,
+        amount: Number(r.amount_nominal) || 0,
+        pct: Number(r.pct_of_nih) || 0,
+      }))
+      .filter((r) => r.amount > 0)
+      .sort((a, b) => b.amount - a.amount);
+    const top5 = ranked.slice(0, 5).map((r) => r.ic_full_name);
+    // 20-year share trend per top-5 IC.
+    const byFy = new Map<number, Record<string, number>>();
+    for (const r of nihIcs) {
+      const fullName = r.ic_full_name || r.ic_code;
+      if (!top5.includes(fullName)) continue;
+      const row = byFy.get(r.fiscal_year) ?? {};
+      row[fullName] = (Number(r.pct_of_nih) || 0) * 100;
+      byFy.set(r.fiscal_year, row);
+    }
+    const trend = Array.from(byFy.keys())
+      .sort((a, b) => a - b)
+      .map((fy) => {
+        const v = byFy.get(fy) ?? {};
+        const row: Record<string, number> = { fiscal_year: fy };
+        for (const t of top5) row[t] = v[t] ?? 0;
+        return row;
+      });
+    return { latestFy, ranked, top5, trend };
+  }, [nihIcs]);
+
+  /* ─── §S5.2 Topic leaders: group {topic: [leader rows]} ─── */
+  const topicLeadersByTopic = useMemo(() => {
+    const m = new Map<string, TopicLeaderRow[]>();
+    for (const r of topicLeaders) {
+      const arr = m.get(r.topic) ?? [];
+      arr.push(r);
+      m.set(r.topic, arr);
+    }
+    for (const arr of m.values()) {
+      arr.sort((a, b) => a.topic_rank_national - b.topic_rank_national);
+    }
+    return m;
+  }, [topicLeaders]);
+
+  /* ─── §S5.3 State specialization: group {topic: [state rows]} ─── */
+  const stateTopicsByTopic = useMemo(() => {
+    const m = new Map<string, StateTopicRow[]>();
+    for (const r of stateTopics) {
+      const arr = m.get(r.topic) ?? [];
+      arr.push(r);
+      m.set(r.topic, arr);
+    }
+    for (const arr of m.values()) {
+      arr.sort((a, b) => Number(b.state_topic_amount) - Number(a.state_topic_amount));
+    }
+    return m;
+  }, [stateTopics]);
+
   return (
     <div className="container-wide pt-10 pb-24 md:pt-14 md:pb-32 space-y-6">
       <PageHeader
@@ -613,6 +713,75 @@ export default function NationalPage() {
             showLegend={false}
           />
         </ChartFrame>
+      </section>
+
+      {/* ─── §S5.1 NIH Institutes drill-down ─── */}
+      <section
+        id="nih-ics"
+        aria-labelledby="national-section-nih-ics"
+        className="scroll-mt-24"
+      >
+        <SectionDivider
+          eyebrow="National · NIH Institutes"
+          title="Inside the HHS bar: 27 NIH Institutes & Centers"
+          dek="HHS dollars routed through NIH split across the administering Institute. NCI, NIAID, NHLBI lead by funding volume in most years."
+          color="hsl(var(--agency-nih))"
+        />
+        <ChartFrame
+          eyebrow={nihIcView.latestFy ? `FY${nihIcView.latestFy} ranking` : 'NIH ICs'}
+          title="National NIH funding by Institute / Center"
+          dek="Sorted by total NIH funding in the latest reported fiscal year. % is share of national NIH total that year (sums to 100%)."
+          source="fact_nih_project.admin_ic_code · agg_national_nih_ic"
+          methodology={{
+            what:
+              'Which NIH Institute or Center actually wrote the checks — Cancer (NCI), Allergy/Infectious (NIAID), Heart/Lung/Blood (NHLBI), General Medical (NIGMS), and so on.',
+            how:
+              'We aggregate fact_nih_project.total_cost_nominal by administering IC (admin_ic_code). Each project is counted once at its administering IC; the 27 standard ICs plus a few legacy/special codes are included.',
+            caveats:
+              'admin_ic_code represents the IC that manages the project. For multi-IC awards, contributing ICs may not be reflected. Total_cost includes both direct + indirect.',
+          }}
+        >
+          <ResponsiveSvg height={Math.max(420, nihIcView.ranked.length * 20 + 40)}>
+            {(w, h) => <IcBars width={w} height={h} bars={nihIcView.ranked} />}
+          </ResponsiveSvg>
+        </ChartFrame>
+
+        {nihIcView.top5.length > 0 && (
+          <ChartFrame
+            eyebrow="20-year IC share trend"
+            title="Top 5 NIH Institutes: share of national NIH $ over time"
+            dek="One line per top-5 IC, plotted as % of national NIH $ each FY."
+            source="agg_national_nih_ic"
+            methodology={{
+              what:
+                'Whether the dominant NIH Institutes have held steady or shifted relative to each other over 20 years.',
+              how:
+                'For each FY we compute IC share = IC dollars ÷ total NIH dollars that year. One line per IC, using the top-5 latest-FY ranking by dollar amount.',
+              caveats:
+                'Membership of "top 5" is fixed to the latest-FY ranking, so earlier years may show some non-top-5 ICs missing from this view.',
+            }}
+          >
+            <LineChart
+              data={nihIcView.trend as unknown as Array<Record<string, unknown>>}
+              xKey="fiscal_year"
+              series={nihIcView.top5.map((t, i) => ({
+                key: t,
+                label: t,
+                color: [
+                  'hsl(var(--accent))',
+                  'hsl(var(--agency-nih))',
+                  'hsl(var(--agency-nsf))',
+                  'hsl(var(--agency-dod))',
+                  'hsl(var(--agency-doe))',
+                ][i % 5],
+              }))}
+              yFormat={(v) => `${v.toFixed(1)}%`}
+              height={340}
+              directLabels
+              showLegend={false}
+            />
+          </ChartFrame>
+        )}
       </section>
 
       {/* ─── §3 Concentration ─── */}
@@ -929,6 +1098,132 @@ export default function NationalPage() {
             showLegend={false}
           />
         </ChartFrame>
+
+        {topicLeaders.length > 0 && topicsView.top10.length > 0 && (
+          <ChartFrame
+            eyebrow="Top universities per topic"
+            title="The top 5 universities funded for each top-10 topic"
+            dek="For each of the 10 most-funded topics, the universities that received the largest tagged federal $ in the latest fiscal year."
+            source="agg_uni_specialization (latest FY)"
+            methodology={{
+              what:
+                'Where the biggest research-topic dollars actually land — for AI/ML, Cancer, Quantum, etc., which 5 universities are at the top.',
+              how:
+                'For the latest reported FY we rank universities by tagged federal $ within each topic (topic_rank_national), then list the top 5. Click a name to open that uni\'s profile.',
+              caveats:
+                'Ranking uses the same regex-tagged grant text as the topics chart above. Topic overlap rules apply (a grant can match multiple topics).',
+            }}
+          >
+            <div className="grid grid-cols-1 gap-x-8 gap-y-4 md:grid-cols-2">
+              {topicsView.top10.map((topic) => {
+                const leaders = topicLeadersByTopic.get(topic) ?? [];
+                if (leaders.length === 0) return null;
+                return (
+                  <div key={topic}>
+                    <p className="mb-1.5 text-[11px] uppercase tracking-wider text-text-tertiary">
+                      {topic}
+                    </p>
+                    <ol className="space-y-1 text-[12px]">
+                      {leaders.slice(0, 5).map((u) => (
+                        <li
+                          key={u.institution_sk}
+                          className="flex items-baseline justify-between gap-3 border-b border-rule/40 py-1"
+                        >
+                          <span className="min-w-0 truncate">
+                            <span className="mr-2 text-text-tertiary tnum">
+                              #{u.topic_rank_national}
+                            </span>
+                            <a
+                              href={`/universities/${u.institution_sk}`}
+                              className="text-accent hover:underline"
+                            >
+                              {u.canonical_name ?? u.institution_sk}
+                            </a>
+                            {u.state_code && (
+                              <span className="ml-1 text-text-tertiary">· {u.state_code}</span>
+                            )}
+                          </span>
+                          <span className="shrink-0 text-text-secondary tnum">
+                            {formatDollars(Number(u.uni_topic_amount) || 0)}
+                          </span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                );
+              })}
+            </div>
+          </ChartFrame>
+        )}
+      </section>
+
+      {/* ─── §S5.3 State topic specialization ─── */}
+      <section
+        id="state-specialization"
+        aria-labelledby="national-section-state-spec"
+        className="scroll-mt-24"
+      >
+        <SectionDivider
+          eyebrow="National · State specialization"
+          title="Which states lead each research topic"
+          dek="Small-multiples view: for each of the top 6 topics by national $, the 5 states that captured the largest share in the latest fiscal year."
+          color="hsl(var(--agency-nasa))"
+        />
+        <ChartFrame
+          eyebrow={nihIcView.latestFy ? `FY${nihIcView.latestFy} state ranking` : 'State topic leaders'}
+          title="Top 5 states per research topic"
+          dek="Each panel shows one topic; bars are the top 5 states by tagged federal $ that year, with each state's share of the national topic total."
+          source="agg_state_topic"
+          methodology={{
+            what:
+              'For each major research topic, the U.S. states whose universities won the largest slice — a geographic read on where the AI dollars, the cancer dollars, the climate dollars actually went.',
+            how:
+              'agg_state_topic rolls each university\'s tagged topic dollars up to its headquarters state, then ranks states by total per (topic, FY). state_topic_share = state total ÷ national topic total.',
+            caveats:
+              'A university\'s state is its headquarters state in dim_institution. Multi-campus systems may understate states with prominent branch campuses.',
+          }}
+        >
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {(topicsView.top10.slice(0, 6) as string[]).map((topic) => {
+              const states = (stateTopicsByTopic.get(topic) ?? []).slice(0, 5);
+              if (states.length === 0) return null;
+              const maxAmt = Math.max(...states.map((s) => Number(s.state_topic_amount) || 0));
+              return (
+                <div key={topic} className="rounded border border-rule p-3">
+                  <p className="mb-2 text-[11px] uppercase tracking-wider text-text-tertiary">
+                    {topic}
+                  </p>
+                  <ul className="space-y-1">
+                    {states.map((s) => {
+                      const amt = Number(s.state_topic_amount) || 0;
+                      const share = Number(s.state_topic_share) || 0;
+                      const w = maxAmt > 0 ? (amt / maxAmt) * 100 : 0;
+                      return (
+                        <li key={s.state_code} className="text-[12px]">
+                          <div className="flex items-baseline justify-between gap-2">
+                            <span className="font-medium tnum">{s.state_code}</span>
+                            <span className="text-text-tertiary tnum">
+                              {formatPercent(share)}
+                            </span>
+                          </div>
+                          <div
+                            className="mt-0.5 h-1.5 rounded"
+                            style={{
+                              width: `${w}%`,
+                              background: 'hsl(var(--accent))',
+                              minWidth: 4,
+                            }}
+                            aria-label={`${s.state_code} ${formatDollars(amt)} (${formatPercent(share)})`}
+                          />
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        </ChartFrame>
       </section>
 
       {/* ─── §8 Team size ─── */}
@@ -1049,11 +1344,194 @@ export default function NationalPage() {
           </ResponsiveSvg>
         </ChartFrame>
       </section>
+
+      {/* ─── §S5.4 5-yr climbers & fallers ─── */}
+      <section
+        id="climbers-fallers"
+        aria-labelledby="national-section-climbers"
+        className="scroll-mt-24"
+      >
+        <SectionDivider
+          eyebrow="National · Growth"
+          title="5-year climbers & fallers"
+          dek="The 10 fastest-growing and the 10 fastest-declining universities by 5-year compound annual growth rate, FY2019 → FY2024."
+          color="hsl(var(--agency-doe))"
+        />
+        <ChartFrame
+          eyebrow="FY2019 → FY2024 CAGR"
+          title="Who grew, who shrank?"
+          dek="One panel of climbers (top 10 by 5-yr CAGR), one of fallers (bottom 10). Restricted to universities with FY2024 HERD R&D ≥ $5M to avoid tiny-base noise."
+          source="agg_uni_growth"
+          methodology={{
+            what:
+              'Which universities have been on the steepest 5-year upward or downward trajectory, in HERD-reported total R&D.',
+            how:
+              'CAGR_5yr = (FY24 total / FY19 total)^(1/5) − 1. Universities are restricted to those with FY24 total R&D ≥ $5M (avoids divide-by-tiny CAGRs). Climbers are sorted descending; fallers ascending.',
+            caveats:
+              'Nominal dollars (no CPI deflation) — real-dollar CAGRs would be ~2.5–3% lower per year over the 2019-24 window. Rank-change columns use HERD-reported FY19 ranks among the same $5M cohort.',
+          }}
+        >
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+            <GrowthLeaderboard
+              title="Top 10 climbers (5-yr CAGR)"
+              rows={climbers}
+              dir="climber"
+            />
+            <GrowthLeaderboard
+              title="Bottom 10 fallers (5-yr CAGR)"
+              rows={fallers}
+              dir="faller"
+            />
+          </div>
+        </ChartFrame>
+      </section>
     </div>
   );
 }
 
 /* ───────────── Inline visx components (kept local to the file) ──────────── */
+
+function IcBars({
+  bars,
+  width,
+  height,
+}: {
+  bars: Array<{ ic_code: string; ic_full_name: string; amount: number; pct: number }>;
+  width: number;
+  height: number;
+}) {
+  const margin = { top: 8, right: 100, bottom: 28, left: 240 };
+  const innerW = Math.max(0, width - margin.left - margin.right);
+  const innerH = Math.max(0, height - margin.top - margin.bottom);
+  const labels = bars.map((b) => b.ic_full_name);
+  const y = scaleBand({ domain: labels, range: [0, innerH], padding: 0.15 });
+  const x = scaleLinear({
+    domain: [0, Math.max(1, ...bars.map((b) => b.amount))],
+    range: [0, innerW],
+    nice: true,
+  });
+  return (
+    <svg width={width} height={height} role="img">
+      <Group left={margin.left} top={margin.top}>
+        {bars.map((b) => {
+          const by = y(b.ic_full_name) ?? 0;
+          const bw = x(b.amount);
+          const bh = y.bandwidth();
+          return (
+            <g key={b.ic_code}>
+              <rect
+                x={0}
+                y={by}
+                width={bw}
+                height={bh}
+                fill="hsl(var(--agency-nih))"
+                rx={2}
+              />
+              <text
+                x={bw + 6}
+                y={by + bh / 2}
+                dy="0.35em"
+                className="fill-text-secondary text-[11px] tnum"
+              >
+                {formatDollars(b.amount)} · {formatPercent(b.pct)}
+              </text>
+            </g>
+          );
+        })}
+        <AxisBottom
+          top={innerH}
+          scale={x}
+          numTicks={4}
+          tickFormat={(v) => formatDollars(Number(v))}
+          tickLabelProps={() => ({
+            className: 'fill-text-tertiary text-[11px] tnum',
+            textAnchor: 'middle',
+          })}
+        />
+        <AxisLeft
+          scale={y}
+          tickLabelProps={() => ({
+            className: 'fill-text-primary text-[11px]',
+            textAnchor: 'end',
+            dx: -6,
+            dy: 4,
+          })}
+          hideAxisLine
+          hideTicks
+        />
+      </Group>
+    </svg>
+  );
+}
+
+function GrowthLeaderboard({
+  title,
+  rows,
+  dir,
+}: {
+  title: string;
+  rows: GrowthRow[];
+  dir: 'climber' | 'faller';
+}) {
+  if (rows.length === 0) {
+    return (
+      <div>
+        <p className="mb-2 text-[12px] uppercase tracking-wider text-text-tertiary">{title}</p>
+        <p className="text-[11px] text-text-tertiary">No rows.</p>
+      </div>
+    );
+  }
+  return (
+    <div>
+      <p className="mb-2 text-[12px] uppercase tracking-wider text-text-tertiary">{title}</p>
+      <ol className="divide-y divide-rule/40 text-[12px]">
+        {rows.map((r, i) => {
+          const cagr = Number(r.cagr_5yr) || 0;
+          const rankDelta = r.rank_change_5yr;
+          const rankSign = rankDelta && rankDelta > 0 ? '↑' : rankDelta && rankDelta < 0 ? '↓' : '·';
+          const cagrColor =
+            dir === 'climber' ? 'text-positive' : 'text-negative';
+          return (
+            <li
+              key={r.institution_sk}
+              className="flex items-baseline justify-between gap-3 py-1.5"
+            >
+              <span className="min-w-0 truncate">
+                <span className="mr-2 text-text-tertiary tnum">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <a
+                  href={`/universities/${r.institution_sk}`}
+                  className="text-accent hover:underline"
+                >
+                  {r.canonical_name ?? r.institution_sk}
+                </a>
+                {r.state_code && (
+                  <span className="ml-1 text-text-tertiary">· {r.state_code}</span>
+                )}
+              </span>
+              <span className="flex shrink-0 items-baseline gap-2 tnum">
+                <span className={cagrColor}>
+                  {cagr >= 0 ? '+' : ''}
+                  {(cagr * 100).toFixed(1)}%
+                </span>
+                {rankDelta !== null && rankDelta !== undefined && (
+                  <span className="text-text-tertiary">
+                    {rankSign}
+                    {Math.abs(rankDelta)}
+                  </span>
+                )}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+      <p className="mt-2 text-[10px] italic text-text-tertiary">
+        CAGR = (FY24 / FY19)^(1/5) − 1. Rank Δ = FY19 rank − FY24 rank within the $5M+ cohort.
+      </p>
+    </div>
+  );
+}
 
 function TopicBars({
   bars,
