@@ -40,8 +40,21 @@ jobs:
           done
       - name: Run axe a11y smoke
         run: |
-          # ubuntu-latest runners ship google-chrome-stable preinstalled
-          CHROME=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium-browser)
+          # ubuntu-latest runners ship google-chrome preinstalled; fall back
+          # to chromium-browser or apt-installed chromium if absent.
+          set -x
+          which google-chrome || true
+          which google-chrome-stable || true
+          which chromium || true
+          which chromium-browser || true
+          ls -la /usr/bin/google* 2>/dev/null || true
+          CHROME=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)
+          if [ -z "$CHROME" ]; then
+            echo "No Chrome on PATH; installing chromium via apt..."
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq chromium-browser || sudo apt-get install -y -qq chromium
+            CHROME=$(command -v chromium || command -v chromium-browser)
+          fi
           echo "Using Chrome: $CHROME"
           CHROME="$CHROME" node scripts/qa/axe_smoke.js
 
