@@ -95,19 +95,24 @@ Prereqs: Node 20+, pnpm 9+, Python 3.10+ with DuckDB.
 # 1. Install JS deps
 pnpm install
 
-# 2. Set up the Python data-pipeline venv (one-time)
+# 2. Opt in to the pre-commit hook (one-time, prevents biome / typecheck regressions)
+bash .githooks/install.sh
+
+# 3. Set up the Python data-pipeline venv (one-time)
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r scripts/requirements.txt duckdb
 
-# 3. Build the browser-bundled parquet (reads from the source data lake)
+# 4. Build the browser-bundled parquet (reads from the source data lake)
 pnpm data:build
 pnpm data:verify
 
-# 4. Run the dashboard
+# 5. Run the dashboard
 pnpm dev
 # → http://localhost:3000
 ```
+
+The pre-commit hook runs `pnpm lint` (and `pnpm typecheck` if anything under `apps/web/` is staged) before every commit. Skip with `git commit --no-verify` in emergencies.
 
 ## Production build
 
