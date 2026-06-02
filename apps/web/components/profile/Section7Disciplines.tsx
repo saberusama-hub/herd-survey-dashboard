@@ -3,7 +3,7 @@
 import { AxisBottom, AxisLeft } from '@visx/axis';
 import { Group } from '@visx/group';
 import { scaleBand, scaleLinear } from '@visx/scale';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { ResponsiveSvg } from '@/components/charts/ResponsiveSvg';
 import { Sparkline } from '@/components/charts/Sparkline';
@@ -11,10 +11,16 @@ import { ChartFrame } from '@/components/editorial/ChartFrame';
 import { KpiStrip, type KpiTile } from '@/components/editorial/KpiStrip';
 import { SectionDivider } from '@/components/editorial/SectionDivider';
 import { formatDollars, formatPercent } from '@/lib/format';
-import type { UniversityProfile } from '@/lib/queries';
+import {
+  getUniversitySpecialization,
+  type SpecializationRow,
+  type UniversityProfile,
+} from '@/lib/queries';
 
 interface Props {
   profile: UniversityProfile;
+  /** institution_sk for the specialization-scores query. */
+  institutionSk: string;
 }
 
 /**
@@ -26,9 +32,42 @@ interface Props {
  *     20-year sparkline per topic. Title + (NSF) abstract / (NIH) terms
  *     pattern-matched into 30 buckets — see /methodology.
  */
-export function Section7Disciplines({ profile }: Props) {
+export function Section7Disciplines({ profile, institutionSk }: Props) {
   const { fieldMix, topics } = profile;
   const [showAllTopics, setShowAllTopics] = useState(false);
+  const [specialization, setSpecialization] = useState<SpecializationRow[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getUniversitySpecialization(institutionSk, 5)
+      .then((rows) => {
+        if (!cancelled) setSpecialization(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setSpecialization([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [institutionSk]);
+
+  const specializationKpis = useMemo<KpiTile[]>(() => {
+    if (!specialization || specialization.length === 0) return [];
+    return specialization.slice(0, 3).map((s) => {
+      const score = Number(s.specialization_score) || 0;
+      const rank = Number(s.topic_rank_national) || 0;
+      return {
+        label: s.topic,
+        value: `${score.toFixed(2)}×`,
+        delta: `${score >= 1 ? 'Over' : 'Under'}-indexed · rank #${rank} nationally`,
+        hint: (
+          <span className="text-text-tertiary">
+            {formatDollars(Number(s.uni_topic_amount) || 0)} federal $ tagged
+          </span>
+        ),
+      };
+    });
+  }, [specialization]);
 
   const view = useMemo(() => {
     if (fieldMix.length === 0 && topics.length === 0) {
@@ -205,6 +244,24 @@ export function Section7Disciplines({ profile }: Props) {
               </button>
             )}
           </ChartFrame>
+        )}
+
+        {/* Specialization KPIs — where this uni is over-indexed vs general size */}
+        {specializationKpis.length > 0 && (
+          <div>
+            <p className="mb-3 text-[11px] uppercase tracking-wider text-text-tertiary">
+              Where this university specializes
+            </p>
+            <KpiStrip tiles={specializationKpis} cols={3} />
+            <p className="mt-3 text-[11px] italic text-text-tertiary">
+              Specialization score = (uni's share of that topic's national federal $) ÷ (uni's share of national HERD R&amp;D).
+              Score &gt; 1 ⇒ over-indexed for the uni's size. See{' '}
+              <a className="text-accent hover:underline" href="/methodology#specialization">
+                methodology
+              </a>{' '}
+              for the formula.
+            </p>
+          </div>
         )}
       </div>
     </section>

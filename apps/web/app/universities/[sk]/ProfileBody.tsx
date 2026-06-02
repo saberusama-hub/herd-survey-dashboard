@@ -79,10 +79,10 @@ export function ProfileBody({ sk, fallbackName, state }: Props) {
       <Section1Hero profile={profile} state={state} />
       <Section2TotalRD profile={profile} />
       <Section3Sources profile={profile} />
-      <Section4Agencies profile={profile} />
+      <Section4Agencies profile={profile} institutionSk={sk} />
       <Section5Reconciliation profile={profile} />
       <Section6PIs profile={profile} />
-      <Section7Disciplines profile={profile} />
+      <Section7Disciplines profile={profile} institutionSk={sk} />
       <Section8Concentration profile={profile} />
       <Section9StateContext profile={profile} />
 
