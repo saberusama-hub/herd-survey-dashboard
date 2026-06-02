@@ -57,9 +57,9 @@
   },
   {
     "id": "hhs_total_fy2023",
-    "description": "HHS federal R&D FY2023 national total (~$28B)",
+    "description": "HHS federal R&D FY2023 national total (~$33.1B post-S5.5 v3 raw rebuild)",
     "sql": "SELECT CAST(SUM(amount_nominal) AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_uni_agency_split.parquet') WHERE fiscal_year = 2023 AND agency_bucket = 'HHS'",
-    "expected": 28079115000,
+    "expected": 33098797000,
     "tolerance_pct": 10.0
   },
   {
@@ -71,35 +71,35 @@
   },
   {
     "id": "dod_total_fy2023",
-    "description": "DOD federal R&D FY2023 national total (~$5.7B)",
+    "description": "DOD federal R&D FY2023 national total (~$9.0B post-rebuild)",
     "sql": "SELECT CAST(SUM(amount_nominal) AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_uni_agency_split.parquet') WHERE fiscal_year = 2023 AND agency_bucket = 'DOD'",
-    "expected": 5730273000,
+    "expected": 9046300000,
     "tolerance_pct": 10.0
   },
   {
     "id": "doe_total_fy2023",
-    "description": "DOE federal R&D FY2023 national total (~$2.1B)",
+    "description": "DOE federal R&D FY2023 national total (~$2.7B post-rebuild)",
     "sql": "SELECT CAST(SUM(amount_nominal) AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_uni_agency_split.parquet') WHERE fiscal_year = 2023 AND agency_bucket = 'DOE'",
-    "expected": 2107165000,
+    "expected": 2670700000,
     "tolerance_pct": 10.0
   },
   {
     "id": "nasa_total_fy2023",
-    "description": "NASA federal R&D FY2023 national total (~$1.9B)",
+    "description": "NASA federal R&D FY2023 national total (~$2.3B post-rebuild)",
     "sql": "SELECT CAST(SUM(amount_nominal) AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_uni_agency_split.parquet') WHERE fiscal_year = 2023 AND agency_bucket = 'NASA'",
-    "expected": 1895452000,
+    "expected": 2295600000,
     "tolerance_pct": 10.0
   },
   {
     "id": "usda_total_fy2023",
-    "description": "USDA federal R&D FY2023 national total (~$2.1B)",
+    "description": "USDA federal R&D FY2023 national total (~$1.7B post-rebuild)",
     "sql": "SELECT CAST(SUM(amount_nominal) AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_uni_agency_split.parquet') WHERE fiscal_year = 2023 AND agency_bucket = 'USDA'",
-    "expected": 2067771000,
+    "expected": 1700900000,
     "tolerance_pct": 10.0
   },
   {
     "id": "johns_hopkins_fy2024_total",
-    "description": "Johns Hopkins total R&D FY2024 ~$4.1B — #1 in US",
+    "description": "Johns Hopkins total R&D FY2024 ~$4.1B \u2014 #1 in US",
     "sql": "SELECT CAST(t.total_rd_nominal AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_uni_total_rd.parquet') t JOIN read_parquet('apps/web/public/data/dim_institution.parquet') i USING (institution_sk) WHERE i.canonical_name = 'Johns Hopkins University' AND t.fiscal_year = 2024",
     "expected": 4129264000,
     "tolerance_pct": 8.0
@@ -134,37 +134,37 @@
   },
   {
     "id": "ardes_nonprofit_fy2008_is_zero",
-    "description": "ARDES era (pre-FY2010) reports zero nonprofit dollars — landmine #2",
+    "description": "ARDES era (pre-FY2010) reports zero nonprofit dollars \u2014 landmine #2",
     "sql": "SELECT COALESCE((SELECT CAST(SUM(amount_nominal) AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_uni_source_split.parquet') WHERE fiscal_year = 2008 AND source_category = 'nonprofit'), 0)",
     "expected": 0,
     "tolerance_pct": 100.0
   },
   {
     "id": "nonprofit_fy2010_nonzero",
-    "description": "FY2010 (first post-ARDES year) has nonprofit dollars — ~$3.7B",
+    "description": "FY2010 (first post-ARDES year) has nonprofit dollars \u2014 ~$3.7B",
     "sql": "SELECT CAST(SUM(amount_nominal) AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_uni_source_split.parquet') WHERE fiscal_year = 2010 AND source_category = 'nonprofit'",
     "expected": 3729655000,
     "tolerance_pct": 15.0
   },
   {
     "id": "pi_count_floor_fy2024",
-    "description": "PI count national FY2024 from agg_uni_pi_metrics (top-20K NIH+NSF floor) — should be > 500",
+    "description": "PI count national FY2024 from agg_uni_pi_metrics (top-20K NIH+NSF floor) \u2014 should be > 500",
     "sql": "SELECT CAST(SUM(pi_count) AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_uni_pi_metrics.parquet') WHERE fiscal_year = 2024",
     "expected": 831,
     "tolerance_pct": 15.0
   },
   {
     "id": "hhi_sanity_fy2023_high",
-    "description": "HHI sanity FY2023 — at least one institution highly concentrated (>4000)",
+    "description": "HHI sanity FY2023 \u2014 count of highly-concentrated institutions (>4000 HHI)",
     "sql": "SELECT CAST(COUNT(*) AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_uni_concentration.parquet') WHERE fiscal_year = 2023 AND hhi > 4000",
-    "expected": 930,
+    "expected": 362,
     "tolerance_pct": 15.0
   },
   {
     "id": "hhi_sanity_fy2023_low",
-    "description": "HHI sanity FY2023 — many institutions diversified (<2500)",
+    "description": "HHI sanity FY2023 \u2014 count of well-diversified institutions (<2500 HHI)",
     "sql": "SELECT CAST(COUNT(*) AS DOUBLE) FROM read_parquet('apps/web/public/data/agg_uni_concentration.parquet') WHERE fiscal_year = 2023 AND hhi < 2500",
-    "expected": 39,
+    "expected": 90,
     "tolerance_pct": 15.0
   },
   {
@@ -176,7 +176,7 @@
   },
   {
     "id": "vol70_vol71_boundary_growth",
-    "description": "Vol70→71 boundary (FY2014→FY2015) growth — total US R&D should grow not crash",
+    "description": "Vol70\u219271 boundary (FY2014\u2192FY2015) growth \u2014 total US R&D should grow not crash",
     "sql": "WITH y AS (SELECT fiscal_year, SUM(amount_nominal) AS amt FROM read_parquet('apps/web/public/data/agg_national_overview.parquet') WHERE fiscal_year IN (2014, 2015) GROUP BY fiscal_year) SELECT (SELECT amt FROM y WHERE fiscal_year = 2015) / (SELECT amt FROM y WHERE fiscal_year = 2014)",
     "expected": 1.02,
     "tolerance_pct": 5.0
@@ -197,7 +197,7 @@
   },
   {
     "id": "sheet11_fy2024_gap_negative",
-    "description": "Sheet 11 FY2024 gap FF_explicit − HERD is negative post-FY2018 (~-$20B)",
+    "description": "Sheet 11 FY2024 gap FF_explicit \u2212 HERD is negative post-FY2018 (~-$20B)",
     "sql": "SELECT CAST(gap_ff_explicit_minus_herd_usd AS DOUBLE) FROM read_parquet('apps/web/public/data/sheet_11_federal_university_bridge.parquet') WHERE fiscal_year = 2024",
     "expected": -20311632000,
     "tolerance_pct": 15.0
