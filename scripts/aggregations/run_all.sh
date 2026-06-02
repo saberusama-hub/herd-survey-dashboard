@@ -19,9 +19,15 @@ if [ ! -x "$PY" ]; then
   exit 1
 fi
 
-echo "Running 15 aggregations using $($PY --version)..."
+echo "Running aggregations using $($PY --version)..."
+# Scripts 01-15: original Phase P1.
+# Scripts 16-20: Phase R raw-lake PI universe / team-size / 30-topic.
+# Scripts 21-25: Phase S5 NIH-IC / specialization / state-topic / growth.
+# Order matters — 23 depends on 18, 24 depends on 18, 25 depends on 01.
 for script in 01_*.py 02_*.py 03_*.py 04_*.py 05_*.py 06_*.py 07_*.py 08_*.py \
-              09_*.py 10_*.py 11_*.py 12_*.py 13_*.py 14_*.py 15_*.py; do
+              09_*.py 10_*.py 11_*.py 12_*.py 13_*.py 14_*.py 15_*.py \
+              16_*.py 17_*.py 18_*.py 19_*.py 20_*.py \
+              21_*.py 22_*.py 23_*.py 24_*.py 25_*.py; do
   echo ""
   echo "> $script"
   "$PY" "$script"
