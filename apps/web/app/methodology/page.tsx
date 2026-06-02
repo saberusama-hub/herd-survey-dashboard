@@ -429,6 +429,147 @@ export default function MethodologyPage() {
         </Card>
       </section>
 
+      <section className="space-y-4" id="nih-ic">
+        <h2 className="h-section">NIH Institute breakdown</h2>
+        <p className="text-text-secondary">
+          The HERD &ldquo;HHS&rdquo; agency bar collapses NIH plus every other Health &amp; Human Services component (CDC,
+          AHRQ, HRSA, etc.) into one number. The NIH IC drill-down opens up only the NIH portion, split across the 27
+          Institutes &amp; Centers that actually administer the grants.
+        </p>
+        <Card>
+          <CardContent className="text-sm text-text-secondary space-y-2">
+            <p>
+              <strong className="text-text-primary">What it is.</strong> Two pre-aggregated tables —{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">agg_uni_nih_ic</code> (per university × FY × IC)
+              and <code className="text-xs bg-accent-muted/40 rounded px-1">agg_national_nih_ic</code> (national × FY ×
+              IC with <code className="text-xs bg-accent-muted/40 rounded px-1">pct_of_nih</code>).
+            </p>
+            <p>
+              <strong className="text-text-primary">How it&apos;s computed.</strong> We aggregate{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">fact_nih_project.total_cost_nominal</code> by{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">admin_ic_code</code> (the administering IC). The
+              IC&apos;s full name is parsed from <code className="text-xs bg-accent-muted/40 rounded px-1">ic_name</code>{' '}
+              (&ldquo;&lt;NAME&gt;:&lt;project title&gt;&rdquo;) and the most-frequent string per IC is kept. The
+              per-university SK uses <code className="text-xs bg-accent-muted/40 rounded px-1">dim_institution_crosswalk</code>
+              to land on the HERD-side institution_sk.
+            </p>
+            <p>
+              <strong className="text-text-primary">Known limitations.</strong> admin_ic represents the IC that{' '}
+              <em>manages</em> the project — multi-IC awards can list co-funding ICs that aren&apos;t reflected here.
+              Non-NIH HHS components (CDC, AHRQ, HRSA, FDA, IHS) are not in{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">fact_nih_project</code>; the IC drill-down is
+              strictly NIH. Some legacy / special codes (e.g., <code className="text-xs bg-accent-muted/40 rounded px-1">RR</code>{' '}
+              for the now-defunct National Center for Research Resources) appear in older FYs.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="space-y-4" id="specialization">
+        <h2 className="h-section">University specialization score</h2>
+        <p className="text-text-secondary">
+          A topic-level specialization score that asks: <em>given how big this university is overall, does it
+          over-index on this research topic?</em>
+        </p>
+        <Card>
+          <CardContent className="text-sm text-text-secondary space-y-2">
+            <p>
+              <strong className="text-text-primary">What it is.</strong>{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">specialization_score = uni_topic_share /
+                uni_total_share</code>, computed per university × FY × topic.
+            </p>
+            <p>
+              <code className="text-xs bg-accent-muted/40 rounded px-1">uni_topic_share</code> = uni&apos;s topic dollars
+              ÷ national topic dollars; <code className="text-xs bg-accent-muted/40 rounded px-1">uni_total_share</code>{' '}
+              = uni&apos;s HERD total R&amp;D ÷ national HERD total. Score &gt; 1 means over-indexed (this uni
+              captures a larger slice of the topic than its overall size would predict); &lt; 1 means under-indexed.
+              Plus a national rank within (topic, FY).
+            </p>
+            <p>
+              <strong className="text-text-primary">How it&apos;s computed.</strong> Source is{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">agg_uni_topic</code> (30-topic regex-tagged NSF +
+              NIH grant text) joined to <code className="text-xs bg-accent-muted/40 rounded px-1">agg_uni_total_rd</code>.
+              Restricted to universities with HERD total R&amp;D &gt; 0 in that FY (a federal-grants-only institution
+              has no meaningful baseline for the share-of-share ratio).
+            </p>
+            <p>
+              <strong className="text-text-primary">Known limitations.</strong> Topic dollars come from regex-tagged
+              NSF + NIH grant text (titles + abstracts + project terms); they are a subset of total federal $ and don&apos;t
+              include other agencies&apos; awards. Score is sensitive to the same caveats as the 30-topic taxonomy: a
+              grant can match multiple topics (non-exclusive). The HERD-total denominator is institution-reported and
+              subject to the FY2005/FY2016 quality flags.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="space-y-4" id="state-topic">
+        <h2 className="h-section">State topic specialization</h2>
+        <p className="text-text-secondary">
+          The 30-topic taxonomy rolled up to U.S. state — which states&apos; universities captured the largest share of
+          the national topic dollars in the latest FY.
+        </p>
+        <Card>
+          <CardContent className="text-sm text-text-secondary space-y-2">
+            <p>
+              <strong className="text-text-primary">What it is.</strong> Per state × FY × topic, the total tagged
+              federal $, the state&apos;s share of the national topic total, and the leading institution_sk within
+              that state for that topic. Source:{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">agg_state_topic</code>.
+            </p>
+            <p>
+              <strong className="text-text-primary">How it&apos;s computed.</strong>{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">agg_uni_topic</code> joined to{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">dim_institution.state_code</code>, summed by
+              state × FY × topic. The top-uni-in-state is a window function (ROW_NUMBER over topic-amount DESC inside
+              each state).
+            </p>
+            <p>
+              <strong className="text-text-primary">Known limitations.</strong> A university is counted in its
+              headquarters state (the <code className="text-xs bg-accent-muted/40 rounded px-1">state_code</code> on
+              dim_institution), even when research is performed at branch campuses elsewhere. Topic overlap means
+              shares are not exclusive within state.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="space-y-4" id="growth">
+        <h2 className="h-section">5/10/20-year growth (climbers &amp; fallers)</h2>
+        <p className="text-text-secondary">
+          Compound-annual-growth-rate (CAGR) for each HERD university over three windows ending at FY2024, plus
+          year-on-year change and a 5-year rank movement.
+        </p>
+        <Card>
+          <CardContent className="text-sm text-text-secondary space-y-2">
+            <p>
+              <strong className="text-text-primary">What it is.</strong> One row per HERD university (with FY2024 total
+              ≥ $5M) in <code className="text-xs bg-accent-muted/40 rounded px-1">agg_uni_growth</code>. Columns:
+              fy24/fy19/fy14/fy05 totals, <code className="text-xs bg-accent-muted/40 rounded px-1">cagr_5yr</code>,{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">cagr_10yr</code>,{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">cagr_20yr</code>,{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">yoy_change_pct</code>,
+              <code className="text-xs bg-accent-muted/40 rounded px-1 mx-1">fy24_rank</code>,
+              <code className="text-xs bg-accent-muted/40 rounded px-1">rank_change_5yr</code>.
+            </p>
+            <p>
+              <strong className="text-text-primary">How it&apos;s computed.</strong>{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">cagr_5yr = (FY24 / FY19)^(1/5) − 1</code> (and
+              analogously for 10 and 20 years). Ranks are over the same FY24 ≥ $5M cohort. Source is{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">agg_uni_total_rd</code> (HERD-reported nominal
+              R&amp;D).
+            </p>
+            <p>
+              <strong className="text-text-primary">Known limitations.</strong> Nominal dollars; CPI deflation would
+              trim the FY19→FY24 CAGR by roughly 2.5–3 percentage points per year given the post-pandemic inflation.
+              The $5M floor avoids divide-by-tiny CAGRs (a uni going from $200K to $20M is technically 100× growth but
+              not editorially interesting). Universities that fell below $5M in FY24 are dropped, which makes the
+              &ldquo;fallers&rdquo; list a conservative one (true collapses out of the dataset are not surfaced).
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
       <section className="space-y-4">
         <h2 className="h-section">QA results</h2>
         <p className="text-text-secondary">
