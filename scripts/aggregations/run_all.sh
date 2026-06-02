@@ -36,3 +36,7 @@ done
 echo ""
 echo "Total agg_*.parquet size:"
 du -ch ../../apps/web/public/data/agg_*.parquet | tail -1
+
+echo ""
+echo "> Refreshing manifest.json"
+"$PY" ../refresh_manifest.py

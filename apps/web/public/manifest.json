@@ -1,7 +1,938 @@
 {
-  "built_at_utc": "2026-05-29T19:19:07.429841+00:00",
+  "built_at_utc": "2026-06-02T10:55:23.464271+00:00",
   "source_dir": "/Users/Usama/Documents/Documents - Usama\u2019s MacBook Pro/Claude Projects/Herd Survey/data/processed",
   "files": {
+    "agg_national_agency_trend": {
+      "rows": 140,
+      "size_bytes": 2916,
+      "sha256": "99a0e74c3c162b8fe028e8d9025607a3bfc383008ce50679d1b2730ba3741905",
+      "columns": [
+        {
+          "name": "fiscal_year",
+          "type": "int32"
+        },
+        {
+          "name": "agency_bucket",
+          "type": "string"
+        },
+        {
+          "name": "amount_nominal",
+          "type": "double"
+        },
+        {
+          "name": "amount_real",
+          "type": "double"
+        }
+      ]
+    },
+    "agg_national_concentration": {
+      "rows": 60,
+      "size_bytes": 1117,
+      "sha256": "3fa601a37dbe04f15ae07bb57407394c0262c4d92fce75e77e41569773658ed8",
+      "columns": [
+        {
+          "name": "fiscal_year",
+          "type": "int32"
+        },
+        {
+          "name": "bucket",
+          "type": "string"
+        },
+        {
+          "name": "share",
+          "type": "double"
+        }
+      ]
+    },
+    "agg_national_nih_ic": {
+      "rows": 929,
+      "size_bytes": 17992,
+      "sha256": "0622e64e612f9bbd9ddd444a296e7bce4b57e1bcbaf15327c495a4d75a16a831",
+      "columns": [
+        {
+          "name": "fiscal_year",
+          "type": "int32"
+        },
+        {
+          "name": "ic_code",
+          "type": "string"
+        },
+        {
+          "name": "ic_full_name",
+          "type": "string"
+        },
+        {
+          "name": "amount_nominal",
+          "type": "double"
+        },
+        {
+          "name": "project_count",
+          "type": "int64"
+        },
+        {
+          "name": "pct_of_nih",
+          "type": "double"
+        }
+      ]
+    },
+    "agg_national_overview": {
+      "rows": 115,
+      "size_bytes": 2652,
+      "sha256": "295cf341cd52c08bf55d0eaf60395c3eaeb7ab7382948c1a59519a9043e71744",
+      "columns": [
+        {
+          "name": "fiscal_year",
+          "type": "int32"
+        },
+        {
+          "name": "source_category",
+          "type": "string"
+        },
+        {
+          "name": "amount_nominal",
+          "type": "double"
+        },
+        {
+          "name": "amount_real",
+          "type": "double"
+        }
+      ]
+    },
+    "agg_national_team_size": {
+      "rows": 83,
+      "size_bytes": 2587,
+      "sha256": "f1c3d4eba6a8ab559b7eac5e3bc9ecd6739f55966ea3d19605887076cb1323e0",
+      "columns": [
+        {
+          "name": "fiscal_year",
+          "type": "int32"
+        },
+        {
+          "name": "team_size_bucket",
+          "type": "string"
+        },
+        {
+          "name": "grant_count",
+          "type": "int64"
+        },
+        {
+          "name": "total_amount",
+          "type": "double"
+        },
+        {
+          "name": "share_of_total",
+          "type": "double"
+        }
+      ]
+    },
+    "agg_national_topic": {
+      "rows": 600,
+      "size_bytes": 10901,
+      "sha256": "1730f9faaa300dd67fbf31c4cada798b58e2495eab23c265931f00526137bf76",
+      "columns": [
+        {
+          "name": "fiscal_year",
+          "type": "int32"
+        },
+        {
+          "name": "topic",
+          "type": "string"
+        },
+        {
+          "name": "grant_count",
+          "type": "int64"
+        },
+        {
+          "name": "tagged_amount",
+          "type": "double"
+        },
+        {
+          "name": "share_of_total",
+          "type": "double"
+        }
+      ]
+    },
+    "agg_state_topic": {
+      "rows": 29688,
+      "size_bytes": 439004,
+      "sha256": "d4fbc980ae90e87e35de52a1829ee4191ec17feae0ffae0740b632d6f8ec12bb",
+      "columns": [
+        {
+          "name": "state_code",
+          "type": "string"
+        },
+        {
+          "name": "fiscal_year",
+          "type": "int32"
+        },
+        {
+          "name": "topic",
+          "type": "string"
+        },
+        {
+          "name": "state_topic_amount",
+          "type": "double"
+        },
+        {
+          "name": "state_topic_share",
+          "type": "double"
+        },
+        {
+          "name": "top_uni_in_state",
+          "type": "string"
+        }
+      ]
+    },
+    "agg_uni_agency_split": {
+      "rows": 66810,
+      "size_bytes": 567095,
+      "sha256": "2c53517feebddd25e3a789d7656034cbaacf6314e49afac6aeddec6483d6669f",
+      "columns": [
+        {
+          "name": "institution_sk",
+          "type": "string"
+        },
+        {
+          "name": "fiscal_year",
+          "type": "int32"
+        },
+        {
+          "name": "agency_bucket",
+          "type": "string"
+        },
+        {
+          "name": "amount_nominal",
+          "type": "double"
+        },
+        {
+          "name": "amount_real",
+          "type": "double"
+        }
+      ]
+    },
+    "agg_uni_concentration": {
+      "rows": 13167,
+      "size_bytes": 298100,
+      "sha256": "4a5865f480f9b2cea5ed58badfbfa0715dff44f5ebee9f24ec2280cc914492f4",
+      "columns": [
+        {
+          "name": "institution_sk",
+          "type": "string"
+        },
+        {
+          "name": "fiscal_year",
+          "type": "int32"
+        },
+        {
+          "name": "hhi",
+          "type": "double"
+        },
+        {
+          "name": "shannon_entropy",
+          "type": "double"
+        },
+        {
+          "name": "cov_5yr",
+          "type": "double"
+        }
+      ]
+    },
+    "agg_uni_federal_funds": {
+      "rows": 210983,
+      "size_bytes": 3081857,
+      "sha256": "ee543f3ae75b0aed4343897a9d026d963e0f60d7efcc95f2311b64eede153363",
+      "columns": [
+        {
+          "name": "institution_sk",
+          "type": "string"
+        },
+        {
+          "name": "fiscal_year",
+          "type": "int64"
+        },
+        {
+          "name": "agency_bucket",
+          "type": "string"
+        },
+        {
+          "name": "taxonomy_version",
+          "type": "string"
+        },
+        {
+          "name": "amount_nominal",
+          "type": "double"
+        },
+        {
+          "name": "amount_real",
+          "type": "double"
+        }
+      ]
+    },
+    "agg_uni_field_mix": {
+      "rows": 105514,
+      "size_bytes": 458735,
+      "sha256": "c4ccc4857fc38b29941010002bf9537da8a76fad0abb6958e1f5769aee059eda",
+      "columns": [
+        {
+          "name": "institution_sk",
+          "type": "string"
+        },
+        {
+          "name": "fiscal_year",
+          "type": "int64"
+        },
+        {
+          "name": "field_category",
+          "type": "string"
+        },
+        {
+          "name": "is_stem",
+          "type": "bool"
+        },
+        {
+          "name": "amount_nominal",
+          "type": "double"
+        }
+      ]
+    },
+    "agg_uni_growth": {
+      "rows": 463,
+      "size_bytes": 25691,
+      "sha256": "2b7085445020a7bda15c6181cc772022f18ab4d6c01d7e62385e9afca7111928",
+      "columns": [
+        {
+          "name": "institution_sk",
+          "type": "string"
+        },
+        {
+          "name": "fy24_total",
+          "type": "double"
+        },
+        {
+          "name": "fy19_total",
+          "type": "double"
+        },
+        {
+          "name": "fy14_total",
+          "type": "double"
+        },
+        {
+          "name": "fy05_total",
+          "type": "double"
+        },
+        {
+          "name": "cagr_5yr",
+          "type": "double"
+        },
+        {
+          "name": "cagr_10yr",
+          "type": "double"
+        },
+        {
+          "name": "cagr_20yr",
+          "type": "double"
+        },
+        {
+          "name": "yoy_change_pct",
+          "type": "double"
+        },
+        {
+          "name": "fy24_rank",
+          "type": "int32"
+        },
+        {
+          "name": "fy19_rank",
+          "type": "int32"
+        },
+        {
+          "name": "rank_change_5yr",
+          "type": "int32"
+        }
+      ]
+    },
+    "agg_uni_nih_ic": {
+      "rows": 79762,
+      "size_bytes": 601839,
+      "sha256": "fc107687edec3a3a181be62ad54ecc75e19fc95ac5a6c953b855fd121203f828",
+      "columns": [
+        {
+          "name": "institution_sk",
+          "type": "string"
+        },
+        {
+          "name": "fiscal_year",
+          "type": "int32"
+        },
+        {
+          "name": "ic_code",
+          "type": "string"
+        },
+        {
+          "name": "ic_full_name",
+          "type": "string"
+        },
+        {
+          "name": "amount_nominal",
+          "type": "double"
+        },
+        {
+          "name": "project_count",
+          "type": "int64"
+        }
+      ]
+    },
+    "agg_uni_patents": {
+      "rows": 7320,
+      "size_bytes": 22000,
+      "sha256": "9bba9800af8912652fb53037cf75cf669f4e0c60ea6d117c41c2fc0da0bac79a",
+      "columns": [
+        {
+          "name": "institution_sk",
+          "type": "string"
+        },
+        {
+          "name": "fiscal_year",
+          "type": "int64"
+        },
+        {
+          "name": "award_count",
+          "type": "int64"
+        },
+        {
+          "name": "patent_count",
+          "type": "int64"
+        },
+        {
+          "name": "patents_per_award",
+          "type": "double"
+        }
+      ]
+    },
+    "agg_uni_peers": {
+      "rows": 1980,
+      "size_bytes": 8727,
+      "sha256": "869e5f29515cce405ed0bfaaa39d5a58f967f64ad307d579c227a431ecd3320c",
+      "columns": [
+        {
+          "name": "uni_sk",
+          "type": "string"
+        },
+        {
+          "name": "peer_sk",
+          "type": "string"
+        },
+        {
+          "name": "peer_rank",
+          "type": "int64"
+        }
+      ]
+    },
+    "agg_uni_pi_distribution": {
+      "rows": 16005,
+      "size_bytes": 232562,
+      "sha256": "2f45075eddf74be4916aa6ae0ac1a9df9cf3635a2e14a780259adc6d58600192",
+      "columns": [
+        {
+          "name": "institution_sk",
+          "type": "string"
+        },
+        {
+          "name": "fiscal_year",
+          "type": "int64"
+        },
+        {
+          "name": "decile",
+          "type": "int64"
+        },
+        {
+          "name": "min_amount",
+          "type": "double"
+        },
+        {
+          "name": "max_amount",
+          "type": "double"
+        },
+        {
+          "name": "avg_amount",
+          "type": "double"
+        },
+        {
+          "name": "pi_count",
+          "type": "int64"
+        }
+      ]
+    },
+    "agg_uni_pi_metrics": {
+      "rows": 7320,
+      "size_bytes": 80103,
+      "sha256": "fffdf2ecbe3d7fa7d3f6f9a64baa1178f575ab5b3474f002a64c8f5fd8470c22",
+      "columns": [
+        {
+          "name": "institution_sk",
+          "type": "string"
+        },
+        {
+          "name": "fiscal_year",
+          "type": "int64"
+        },
+        {
+          "name": "pi_count",
+          "type": "int64"
+        },
+        {
+          "name": "federal_amount",
+          "type": "double"
+        },
+        {
+          "name": "amount_per_pi",
+          "type": "double"
+        }
+      ]
+    },
+    "agg_uni_pi_universe": {
+      "rows": 76904,
+      "size_bytes": 1138854,
+      "sha256": "ef0a216684051c022efdc8f8a22c2b21f71df1399de23572c33c45f8c80d96de",
+      "columns": [
+        {
+          "name": "institution_sk",
+          "type": "string"
+        },
+        {
+          "name": "fiscal_year",
+          "type": "int32"
+        },
+        {
+          "name": "distinct_pi_count",
+          "type": "int64"
+        },
+        {
+          "name": "federal_amount_nsf",
+          "type": "double"
+        },
+        {
+          "name": "federal_amount_nih",
+          "type": "double"
+        },
+        {
+          "name": "federal_amount_total",
+          "type": "double"
+        },
+        {
+          "name": "amount_per_pi",
+          "type": "double"
+        },
+        {
+          "name": "data_quality",
+          "type": "string"
+        }
+      ]
+    },
+    "agg_uni_source_split": {
+      "rows": 72357,
+      "size_bytes": 620332,
+      "sha256": "bc248f26230d90e817eb03736f4ef66f04b90fbe9880b46ffff5773f7855c3fe",
+      "columns": [
+        {
+          "name": "institution_sk",
+          "type": "string"
+        },
+        {
+          "name": "fiscal_year",
+          "type": "int32"
+        },
+        {
+          "name": "source_category",
+          "type": "string"
+        },
+        {
+          "name": "amount_nominal",
+          "type": "double"
+        },
+        {
+          "name": "amount_real",
+          "type": "double"
+        }
+      ]
+    },
+    "agg_uni_specialization": {
+      "rows": 112912,
+      "size_bytes": 2948087,
+      "sha256": "82423219679a473d6d4c4f60877bf8b488e0fe8bcea0e031d6c1146f38b75dda",
+      "columns": [
+        {
+          "name": "institution_sk",
+          "type": "string"
+        },
+        {
+          "name": "fiscal_year",
+          "type": "int32"
+        },
+        {
+          "name": "topic",
+          "type": "string"
+        },
+        {
+          "name": "uni_topic_amount",
+          "type": "double"
+        },
+        {
+          "name": "uni_topic_share",
+          "type": "double"
+        },
+        {
+          "name": "national_topic_amount",
+          "type": "double"
+        },
+        {
+          "name": "uni_total_amount",
+          "type": "double"
+        },
+        {
+          "name": "uni_total_share",
+          "type": "double"
+        },
+        {
+          "name": "specialization_score",
+          "type": "double"
+        },
+        {
+          "name": "topic_rank_national",
+          "type": "int32"
+        }
+      ]
+    },
+    "agg_uni_state_context": {
+      "rows": 16110,
+      "size_bytes": 228537,
+      "sha256": "72dacae6bfe5deb27ca29187e579ed97c21d6edfa0a8df6cbd312c38802f5424",
+      "columns": [
+        {
+          "name": "institution_sk",
+          "type": "string"
+        },
+        {
+          "name": "fiscal_year",
+          "type": "int32"
+        },
+        {
+          "name": "state_code",
+          "type": "string"
+        },
+        {
+          "name": "uni_total",
+          "type": "double"
+        },
+        {
+          "name": "state_total",
+          "type": "double"
+        },
+        {
+          "name": "share_of_state",
+          "type": "double"
+        }
+      ]
+    },
+    "agg_uni_subject_tag": {
+      "rows": 36600,
+      "size_bytes": 68789,
+      "sha256": "3af759b35a0c7071aa258c9877c26601821599e31dec77b1372c12e6ce090250",
+      "columns": [
+        {
+          "name": "institution_sk",
+          "type": "string"
+        },
+        {
+          "name": "fiscal_year",
+          "type": "int64"
+        },
+        {
+          "name": "subject_tag",
+          "type": "string"
+        },
+        {
+          "name": "tagged_amount",
+          "type": "double"
+        }
+      ]
+    },
+    "agg_uni_team_size": {
+      "rows": 122461,
+      "size_bytes": 883217,
+      "sha256": "497e09204a4355db31ac39652acbd63eb879d9e97780961cf8a574be65f7da04",
+      "columns": [
+        {
+          "name": "institution_sk",
+          "type": "string"
+        },
+        {
+          "name": "fiscal_year",
+          "type": "int32"
+        },
+        {
+          "name": "team_size_bucket",
+          "type": "string"
+        },
+        {
+          "name": "grant_count",
+          "type": "int64"
+        },
+        {
+          "name": "total_amount",
+          "type": "double"
+        },
+        {
+          "name": "data_quality",
+          "type": "string"
+        }
+      ]
+    },
+    "agg_uni_topic": {
+      "rows": 326539,
+      "size_bytes": 2288534,
+      "sha256": "c94a3e45ebf39921b781973ac44dbb5752403eed101cced4bc96b84ae1ecf16c",
+      "columns": [
+        {
+          "name": "institution_sk",
+          "type": "string"
+        },
+        {
+          "name": "fiscal_year",
+          "type": "int32"
+        },
+        {
+          "name": "topic",
+          "type": "string"
+        },
+        {
+          "name": "grant_count",
+          "type": "int64"
+        },
+        {
+          "name": "tagged_amount",
+          "type": "double"
+        }
+      ]
+    },
+    "agg_uni_total_rd": {
+      "rows": 16110,
+      "size_bytes": 189826,
+      "sha256": "5ea2c7cacfdc13219c5042240c7d7c34a1d00e4f165a11d17160709a271af7e8",
+      "columns": [
+        {
+          "name": "institution_sk",
+          "type": "string"
+        },
+        {
+          "name": "fiscal_year",
+          "type": "int32"
+        },
+        {
+          "name": "total_rd_nominal",
+          "type": "double"
+        },
+        {
+          "name": "total_rd_real",
+          "type": "double"
+        }
+      ]
+    },
+    "cpi_u_annual": {
+      "rows": 21,
+      "size_bytes": 1876,
+      "sha256": "59b280a8af56b16202d1ff012de0f718e835e7f122a24859eac8c5c6ee4c9447",
+      "columns": [
+        {
+          "name": "fy",
+          "type": "int64"
+        },
+        {
+          "name": "cpi_u_annual_avg",
+          "type": "double"
+        },
+        {
+          "name": "cpi_u_real_2024_factor",
+          "type": "double"
+        }
+      ]
+    },
+    "dim_agency": {
+      "rows": 1898,
+      "size_bytes": 71884,
+      "sha256": "13405cdbaee41010d9423cab1707386e4a3d30bb7391fca252a55ee2e5062427",
+      "columns": [
+        {
+          "name": "agency_sk",
+          "type": "string"
+        },
+        {
+          "name": "level",
+          "type": "int64"
+        },
+        {
+          "name": "parent_agency_sk",
+          "type": "string"
+        },
+        {
+          "name": "code",
+          "type": "string"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "abbreviation",
+          "type": "string"
+        },
+        {
+          "name": "aliases",
+          "type": "string"
+        },
+        {
+          "name": "treasury_cgac",
+          "type": "string"
+        },
+        {
+          "name": "sources",
+          "type": "string"
+        },
+        {
+          "name": "notes",
+          "type": "string"
+        }
+      ]
+    },
+    "dim_institution": {
+      "rows": 75204,
+      "size_bytes": 4075614,
+      "sha256": "589684a5f43eba273c9bbebe870eeb2ad4e37e2f2cb2edc97555dc7183437284",
+      "columns": [
+        {
+          "name": "institution_sk",
+          "type": "string"
+        },
+        {
+          "name": "canonical_name",
+          "type": "string"
+        },
+        {
+          "name": "canonical_name_v4",
+          "type": "string"
+        },
+        {
+          "name": "ipeds_unitid",
+          "type": "string"
+        },
+        {
+          "name": "primary_uei",
+          "type": "string"
+        },
+        {
+          "name": "primary_duns",
+          "type": "string"
+        },
+        {
+          "name": "ncses_inst_id",
+          "type": "string"
+        },
+        {
+          "name": "parent_uei",
+          "type": "string"
+        },
+        {
+          "name": "parent_name",
+          "type": "string"
+        },
+        {
+          "name": "state_code",
+          "type": "string"
+        },
+        {
+          "name": "country_code",
+          "type": "string"
+        },
+        {
+          "name": "city",
+          "type": "string"
+        },
+        {
+          "name": "sector",
+          "type": "string"
+        },
+        {
+          "name": "is_hbcu",
+          "type": "bool"
+        },
+        {
+          "name": "is_hsi",
+          "type": "bool"
+        },
+        {
+          "name": "is_msi",
+          "type": "bool"
+        },
+        {
+          "name": "first_seen_fy",
+          "type": "double"
+        },
+        {
+          "name": "last_seen_fy",
+          "type": "double"
+        },
+        {
+          "name": "resolution_method",
+          "type": "string"
+        },
+        {
+          "name": "resolution_confidence",
+          "type": "string"
+        },
+        {
+          "name": "n_observations",
+          "type": "int64"
+        },
+        {
+          "name": "n_sources",
+          "type": "int64"
+        },
+        {
+          "name": "er_audit_parent_child",
+          "type": "string"
+        }
+      ]
+    },
+    "dim_institution_crosswalk": {
+      "rows": 1014,
+      "size_bytes": 25849,
+      "sha256": "69b1d442dcaaaa0c616c458c4b71af0d2cf013d106da57dd33f78a8bad26f2ea",
+      "columns": [
+        {
+          "name": "herd_sk",
+          "type": "large_string"
+        },
+        {
+          "name": "fed_sk",
+          "type": "large_string"
+        },
+        {
+          "name": "match_method",
+          "type": "large_string"
+        },
+        {
+          "name": "match_confidence",
+          "type": "double"
+        },
+        {
+          "name": "canonical_name",
+          "type": "large_string"
+        },
+        {
+          "name": "state_code",
+          "type": "large_string"
+        }
+      ]
+    },
     "sheet_01_institution_funding_panel": {
       "rows": 1014,
       "size_bytes": 489225,
@@ -1442,171 +2373,6 @@
         },
         {
           "name": "pct_NIEHS",
-          "type": "double"
-        }
-      ]
-    },
-    "dim_institution": {
-      "rows": 75204,
-      "size_bytes": 4075614,
-      "sha256": "589684a5f43eba273c9bbebe870eeb2ad4e37e2f2cb2edc97555dc7183437284",
-      "columns": [
-        {
-          "name": "institution_sk",
-          "type": "string"
-        },
-        {
-          "name": "canonical_name",
-          "type": "string"
-        },
-        {
-          "name": "canonical_name_v4",
-          "type": "string"
-        },
-        {
-          "name": "ipeds_unitid",
-          "type": "string"
-        },
-        {
-          "name": "primary_uei",
-          "type": "string"
-        },
-        {
-          "name": "primary_duns",
-          "type": "string"
-        },
-        {
-          "name": "ncses_inst_id",
-          "type": "string"
-        },
-        {
-          "name": "parent_uei",
-          "type": "string"
-        },
-        {
-          "name": "parent_name",
-          "type": "string"
-        },
-        {
-          "name": "state_code",
-          "type": "string"
-        },
-        {
-          "name": "country_code",
-          "type": "string"
-        },
-        {
-          "name": "city",
-          "type": "string"
-        },
-        {
-          "name": "sector",
-          "type": "string"
-        },
-        {
-          "name": "is_hbcu",
-          "type": "bool"
-        },
-        {
-          "name": "is_hsi",
-          "type": "bool"
-        },
-        {
-          "name": "is_msi",
-          "type": "bool"
-        },
-        {
-          "name": "first_seen_fy",
-          "type": "double"
-        },
-        {
-          "name": "last_seen_fy",
-          "type": "double"
-        },
-        {
-          "name": "resolution_method",
-          "type": "string"
-        },
-        {
-          "name": "resolution_confidence",
-          "type": "string"
-        },
-        {
-          "name": "n_observations",
-          "type": "int64"
-        },
-        {
-          "name": "n_sources",
-          "type": "int64"
-        },
-        {
-          "name": "er_audit_parent_child",
-          "type": "string"
-        }
-      ]
-    },
-    "dim_agency": {
-      "rows": 1898,
-      "size_bytes": 71884,
-      "sha256": "13405cdbaee41010d9423cab1707386e4a3d30bb7391fca252a55ee2e5062427",
-      "columns": [
-        {
-          "name": "agency_sk",
-          "type": "string"
-        },
-        {
-          "name": "level",
-          "type": "int64"
-        },
-        {
-          "name": "parent_agency_sk",
-          "type": "string"
-        },
-        {
-          "name": "code",
-          "type": "string"
-        },
-        {
-          "name": "name",
-          "type": "string"
-        },
-        {
-          "name": "abbreviation",
-          "type": "string"
-        },
-        {
-          "name": "aliases",
-          "type": "string"
-        },
-        {
-          "name": "treasury_cgac",
-          "type": "string"
-        },
-        {
-          "name": "sources",
-          "type": "string"
-        },
-        {
-          "name": "notes",
-          "type": "string"
-        }
-      ]
-    },
-    "cpi_u_annual": {
-      "rows": 21,
-      "size_bytes": 1876,
-      "sha256": "59b280a8af56b16202d1ff012de0f718e835e7f122a24859eac8c5c6ee4c9447",
-      "columns": [
-        {
-          "name": "fy",
-          "type": "int64"
-        },
-        {
-          "name": "cpi_u_annual_avg",
-          "type": "double"
-        },
-        {
-          "name": "cpi_u_real_2024_factor",
           "type": "double"
         }
       ]

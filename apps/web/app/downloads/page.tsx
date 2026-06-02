@@ -19,10 +19,12 @@ export default function DownloadsPage() {
   const files = manifest.files as Record<string, ManifestFile>;
   const totalBytes = Object.values(files).reduce((sum, f) => sum + f.size_bytes, 0);
 
-  const sheets = Object.entries(files)
-    .filter(([k]) => k.startsWith('sheet_'))
+  const allEntries = Object.entries(files);
+  const sheets = allEntries.filter(([k]) => k.startsWith('sheet_')).sort(([a], [b]) => a.localeCompare(b));
+  const aggs = allEntries.filter(([k]) => k.startsWith('agg_')).sort(([a], [b]) => a.localeCompare(b));
+  const dims = allEntries
+    .filter(([k]) => !k.startsWith('sheet_') && !k.startsWith('agg_'))
     .sort(([a], [b]) => a.localeCompare(b));
-  const dims = Object.entries(files).filter(([k]) => !k.startsWith('sheet_'));
 
   return (
     <div className="container-wide py-10 md:py-14 space-y-8">
@@ -41,7 +43,7 @@ export default function DownloadsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Sheet parquet files (12)</CardTitle>
+          <CardTitle>Source-of-truth sheets ({sheets.length})</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <FileTable files={sheets} />
@@ -50,7 +52,16 @@ export default function DownloadsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Dimensions + lookups</CardTitle>
+          <CardTitle>Pre-aggregated analytical views ({aggs.length})</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <FileTable files={aggs} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Dimensions + lookups ({dims.length})</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <FileTable files={dims} />
