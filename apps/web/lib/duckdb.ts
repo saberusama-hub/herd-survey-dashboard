@@ -56,6 +56,12 @@ const PARQUET_FILES = [
   'agg_national_team_size',
   'agg_national_topic',
   'dim_institution_crosswalk',
+  // Phase S5: NIH IC breakdown, specialization, state topic, growth.
+  'agg_uni_nih_ic',
+  'agg_national_nih_ic',
+  'agg_uni_specialization',
+  'agg_state_topic',
+  'agg_uni_growth',
 ];
 
 let db: duckdb.AsyncDuckDB | null = null;

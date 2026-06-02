@@ -1140,3 +1140,227 @@ export async function getPeerCards(uniSk: string): Promise<PeerCard[]> {
     ORDER BY p.peer_rank
   `);
 }
+
+// ─────────── Phase S5: NIH IC, specialization, state topic, growth ───────────
+
+export interface NihIcRow extends Row {
+  fiscal_year: number;
+  ic_code: string;
+  ic_full_name: string;
+  amount_nominal: number;
+  project_count: number;
+}
+
+export interface NationalNihIcRow extends NihIcRow {
+  pct_of_nih: number;
+}
+
+/** Per-uni NIH Institute breakdown (all FYs, all ICs with non-zero). */
+export async function getUniversityNihICs(sk: string): Promise<NihIcRow[]> {
+  const safe = sq(sk);
+  return query<NihIcRow>(`
+    SELECT fiscal_year, ic_code, ic_full_name, amount_nominal, project_count
+    FROM agg_uni_nih_ic
+    WHERE institution_sk = '${safe}'
+    ORDER BY fiscal_year, amount_nominal DESC
+  `);
+}
+
+/** National NIH IC roll-up (all FYs, all ICs). */
+export async function getNationalNihICs(): Promise<NationalNihIcRow[]> {
+  return query<NationalNihIcRow>(`
+    SELECT fiscal_year, ic_code, ic_full_name, amount_nominal, project_count, pct_of_nih
+    FROM agg_national_nih_ic
+    ORDER BY fiscal_year, amount_nominal DESC
+  `);
+}
+
+export interface SpecializationRow extends Row {
+  fiscal_year: number;
+  topic: string;
+  uni_topic_amount: number;
+  uni_topic_share: number;
+  national_topic_amount: number;
+  uni_total_amount: number;
+  uni_total_share: number;
+  specialization_score: number;
+  topic_rank_national: number;
+}
+
+/** Latest-FY specialization snapshot for one university, top-N by score. */
+export async function getUniversitySpecialization(
+  sk: string,
+  topN = 5,
+): Promise<SpecializationRow[]> {
+  const safe = sq(sk);
+  return query<SpecializationRow>(`
+    WITH latest AS (
+      SELECT MAX(fiscal_year) AS fy
+      FROM agg_uni_specialization
+      WHERE institution_sk = '${safe}'
+    )
+    SELECT
+      s.fiscal_year,
+      s.topic,
+      s.uni_topic_amount,
+      s.uni_topic_share,
+      s.national_topic_amount,
+      s.uni_total_amount,
+      s.uni_total_share,
+      s.specialization_score,
+      s.topic_rank_national
+    FROM agg_uni_specialization s, latest
+    WHERE s.institution_sk = '${safe}'
+      AND s.fiscal_year = latest.fy
+    ORDER BY s.specialization_score DESC NULLS LAST
+    LIMIT ${topN}
+  `);
+}
+
+export interface TopicLeaderRow extends Row {
+  topic: string;
+  institution_sk: string;
+  canonical_name: string;
+  state_code: string | null;
+  uni_topic_amount: number;
+  specialization_score: number;
+  topic_rank_national: number;
+}
+
+/** For each topic, top-N universities by uni_topic_amount in the latest FY. */
+export async function getNationalTopicLeaders(topN = 5): Promise<TopicLeaderRow[]> {
+  return query<TopicLeaderRow>(`
+    WITH latest AS (
+      SELECT MAX(fiscal_year) AS fy FROM agg_uni_specialization
+    )
+    SELECT
+      s.topic,
+      s.institution_sk,
+      di.canonical_name,
+      di.state_code,
+      s.uni_topic_amount,
+      s.specialization_score,
+      s.topic_rank_national
+    FROM agg_uni_specialization s, latest
+    LEFT JOIN dim_institution di ON di.institution_sk = s.institution_sk
+    WHERE s.fiscal_year = latest.fy
+      AND s.topic_rank_national <= ${topN}
+    ORDER BY s.topic, s.topic_rank_national
+  `);
+}
+
+export interface StateTopicRow extends Row {
+  state_code: string;
+  fiscal_year: number;
+  topic: string;
+  state_topic_amount: number;
+  state_topic_share: number;
+  top_uni_in_state: string | null;
+}
+
+/** For each topic, top-N states by state_topic_amount in the latest FY. */
+export async function getStateTopicLeaders(topN = 10): Promise<StateTopicRow[]> {
+  return query<StateTopicRow>(`
+    WITH latest AS (
+      SELECT MAX(fiscal_year) AS fy FROM agg_state_topic
+    ),
+    ranked AS (
+      SELECT
+        s.state_code,
+        s.fiscal_year,
+        s.topic,
+        s.state_topic_amount,
+        s.state_topic_share,
+        s.top_uni_in_state,
+        ROW_NUMBER() OVER (
+          PARTITION BY s.topic ORDER BY s.state_topic_amount DESC
+        ) AS rn
+      FROM agg_state_topic s, latest
+      WHERE s.fiscal_year = latest.fy
+    )
+    SELECT state_code, fiscal_year, topic, state_topic_amount,
+           state_topic_share, top_uni_in_state
+    FROM ranked
+    WHERE rn <= ${topN}
+    ORDER BY topic, state_topic_amount DESC
+  `);
+}
+
+export interface GrowthRow extends Row {
+  institution_sk: string;
+  canonical_name: string;
+  state_code: string | null;
+  fy24_total: number;
+  fy19_total: number | null;
+  fy14_total: number | null;
+  fy05_total: number | null;
+  cagr_5yr: number | null;
+  cagr_10yr: number | null;
+  cagr_20yr: number | null;
+  yoy_change_pct: number | null;
+  fy24_rank: number;
+  fy19_rank: number | null;
+  rank_change_5yr: number | null;
+}
+
+type GrowthWindow = '5yr' | '10yr' | '20yr';
+
+function growthColumn(window: GrowthWindow): string {
+  if (window === '10yr') return 'cagr_10yr';
+  if (window === '20yr') return 'cagr_20yr';
+  return 'cagr_5yr';
+}
+
+/** Top-N universities by CAGR over the chosen window. */
+export async function getTopClimbers(
+  window: GrowthWindow = '5yr',
+  topN = 10,
+): Promise<GrowthRow[]> {
+  const col = growthColumn(window);
+  return query<GrowthRow>(`
+    SELECT
+      g.institution_sk,
+      di.canonical_name,
+      di.state_code,
+      g.fy24_total, g.fy19_total, g.fy14_total, g.fy05_total,
+      g.cagr_5yr, g.cagr_10yr, g.cagr_20yr,
+      g.yoy_change_pct, g.fy24_rank, g.fy19_rank, g.rank_change_5yr
+    FROM agg_uni_growth g
+    LEFT JOIN dim_institution di ON di.institution_sk = g.institution_sk
+    WHERE g.${col} IS NOT NULL
+    ORDER BY g.${col} DESC
+    LIMIT ${topN}
+  `);
+}
+
+/** Bottom-N universities by CAGR over the chosen window. */
+export async function getTopFallers(
+  window: GrowthWindow = '5yr',
+  topN = 10,
+): Promise<GrowthRow[]> {
+  const col = growthColumn(window);
+  return query<GrowthRow>(`
+    SELECT
+      g.institution_sk,
+      di.canonical_name,
+      di.state_code,
+      g.fy24_total, g.fy19_total, g.fy14_total, g.fy05_total,
+      g.cagr_5yr, g.cagr_10yr, g.cagr_20yr,
+      g.yoy_change_pct, g.fy24_rank, g.fy19_rank, g.rank_change_5yr
+    FROM agg_uni_growth g
+    LEFT JOIN dim_institution di ON di.institution_sk = g.institution_sk
+    WHERE g.${col} IS NOT NULL
+    ORDER BY g.${col} ASC
+    LIMIT ${topN}
+  `);
+}
+
+/** Map institution_sk → cagr_5yr for the universities-table column. */
+export async function getGrowthByInstitution(): Promise<
+  Array<{ institution_sk: string; cagr_5yr: number | null }>
+> {
+  return query<{ institution_sk: string; cagr_5yr: number | null }>(`
+    SELECT institution_sk, cagr_5yr
+    FROM agg_uni_growth
+  `);
+}
