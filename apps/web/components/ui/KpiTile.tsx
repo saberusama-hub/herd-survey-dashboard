@@ -61,16 +61,12 @@ export function KpiTile({
         className,
       )}
     >
-      <div className="font-italic-serif text-[0.8125rem] text-text-secondary leading-tight">
-        {eyebrow}
-      </div>
+      <div className="font-italic-serif text-[0.8125rem] text-text-secondary leading-tight">{eyebrow}</div>
       <div className="flex items-baseline gap-2">
         <div className="font-mono text-[2.5rem] md:text-num-hero font-medium tabular-nums tracking-tight text-text-primary leading-none">
           {value}
         </div>
-        {unit ? (
-          <div className="font-sans text-[0.8125rem] text-text-tertiary">{unit}</div>
-        ) : null}
+        {unit ? <div className="font-sans text-[0.8125rem] text-text-tertiary">{unit}</div> : null}
       </div>
       {(delta || caption) && (
         <div className="flex items-center gap-2 text-2xs">

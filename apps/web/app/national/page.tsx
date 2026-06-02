@@ -17,6 +17,16 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { largestYoY, peakYear } from '@/lib/annotations';
 import { formatCount, formatDollars, formatPercent } from '@/lib/format';
 import {
+  type GrowthRow,
+  type NationalFieldMixRow,
+  type NationalNihIcRow,
+  type NationalPiDistributionRow,
+  type NationalStateRollupRow,
+  type NationalTeamSizeRow,
+  type NationalTopicRow,
+  type NationalTrendRow,
+  type StateTopicRow,
+  type TopicLeaderRow,
   getNationalAgencyTrend,
   getNationalConcentration,
   getNationalFieldMix,
@@ -31,16 +41,6 @@ import {
   getStateTopicLeaders,
   getTopClimbers,
   getTopFallers,
-  type GrowthRow,
-  type NationalFieldMixRow,
-  type NationalNihIcRow,
-  type NationalPiDistributionRow,
-  type NationalStateRollupRow,
-  type NationalTeamSizeRow,
-  type NationalTopicRow,
-  type NationalTrendRow,
-  type StateTopicRow,
-  type TopicLeaderRow,
 } from '@/lib/queries';
 
 const SECTIONS = [
@@ -77,14 +77,7 @@ const TEAM_BUCKET_COLOR: Record<TeamBucket, string> = {
   '21+': 'hsl(var(--mute-1))',
 };
 
-const SOURCE_ORDER = [
-  'federal',
-  'state',
-  'industry',
-  'institutional',
-  'nonprofit',
-  'other',
-] as const;
+const SOURCE_ORDER = ['federal', 'state', 'industry', 'institutional', 'nonprofit', 'other'] as const;
 type SourceKey = (typeof SOURCE_ORDER)[number];
 
 const SOURCE_LABEL: Record<SourceKey, string> = {
@@ -352,9 +345,7 @@ export default function NationalPage() {
   const stateSummary = useMemo(() => {
     if (stateRollup.length === 0) return null;
     const fy = Number(stateRollup[0].fiscal_year);
-    const sorted = [...stateRollup].sort(
-      (a, b) => Number(b.total_rd_nominal) - Number(a.total_rd_nominal),
-    );
+    const sorted = [...stateRollup].sort((a, b) => Number(b.total_rd_nominal) - Number(a.total_rd_nominal));
     return {
       fy,
       top5: sorted.slice(0, 5),
@@ -416,10 +407,7 @@ export default function NationalPage() {
   /* ─── §7 PI distribution: latest-FY decile averages ─── */
   const piDistLatest = useMemo(() => {
     if (piDist.length === 0) return { fy: null as number | null, rows: [] as { decile: number; avg_amount: number }[] };
-    const latestFy = piDist.reduce(
-      (m, r) => (r.fiscal_year > m ? r.fiscal_year : m),
-      piDist[0].fiscal_year,
-    );
+    const latestFy = piDist.reduce((m, r) => (r.fiscal_year > m ? r.fiscal_year : m), piDist[0].fiscal_year);
     const rows = piDist
       .filter((r) => r.fiscal_year === latestFy)
       .sort((a, b) => a.decile - b.decile)
@@ -437,10 +425,7 @@ export default function NationalPage() {
         shareTrend: [] as Array<Record<string, number>>,
       };
     }
-    const latestFy = topics.reduce(
-      (m, r) => (r.fiscal_year > m ? r.fiscal_year : m),
-      topics[0].fiscal_year,
-    );
+    const latestFy = topics.reduce((m, r) => (r.fiscal_year > m ? r.fiscal_year : m), topics[0].fiscal_year);
     const latest = topics.filter((r) => r.fiscal_year === latestFy);
     const ranked = latest
       .map((r) => ({
@@ -479,10 +464,7 @@ export default function NationalPage() {
         trend: [] as Array<Record<string, number>>,
       };
     }
-    const latestFy = teamSize.reduce(
-      (m, r) => (r.fiscal_year > m ? r.fiscal_year : m),
-      teamSize[0].fiscal_year,
-    );
+    const latestFy = teamSize.reduce((m, r) => (r.fiscal_year > m ? r.fiscal_year : m), teamSize[0].fiscal_year);
     const latest = teamSize.filter((r) => r.fiscal_year === latestFy);
     const latestRows = TEAM_BUCKET_ORDER.map((b) => {
       const row = latest.find((r) => r.team_size_bucket === b);
@@ -520,10 +502,7 @@ export default function NationalPage() {
         trend: [] as Array<Record<string, number>>,
       };
     }
-    const latestFy = nihIcs.reduce(
-      (m, r) => (r.fiscal_year > m ? r.fiscal_year : m),
-      nihIcs[0].fiscal_year,
-    );
+    const latestFy = nihIcs.reduce((m, r) => (r.fiscal_year > m ? r.fiscal_year : m), nihIcs[0].fiscal_year);
     const ranked = nihIcs
       .filter((r) => r.fiscal_year === latestFy)
       .map((r) => ({
@@ -597,29 +576,17 @@ export default function NationalPage() {
         className="sticky top-0 z-10 -mx-2 flex gap-4 overflow-x-auto border-b border-rule bg-paper/95 px-2 py-3 text-[12px] backdrop-blur"
       >
         {SECTIONS.map((s) => (
-          <a
-            key={s.id}
-            href={`#${s.id}`}
-            className="whitespace-nowrap text-text-secondary hover:text-accent"
-          >
+          <a key={s.id} href={`#${s.id}`} className="whitespace-nowrap text-text-secondary hover:text-accent">
             {s.label}
           </a>
         ))}
       </nav>
 
-      {loading && (
-        <p className="text-sm text-text-tertiary">Loading national rollups…</p>
-      )}
-      {error && (
-        <p className="text-sm text-accent">Error loading data: {error}</p>
-      )}
+      {loading && <p className="text-sm text-text-tertiary">Loading national rollups…</p>}
+      {error && <p className="text-sm text-accent">Error loading data: {error}</p>}
 
       {/* ─── §1 Overview ─── */}
-      <section
-        id="overview"
-        aria-labelledby="national-section-overview"
-        className="scroll-mt-24"
-      >
+      <section id="overview" aria-labelledby="national-section-overview" className="scroll-mt-24">
         <SectionDivider
           eyebrow="National · Overview"
           title="Total U.S. R&D by source"
@@ -637,10 +604,8 @@ export default function NationalPage() {
               : undefined
           }
           methodology={{
-            what:
-              'Twenty years of total U.S. university research spending, sliced into who paid for it: federal, state, industry, the schools themselves, nonprofits, and other.',
-            how:
-              'We sum HERD Q01 "Source of Funds" across every HERD-tracked university for each fiscal year and source category. Each stacked bar therefore equals the nationwide R&D total for that year.',
+            what: 'Twenty years of total U.S. university research spending, sliced into who paid for it: federal, state, industry, the schools themselves, nonprofits, and other.',
+            how: 'We sum HERD Q01 "Source of Funds" across every HERD-tracked university for each fiscal year and source category. Each stacked bar therefore equals the nationwide R&D total for that year.',
             caveats:
               'Pre-FY2010 "nonprofit" bars are conservative — HERD did not collect that category in the ARDES non-response window (FY2005–FY2009).',
           }}
@@ -661,11 +626,7 @@ export default function NationalPage() {
           <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] text-text-secondary">
             {SOURCE_ORDER.map((k) => (
               <li key={k} className="inline-flex items-center gap-1.5">
-                <span
-                  aria-hidden
-                  className="h-2.5 w-2.5 rounded-full"
-                  style={{ background: SOURCE_COLOR[k] }}
-                />
+                <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: SOURCE_COLOR[k] }} />
                 <span>{SOURCE_LABEL[k]}</span>
               </li>
             ))}
@@ -674,11 +635,7 @@ export default function NationalPage() {
       </section>
 
       {/* ─── §2 Agencies ─── */}
-      <section
-        id="agencies"
-        aria-labelledby="national-section-agencies"
-        className="scroll-mt-24"
-      >
+      <section id="agencies" aria-labelledby="national-section-agencies" className="scroll-mt-24">
         <SectionDivider
           eyebrow="National · Agencies"
           title="Federal funding by agency"
@@ -696,10 +653,8 @@ export default function NationalPage() {
               : undefined
           }
           methodology={{
-            what:
-              'How much each federal agency (NIH, NSF, DOD, DOE, NASA, USDA, other) paid U.S. universities for research each year over the last 20 years.',
-            how:
-              'For every year we sum HERD Q09 ("Federal R&D by agency") across all HERD-tracked universities, grouped into the seven canonical agency buckets. One line per agency.',
+            what: 'How much each federal agency (NIH, NSF, DOD, DOE, NASA, USDA, other) paid U.S. universities for research each year over the last 20 years.',
+            how: 'For every year we sum HERD Q09 ("Federal R&D by agency") across all HERD-tracked universities, grouped into the seven canonical agency buckets. One line per agency.',
             caveats:
               'HERD Q09 rolls sub-agencies into their parent department. HHS = NIH + other; Defense = ARO + ONR + AFOSR + DARPA + sub-commands. For sub-agency detail, see the Reconciliation page.',
           }}
@@ -716,11 +671,7 @@ export default function NationalPage() {
       </section>
 
       {/* ─── §S5.1 NIH Institutes drill-down ─── */}
-      <section
-        id="nih-ics"
-        aria-labelledby="national-section-nih-ics"
-        className="scroll-mt-24"
-      >
+      <section id="nih-ics" aria-labelledby="national-section-nih-ics" className="scroll-mt-24">
         <SectionDivider
           eyebrow="National · NIH Institutes"
           title="Inside the HHS bar: 27 NIH Institutes & Centers"
@@ -733,10 +684,8 @@ export default function NationalPage() {
           dek="Sorted by total NIH funding in the latest reported fiscal year. % is share of national NIH total that year (sums to 100%)."
           source="fact_nih_project.admin_ic_code · agg_national_nih_ic"
           methodology={{
-            what:
-              'Which NIH Institute or Center actually wrote the checks — Cancer (NCI), Allergy/Infectious (NIAID), Heart/Lung/Blood (NHLBI), General Medical (NIGMS), and so on.',
-            how:
-              'We aggregate fact_nih_project.total_cost_nominal by administering IC (admin_ic_code). Each project is counted once at its administering IC; the 27 standard ICs plus a few legacy/special codes are included.',
+            what: 'Which NIH Institute or Center actually wrote the checks — Cancer (NCI), Allergy/Infectious (NIAID), Heart/Lung/Blood (NHLBI), General Medical (NIGMS), and so on.',
+            how: 'We aggregate fact_nih_project.total_cost_nominal by administering IC (admin_ic_code). Each project is counted once at its administering IC; the 27 standard ICs plus a few legacy/special codes are included.',
             caveats:
               'admin_ic_code represents the IC that manages the project. For multi-IC awards, contributing ICs may not be reflected. Total_cost includes both direct + indirect.',
           }}
@@ -753,10 +702,8 @@ export default function NationalPage() {
             dek="One line per top-5 IC, plotted as % of national NIH $ each FY."
             source="agg_national_nih_ic"
             methodology={{
-              what:
-                'Whether the dominant NIH Institutes have held steady or shifted relative to each other over 20 years.',
-              how:
-                'For each FY we compute IC share = IC dollars ÷ total NIH dollars that year. One line per IC, using the top-5 latest-FY ranking by dollar amount.',
+              what: 'Whether the dominant NIH Institutes have held steady or shifted relative to each other over 20 years.',
+              how: 'For each FY we compute IC share = IC dollars ÷ total NIH dollars that year. One line per IC, using the top-5 latest-FY ranking by dollar amount.',
               caveats:
                 'Membership of "top 5" is fixed to the latest-FY ranking, so earlier years may show some non-top-5 ICs missing from this view.',
             }}
@@ -785,11 +732,7 @@ export default function NationalPage() {
       </section>
 
       {/* ─── §3 Concentration ─── */}
-      <section
-        id="concentration"
-        aria-labelledby="national-section-concentration"
-        className="scroll-mt-24"
-      >
+      <section id="concentration" aria-labelledby="national-section-concentration" className="scroll-mt-24">
         <SectionDivider
           eyebrow="National · Concentration"
           title="Top-N share of national R&D"
@@ -807,10 +750,8 @@ export default function NationalPage() {
               : undefined
           }
           methodology={{
-            what:
-              'Whether a small group of elite universities dominates U.S. research spending, or whether the money is spread broadly — and how that balance has shifted over 20 years.',
-            how:
-              'For each fiscal year we rank all HERD-tracked universities by total R&D, then compute the % of the national total taken by the top 10, top 25, and top 100. Three lines, one per cohort.',
+            what: 'Whether a small group of elite universities dominates U.S. research spending, or whether the money is spread broadly — and how that balance has shifted over 20 years.',
+            how: 'For each fiscal year we rank all HERD-tracked universities by total R&D, then compute the % of the national total taken by the top 10, top 25, and top 100. Three lines, one per cohort.',
             caveats:
               'Cohort membership can change year over year — "top 10" in FY2005 is not necessarily the same set as in FY2024.',
           }}
@@ -828,11 +769,7 @@ export default function NationalPage() {
       </section>
 
       {/* ─── §4 Geography ─── */}
-      <section
-        id="geography"
-        aria-labelledby="national-section-geography"
-        className="scroll-mt-24"
-      >
+      <section id="geography" aria-labelledby="national-section-geography" className="scroll-mt-24">
         <SectionDivider
           eyebrow="National · Geography"
           title="State-level rollups"
@@ -850,10 +787,8 @@ export default function NationalPage() {
               : undefined
           }
           methodology={{
-            what:
-              'Where the U.S. university research money is geographically — which states host the biggest research economies.',
-            how:
-              'For the latest reported fiscal year we sum total HERD R&D across all HERD-tracked universities in each state (joining `agg_uni_total_rd` to `dim_institution.state_code`). Darker fill = higher total.',
+            what: 'Where the U.S. university research money is geographically — which states host the biggest research economies.',
+            how: 'For the latest reported fiscal year we sum total HERD R&D across all HERD-tracked universities in each state (joining `agg_uni_total_rd` to `dim_institution.state_code`). Darker fill = higher total.',
             caveats:
               'Counts a university’s spending in its headquarters state, even if research is performed at branch campuses elsewhere.',
           }}
@@ -869,14 +804,9 @@ export default function NationalPage() {
                 </p>
                 <ol className="space-y-1 text-sm tnum">
                   {stateSummary.top5.map((r, i) => (
-                    <li
-                      key={r.state_code}
-                      className="flex justify-between border-b border-rule/60 py-1.5"
-                    >
+                    <li key={r.state_code} className="flex justify-between border-b border-rule/60 py-1.5">
                       <span>
-                        <span className="mr-2 text-text-tertiary">
-                          {String(i + 1).padStart(2, '0')}
-                        </span>
+                        <span className="mr-2 text-text-tertiary">{String(i + 1).padStart(2, '0')}</span>
                         <span className="font-medium">{r.state_code}</span>
                         <span className="ml-2 text-text-tertiary">
                           {r.n_institutions} {r.n_institutions === 1 ? 'inst.' : 'insts.'}
@@ -893,11 +823,7 @@ export default function NationalPage() {
       </section>
 
       {/* ─── §5 Trends — multi-metric explorer ─── */}
-      <section
-        id="trends"
-        aria-labelledby="national-section-trends"
-        className="scroll-mt-24"
-      >
+      <section id="trends" aria-labelledby="national-section-trends" className="scroll-mt-24">
         <SectionDivider
           eyebrow="National · Trends"
           title="Multi-metric explorer"
@@ -910,10 +836,8 @@ export default function NationalPage() {
           dek="One line, one national rollup. Use the selector to flip between dollar totals, the federal $ share of all R&D, and the distinct-PI count behind NIH+NSF top grants."
           source="agg_uni_total_rd · agg_uni_source_split · agg_uni_pi_metrics"
           methodology={{
-            what:
-              'Three different ways to slice the 20-year national story — total dollars, federal dependence, and how many researchers were on the federal payroll each year.',
-            how:
-              'Total R&D = sum of `agg_uni_total_rd.total_rd_nominal` across all universities per FY. Federal share = federal-source dollars ÷ all-source dollars per FY. # PIs = sum of distinct-PI counts across institutions per FY (from `agg_uni_pi_universe`).',
+            what: 'Three different ways to slice the 20-year national story — total dollars, federal dependence, and how many researchers were on the federal payroll each year.',
+            how: 'Total R&D = sum of `agg_uni_total_rd.total_rd_nominal` across all universities per FY. Federal share = federal-source dollars ÷ all-source dollars per FY. # PIs = sum of distinct-PI counts across institutions per FY (from `agg_uni_pi_universe`).',
             caveats:
               'FY2005 PI count is masked (entity-resolution discontinuity affecting 81 institutions). Federal share denominator includes non-federal HERD sources (state, industry, institutional, nonprofit, other).',
           }}
@@ -958,11 +882,7 @@ export default function NationalPage() {
       </section>
 
       {/* ─── §6 Disciplines ─── */}
-      <section
-        id="disciplines"
-        aria-labelledby="national-section-disciplines"
-        className="scroll-mt-24"
-      >
+      <section id="disciplines" aria-labelledby="national-section-disciplines" className="scroll-mt-24">
         <SectionDivider
           eyebrow="National · Disciplines"
           title="STEM vs non-STEM nationally"
@@ -980,10 +900,8 @@ export default function NationalPage() {
               : undefined
           }
           methodology={{
-            what:
-              'How much of U.S. university research goes to science, technology, engineering, and math (STEM) versus humanities and social sciences.',
-            how:
-              'For each fiscal year we sum HERD Q03 R&D across all universities, then split by the `is_stem` flag attached to each of the eight HERD field-of-science categories. Stacked bar: STEM on bottom (accent), non-STEM on top (gray).',
+            what: 'How much of U.S. university research goes to science, technology, engineering, and math (STEM) versus humanities and social sciences.',
+            how: 'For each fiscal year we sum HERD Q03 R&D across all universities, then split by the `is_stem` flag attached to each of the eight HERD field-of-science categories. Stacked bar: STEM on bottom (accent), non-STEM on top (gray).',
             caveats:
               'The "STEM" flag follows HERD’s field classification — fields like "Psychology" land in non-STEM here even though they are STEM under other taxonomies.',
           }}
@@ -1006,19 +924,11 @@ export default function NationalPage() {
           </ResponsiveSvg>
           <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] text-text-secondary">
             <li className="inline-flex items-center gap-1.5">
-              <span
-                aria-hidden
-                className="h-2.5 w-2.5 rounded-full"
-                style={{ background: 'hsl(var(--accent))' }}
-              />
+              <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: 'hsl(var(--accent))' }} />
               <span>STEM (S&amp;E)</span>
             </li>
             <li className="inline-flex items-center gap-1.5">
-              <span
-                aria-hidden
-                className="h-2.5 w-2.5 rounded-full"
-                style={{ background: 'hsl(var(--mute-1))' }}
-              />
+              <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: 'hsl(var(--mute-1))' }} />
               <span>Non-STEM</span>
             </li>
           </ul>
@@ -1026,11 +936,7 @@ export default function NationalPage() {
       </section>
 
       {/* ─── §7 Topics: 30-topic taxonomy ─── */}
-      <section
-        id="topics"
-        aria-labelledby="national-section-topics"
-        className="scroll-mt-24"
-      >
+      <section id="topics" aria-labelledby="national-section-topics" className="scroll-mt-24">
         <SectionDivider
           eyebrow="National · Topics"
           title="What is U.S. research about?"
@@ -1044,18 +950,14 @@ export default function NationalPage() {
           source="agg_national_topic (regex-matched, non-exclusive)"
           note="Topics use word-boundary regex on title + abstract / project terms. See /methodology for the exact pattern list."
           methodology={{
-            what:
-              'A nationwide ranking of 30 concrete research topics — Cancer, AI/ML, Climate, Quantum, etc. — sorted by how many federal dollars matched each topic in the most recent year.',
-            how:
-              'Each NSF and NIH grant is scanned for keyword matches against a hand-tuned 30-topic regex taxonomy (titles + NSF abstracts + NIH project terms). We sum the tagged dollars per topic nationally for the latest FY.',
+            what: 'A nationwide ranking of 30 concrete research topics — Cancer, AI/ML, Climate, Quantum, etc. — sorted by how many federal dollars matched each topic in the most recent year.',
+            how: 'Each NSF and NIH grant is scanned for keyword matches against a hand-tuned 30-topic regex taxonomy (titles + NSF abstracts + NIH project terms). We sum the tagged dollars per topic nationally for the latest FY.',
             caveats:
               'Topics are NOT mutually exclusive — one grant can match multiple topics (e.g., "Cancer" and "AI/ML"). Patterns were tightened in May 2026 to reduce false positives. Shares can sum above 100% by design.',
           }}
         >
           <ResponsiveSvg height={Math.max(420, topicsView.ranked.length * 22 + 40)}>
-            {(w, h) => (
-              <TopicBars width={w} height={h} bars={topicsView.ranked} />
-            )}
+            {(w, h) => <TopicBars width={w} height={h} bars={topicsView.ranked} />}
           </ResponsiveSvg>
         </ChartFrame>
 
@@ -1065,10 +967,8 @@ export default function NationalPage() {
           dek="Share of all NSF + NIH federal dollars matching each topic, FY2005 – FY2024. Higher = topic captured a larger slice of the agency portfolio that year."
           source="agg_national_topic"
           methodology={{
-            what:
-              'Whether the 10 most-funded research topics have grown or shrunk relative to the rest of the federal research portfolio over 20 years.',
-            how:
-              'For each FY we compute each topic’s share = topic dollars ÷ total federal $ that year. One line per topic, using the top-10 latest-FY ranking.',
+            what: 'Whether the 10 most-funded research topics have grown or shrunk relative to the rest of the federal research portfolio over 20 years.',
+            how: 'For each FY we compute each topic’s share = topic dollars ÷ total federal $ that year. One line per topic, using the top-10 latest-FY ranking.',
             caveats:
               'Topic overlap means shares are not exclusive (a grant can match several topics). A rising line reflects either growing absolute funding or shrinking competition from other topics — read alongside the ranking above.',
           }}
@@ -1106,10 +1006,8 @@ export default function NationalPage() {
             dek="For each of the 10 most-funded topics, the universities that received the largest tagged federal $ in the latest fiscal year."
             source="agg_uni_specialization (latest FY)"
             methodology={{
-              what:
-                'Where the biggest research-topic dollars actually land — for AI/ML, Cancer, Quantum, etc., which 5 universities are at the top.',
-              how:
-                'For the latest reported FY we rank universities by tagged federal $ within each topic (topic_rank_national), then list the top 5. Click a name to open that uni\'s profile.',
+              what: 'Where the biggest research-topic dollars actually land — for AI/ML, Cancer, Quantum, etc., which 5 universities are at the top.',
+              how: "For the latest reported FY we rank universities by tagged federal $ within each topic (topic_rank_national), then list the top 5. Click a name to open that uni's profile.",
               caveats:
                 'Ranking uses the same regex-tagged grant text as the topics chart above. Topic overlap rules apply (a grant can match multiple topics).',
             }}
@@ -1120,9 +1018,7 @@ export default function NationalPage() {
                 if (leaders.length === 0) return null;
                 return (
                   <div key={topic}>
-                    <p className="mb-1.5 text-[11px] uppercase tracking-wider text-text-tertiary">
-                      {topic}
-                    </p>
+                    <p className="mb-1.5 text-[11px] uppercase tracking-wider text-text-tertiary">{topic}</p>
                     <ol className="space-y-1 text-[12px]">
                       {leaders.slice(0, 5).map((u) => (
                         <li
@@ -1130,18 +1026,11 @@ export default function NationalPage() {
                           className="flex items-baseline justify-between gap-3 border-b border-rule/40 py-1"
                         >
                           <span className="min-w-0 truncate">
-                            <span className="mr-2 text-text-tertiary tnum">
-                              #{u.topic_rank_national}
-                            </span>
-                            <a
-                              href={`/universities/${u.institution_sk}`}
-                              className="text-accent hover:underline"
-                            >
+                            <span className="mr-2 text-text-tertiary tnum">#{u.topic_rank_national}</span>
+                            <a href={`/universities/${u.institution_sk}`} className="text-accent hover:underline">
                               {u.canonical_name ?? u.institution_sk}
                             </a>
-                            {u.state_code && (
-                              <span className="ml-1 text-text-tertiary">· {u.state_code}</span>
-                            )}
+                            {u.state_code && <span className="ml-1 text-text-tertiary">· {u.state_code}</span>}
                           </span>
                           <span className="shrink-0 text-text-secondary tnum">
                             {formatDollars(Number(u.uni_topic_amount) || 0)}
@@ -1158,11 +1047,7 @@ export default function NationalPage() {
       </section>
 
       {/* ─── §S5.3 State topic specialization ─── */}
-      <section
-        id="state-specialization"
-        aria-labelledby="national-section-state-spec"
-        className="scroll-mt-24"
-      >
+      <section id="state-specialization" aria-labelledby="national-section-state-spec" className="scroll-mt-24">
         <SectionDivider
           eyebrow="National · State specialization"
           title="Which states lead each research topic"
@@ -1175,12 +1060,10 @@ export default function NationalPage() {
           dek="Each panel shows one topic; bars are the top 5 states by tagged federal $ that year, with each state's share of the national topic total."
           source="agg_state_topic"
           methodology={{
-            what:
-              'For each major research topic, the U.S. states whose universities won the largest slice — a geographic read on where the AI dollars, the cancer dollars, the climate dollars actually went.',
-            how:
-              'agg_state_topic rolls each university\'s tagged topic dollars up to its headquarters state, then ranks states by total per (topic, FY). state_topic_share = state total ÷ national topic total.',
+            what: 'For each major research topic, the U.S. states whose universities won the largest slice — a geographic read on where the AI dollars, the cancer dollars, the climate dollars actually went.',
+            how: "agg_state_topic rolls each university's tagged topic dollars up to its headquarters state, then ranks states by total per (topic, FY). state_topic_share = state total ÷ national topic total.",
             caveats:
-              'A university\'s state is its headquarters state in dim_institution. Multi-campus systems may understate states with prominent branch campuses.',
+              "A university's state is its headquarters state in dim_institution. Multi-campus systems may understate states with prominent branch campuses.",
           }}
         >
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -1190,9 +1073,7 @@ export default function NationalPage() {
               const maxAmt = Math.max(...states.map((s) => Number(s.state_topic_amount) || 0));
               return (
                 <div key={topic} className="rounded border border-rule p-3">
-                  <p className="mb-2 text-[11px] uppercase tracking-wider text-text-tertiary">
-                    {topic}
-                  </p>
+                  <p className="mb-2 text-[11px] uppercase tracking-wider text-text-tertiary">{topic}</p>
                   <ul className="space-y-1">
                     {states.map((s) => {
                       const amt = Number(s.state_topic_amount) || 0;
@@ -1202,9 +1083,7 @@ export default function NationalPage() {
                         <li key={s.state_code} className="text-[12px]">
                           <div className="flex items-baseline justify-between gap-2">
                             <span className="font-medium tnum">{s.state_code}</span>
-                            <span className="text-text-tertiary tnum">
-                              {formatPercent(share)}
-                            </span>
+                            <span className="text-text-tertiary tnum">{formatPercent(share)}</span>
                           </div>
                           <div
                             className="mt-0.5 h-1.5 rounded"
@@ -1227,11 +1106,7 @@ export default function NationalPage() {
       </section>
 
       {/* ─── §8 Team size ─── */}
-      <section
-        id="team-size"
-        aria-labelledby="national-section-team-size"
-        className="scroll-mt-24"
-      >
+      <section id="team-size" aria-labelledby="national-section-team-size" className="scroll-mt-24">
         <SectionDivider
           eyebrow="National · Team size"
           title="How federal funding flows by PI team size"
@@ -1249,18 +1124,14 @@ export default function NationalPage() {
               : undefined
           }
           methodology={{
-            what:
-              'Nationally, how much research money is going to lone-investigator grants versus larger collaborative teams in the most recent year.',
-            how:
-              'Each NSF + NIH grant is bucketed by team size (1, 2-5, 6-10, 11-20, 21+ PIs) using the NSF `n_pi` field and the NIH `PI_IDS` array. We sum federal dollars per bucket for the latest fiscal year.',
+            what: 'Nationally, how much research money is going to lone-investigator grants versus larger collaborative teams in the most recent year.',
+            how: 'Each NSF + NIH grant is bucketed by team size (1, 2-5, 6-10, 11-20, 21+ PIs) using the NSF `n_pi` field and the NIH `PI_IDS` array. We sum federal dollars per bucket for the latest fiscal year.',
             caveats:
               'NSF does not publish the full co-PI roster, so grants are placed in their reported team-size bucket but co-PIs are not counted individually — slightly conservative on the larger buckets.',
           }}
         >
           <ResponsiveSvg height={280}>
-            {(w, h) => (
-              <TeamSizeBars width={w} height={h} bars={teamSizeView.latestRows} />
-            )}
+            {(w, h) => <TeamSizeBars width={w} height={h} bars={teamSizeView.latestRows} />}
           </ResponsiveSvg>
         </ChartFrame>
 
@@ -1270,10 +1141,8 @@ export default function NationalPage() {
           dek="Stacked bar per FY: single-PI grants on the bottom in accent. Larger team buckets stack on top in graduated greys."
           source="agg_national_team_size"
           methodology={{
-            what:
-              'Whether U.S. research has shifted from solo PIs toward larger team grants over 20 years.',
-            how:
-              'For each FY we sum federal $ in the five team-size buckets and stack them. The accent slice at the bottom is single-PI; bigger teams stack progressively above.',
+            what: 'Whether U.S. research has shifted from solo PIs toward larger team grants over 20 years.',
+            how: 'For each FY we sum federal $ in the five team-size buckets and stack them. The accent slice at the bottom is single-PI; bigger teams stack progressively above.',
             caveats:
               'Team-size bucketing depends on what each agency publishes (NSF `n_pi`, NIH `PI_IDS`). NSF co-PI counts are reported, but individual co-PIs are not enumerated, so multi-PI team counts are conservative.',
           }}
@@ -1294,11 +1163,7 @@ export default function NationalPage() {
           <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] text-text-secondary">
             {TEAM_BUCKET_ORDER.map((k) => (
               <li key={k} className="inline-flex items-center gap-1.5">
-                <span
-                  aria-hidden
-                  className="h-2.5 w-2.5 rounded-full"
-                  style={{ background: TEAM_BUCKET_COLOR[k] }}
-                />
+                <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: TEAM_BUCKET_COLOR[k] }} />
                 <span>{TEAM_BUCKET_LABEL[k]}</span>
               </li>
             ))}
@@ -1307,11 +1172,7 @@ export default function NationalPage() {
       </section>
 
       {/* ─── §9 PI distribution ─── */}
-      <section
-        id="pi-distribution"
-        aria-labelledby="national-section-pis"
-        className="scroll-mt-24"
-      >
+      <section id="pi-distribution" aria-labelledby="national-section-pis" className="scroll-mt-24">
         <SectionDivider
           eyebrow="National · PIs"
           title="$/PI distribution"
@@ -1329,28 +1190,20 @@ export default function NationalPage() {
               : undefined
           }
           methodology={{
-            what:
-              'Whether federal research funding is shared evenly across PIs nationwide, or concentrated in a small slice of top-funded researchers.',
-            how:
-              'At each university we sort PIs into ten equal $/PI buckets (deciles). We then average each decile across institutions — a "decile of deciles." Decile 1 = lowest-funded 10%, decile 10 = highest-funded.',
+            what: 'Whether federal research funding is shared evenly across PIs nationwide, or concentrated in a small slice of top-funded researchers.',
+            how: 'At each university we sort PIs into ten equal $/PI buckets (deciles). We then average each decile across institutions — a "decile of deciles." Decile 1 = lowest-funded 10%, decile 10 = highest-funded.',
             caveats:
               'Averaging deciles across institutions is a coarse but defensible national lens. PIs holding grants at multiple universities are counted once per institution.',
           }}
         >
           <ResponsiveSvg height={280}>
-            {(w, h) => (
-              <DistributionPlot data={piDistLatest.rows} width={w} height={h} />
-            )}
+            {(w, h) => <DistributionPlot data={piDistLatest.rows} width={w} height={h} />}
           </ResponsiveSvg>
         </ChartFrame>
       </section>
 
       {/* ─── §S5.4 5-yr climbers & fallers ─── */}
-      <section
-        id="climbers-fallers"
-        aria-labelledby="national-section-climbers"
-        className="scroll-mt-24"
-      >
+      <section id="climbers-fallers" aria-labelledby="national-section-climbers" className="scroll-mt-24">
         <SectionDivider
           eyebrow="National · Growth"
           title="5-year climbers & fallers"
@@ -1363,25 +1216,15 @@ export default function NationalPage() {
           dek="One panel of climbers (top 10 by 5-yr CAGR), one of fallers (bottom 10). Restricted to universities with FY2024 HERD R&D ≥ $5M to avoid tiny-base noise."
           source="agg_uni_growth"
           methodology={{
-            what:
-              'Which universities have been on the steepest 5-year upward or downward trajectory, in HERD-reported total R&D.',
-            how:
-              'CAGR_5yr = (FY24 total / FY19 total)^(1/5) − 1. Universities are restricted to those with FY24 total R&D ≥ $5M (avoids divide-by-tiny CAGRs). Climbers are sorted descending; fallers ascending.',
+            what: 'Which universities have been on the steepest 5-year upward or downward trajectory, in HERD-reported total R&D.',
+            how: 'CAGR_5yr = (FY24 total / FY19 total)^(1/5) − 1. Universities are restricted to those with FY24 total R&D ≥ $5M (avoids divide-by-tiny CAGRs). Climbers are sorted descending; fallers ascending.',
             caveats:
               'Nominal dollars (no CPI deflation) — real-dollar CAGRs would be ~2.5–3% lower per year over the 2019-24 window. Rank-change columns use HERD-reported FY19 ranks among the same $5M cohort.',
           }}
         >
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-            <GrowthLeaderboard
-              title="Top 10 climbers (5-yr CAGR)"
-              rows={climbers}
-              dir="climber"
-            />
-            <GrowthLeaderboard
-              title="Bottom 10 fallers (5-yr CAGR)"
-              rows={fallers}
-              dir="faller"
-            />
+            <GrowthLeaderboard title="Top 10 climbers (5-yr CAGR)" rows={climbers} dir="climber" />
+            <GrowthLeaderboard title="Bottom 10 fallers (5-yr CAGR)" rows={fallers} dir="faller" />
           </div>
         </ChartFrame>
       </section>
@@ -1419,20 +1262,8 @@ function IcBars({
           const bh = y.bandwidth();
           return (
             <g key={b.ic_code}>
-              <rect
-                x={0}
-                y={by}
-                width={bw}
-                height={bh}
-                fill="hsl(var(--agency-nih))"
-                rx={2}
-              />
-              <text
-                x={bw + 6}
-                y={by + bh / 2}
-                dy="0.35em"
-                className="fill-text-secondary text-[11px] tnum"
-              >
+              <rect x={0} y={by} width={bw} height={bh} fill="hsl(var(--agency-nih))" rx={2} />
+              <text x={bw + 6} y={by + bh / 2} dy="0.35em" className="fill-text-secondary text-[11px] tnum">
                 {formatDollars(b.amount)} · {formatPercent(b.pct)}
               </text>
             </g>
@@ -1489,26 +1320,15 @@ function GrowthLeaderboard({
           const cagr = Number(r.cagr_5yr) || 0;
           const rankDelta = r.rank_change_5yr;
           const rankSign = rankDelta && rankDelta > 0 ? '↑' : rankDelta && rankDelta < 0 ? '↓' : '·';
-          const cagrColor =
-            dir === 'climber' ? 'text-positive' : 'text-negative';
+          const cagrColor = dir === 'climber' ? 'text-positive' : 'text-negative';
           return (
-            <li
-              key={r.institution_sk}
-              className="flex items-baseline justify-between gap-3 py-1.5"
-            >
+            <li key={r.institution_sk} className="flex items-baseline justify-between gap-3 py-1.5">
               <span className="min-w-0 truncate">
-                <span className="mr-2 text-text-tertiary tnum">
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                <a
-                  href={`/universities/${r.institution_sk}`}
-                  className="text-accent hover:underline"
-                >
+                <span className="mr-2 text-text-tertiary tnum">{String(i + 1).padStart(2, '0')}</span>
+                <a href={`/universities/${r.institution_sk}`} className="text-accent hover:underline">
                   {r.canonical_name ?? r.institution_sk}
                 </a>
-                {r.state_code && (
-                  <span className="ml-1 text-text-tertiary">· {r.state_code}</span>
-                )}
+                {r.state_code && <span className="ml-1 text-text-tertiary">· {r.state_code}</span>}
               </span>
               <span className="flex shrink-0 items-baseline gap-2 tnum">
                 <span className={cagrColor}>
@@ -1565,12 +1385,7 @@ function TopicBars({
           return (
             <g key={b.topic}>
               <rect x={0} y={by} width={bw} height={bh} fill="hsl(var(--accent))" rx={2} />
-              <text
-                x={bw + 6}
-                y={by + bh / 2}
-                dy="0.35em"
-                className="fill-text-secondary text-[11px] tnum"
-              >
+              <text x={bw + 6} y={by + bh / 2} dy="0.35em" className="fill-text-secondary text-[11px] tnum">
                 {formatDollars(b.amount)} · {formatPercent(b.share)}
               </text>
             </g>
@@ -1634,20 +1449,8 @@ function TeamSizeBars({
           const bh = y.bandwidth();
           return (
             <g key={b.bucket}>
-              <rect
-                x={0}
-                y={by}
-                width={bw}
-                height={bh}
-                fill={TEAM_BUCKET_COLOR[b.bucket]}
-                rx={2}
-              />
-              <text
-                x={bw + 6}
-                y={by + bh / 2}
-                dy="0.35em"
-                className="fill-text-secondary text-[11px] tnum"
-              >
+              <rect x={0} y={by} width={bw} height={bh} fill={TEAM_BUCKET_COLOR[b.bucket]} rx={2} />
+              <text x={bw + 6} y={by + bh / 2} dy="0.35em" className="fill-text-secondary text-[11px] tnum">
                 {formatDollars(b.amount)} · {formatPercent(b.share)}
               </text>
             </g>

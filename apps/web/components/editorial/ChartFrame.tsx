@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useState, type ReactNode } from 'react';
+import { type ReactNode, useId, useState } from 'react';
 
 export interface ChartMethodology {
   /** Plain-English "what this chart shows" — one sentence, no jargon. */
@@ -39,24 +39,14 @@ interface Props {
  * Clicking it reveals a plain-language "what this is / how computed / caveats"
  * panel for layperson readers.
  */
-export function ChartFrame({
-  eyebrow,
-  title,
-  dek,
-  source,
-  note,
-  methodology,
-  children,
-}: Props) {
+export function ChartFrame({ eyebrow, title, dek, source, note, methodology, children }: Props) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
 
   return (
     <figure className="space-y-3">
       <header className="space-y-1">
-        {eyebrow && (
-          <p className="text-[11px] uppercase tracking-wider text-text-tertiary">{eyebrow}</p>
-        )}
+        {eyebrow && <p className="text-[11px] uppercase tracking-wider text-text-tertiary">{eyebrow}</p>}
         <div className="flex items-baseline gap-2 flex-wrap">
           <h3 className="text-[17px] font-semibold text-text-primary">{title}</h3>
           {methodology && (
@@ -81,17 +71,14 @@ export function ChartFrame({
             className="mt-2 rounded border border-rule bg-mute-3 px-3 py-2 text-[12px] leading-relaxed text-text-secondary max-w-prose space-y-1.5"
           >
             <p>
-              <span className="font-semibold text-text-primary">What it shows:</span>{' '}
-              {methodology.what}
+              <span className="font-semibold text-text-primary">What it shows:</span> {methodology.what}
             </p>
             <p>
-              <span className="font-semibold text-text-primary">How it&rsquo;s computed:</span>{' '}
-              {methodology.how}
+              <span className="font-semibold text-text-primary">How it&rsquo;s computed:</span> {methodology.how}
             </p>
             {methodology.caveats && (
               <p>
-                <span className="font-semibold text-text-primary">Caveats:</span>{' '}
-                {methodology.caveats}
+                <span className="font-semibold text-text-primary">Caveats:</span> {methodology.caveats}
               </p>
             )}
           </div>

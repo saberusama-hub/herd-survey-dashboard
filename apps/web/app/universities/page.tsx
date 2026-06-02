@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useDuckDB } from '@/app/providers';
 import { UniversityTable } from '@/components/editorial/UniversityTable';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { getUniversityIndex, type UniversityIndexRow } from '@/lib/queries';
+import { type UniversityIndexRow, getUniversityIndex } from '@/lib/queries';
+import { useEffect, useState } from 'react';
 
 /**
  * Sortable directory of every HERD-tracked institution. The heavy lifting

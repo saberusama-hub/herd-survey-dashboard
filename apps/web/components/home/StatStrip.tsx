@@ -25,9 +25,15 @@ export function StatStrip() {
 
   useEffect(() => {
     if (!ready) return;
-    headlineKpis().then(setK).catch(() => setK(null));
-    cumulativeFederalRd().then(setCum).catch(() => setCum(null));
-    bottomUpCoverageByFy().then(setCoverage).catch(() => setCoverage([]));
+    headlineKpis()
+      .then(setK)
+      .catch(() => setK(null));
+    cumulativeFederalRd()
+      .then(setCum)
+      .catch(() => setCum(null));
+    bottomUpCoverageByFy()
+      .then(setCoverage)
+      .catch(() => setCoverage([]));
   }, [ready]);
 
   if (error) {
@@ -74,13 +80,13 @@ export function StatStrip() {
       />
       <KpiTile
         eyebrow="Coverage of HERD federal R&D"
-        value={
-          latestCoverage?.coverage_pct
-            ? `${(latestCoverage.coverage_pct * 100).toFixed(0)}%`
-            : '—'
-        }
+        value={latestCoverage?.coverage_pct ? `${(latestCoverage.coverage_pct * 100).toFixed(0)}%` : '—'}
         unit="found in bottom-up sources"
-        delta={coverageDelta !== null ? `${coverageDelta > 0 ? '+' : ''}${coverageDelta.toFixed(0)} pp vs FY${firstCoverage?.fiscal_year}` : null}
+        delta={
+          coverageDelta !== null
+            ? `${coverageDelta > 0 ? '+' : ''}${coverageDelta.toFixed(0)} pp vs FY${firstCoverage?.fiscal_year}`
+            : null
+        }
         sparkline={coverageSpark.length ? coverageSpark : null}
         sparklineColor="hsl(var(--negative))"
       />

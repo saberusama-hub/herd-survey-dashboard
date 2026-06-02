@@ -13,14 +13,7 @@ interface Props {
   profile: UniversityProfile;
 }
 
-const SOURCE_ORDER = [
-  'federal',
-  'state',
-  'industry',
-  'institutional',
-  'nonprofit',
-  'other',
-] as const;
+const SOURCE_ORDER = ['federal', 'state', 'industry', 'institutional', 'nonprofit', 'other'] as const;
 type SourceKey = (typeof SOURCE_ORDER)[number];
 
 const SOURCE_LABEL: Record<SourceKey, string> = {
@@ -67,9 +60,7 @@ export function Section3Sources({ profile }: Props) {
 
     const finalFy = fys.length > 0 ? fys[fys.length - 1] : null;
     const finalRow = wide[wide.length - 1] as Record<string, number | string> | undefined;
-    const finalTotal = finalRow
-      ? SOURCE_ORDER.reduce((s, k) => s + (Number(finalRow[k]) || 0), 0)
-      : 0;
+    const finalTotal = finalRow ? SOURCE_ORDER.reduce((s, k) => s + (Number(finalRow[k]) || 0), 0) : 0;
     const finalBreakdown = SOURCE_ORDER.map((k) => ({
       key: k,
       label: SOURCE_LABEL[k],
@@ -118,10 +109,8 @@ export function Section3Sources({ profile }: Props) {
             : undefined
         }
         methodology={{
-          what:
-            'Who paid for the research at this university each year, split across six categories: federal, state, industry, the school itself, nonprofits, and other.',
-          how:
-            'We sum the HERD Q01 "Source of Funds" reported values per institution per fiscal year, by source category. Each stacked bar therefore equals the total R&D for that year.',
+          what: 'Who paid for the research at this university each year, split across six categories: federal, state, industry, the school itself, nonprofits, and other.',
+          how: 'We sum the HERD Q01 "Source of Funds" reported values per institution per fiscal year, by source category. Each stacked bar therefore equals the total R&D for that year.',
           caveats:
             'HERD did not collect the "nonprofit" category before FY2010 (ARDES non-response window), so FY2005–FY2009 bars understate that slice.',
         }}
@@ -144,11 +133,7 @@ export function Section3Sources({ profile }: Props) {
         <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] text-text-secondary">
           {finalBreakdown.map((b) => (
             <li key={b.key} className="inline-flex items-center gap-1.5">
-              <span
-                aria-hidden
-                className="h-2.5 w-2.5 rounded-full"
-                style={{ background: b.color }}
-              />
+              <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: b.color }} />
               <span>{b.label}</span>
             </li>
           ))}
@@ -158,9 +143,7 @@ export function Section3Sources({ profile }: Props) {
       {/* Final-year breakdown table */}
       {finalFy !== null && (
         <div className="mt-6">
-          <p className="mb-2 text-[11px] uppercase tracking-wider text-text-tertiary">
-            FY{finalFy} breakdown
-          </p>
+          <p className="mb-2 text-[11px] uppercase tracking-wider text-text-tertiary">FY{finalFy} breakdown</p>
           <table className="w-full text-sm tnum">
             <thead className="text-text-tertiary">
               <tr className="border-b border-rule">
@@ -174,20 +157,12 @@ export function Section3Sources({ profile }: Props) {
                 <tr key={b.key} className="border-b border-rule/60">
                   <td className="py-1.5 text-text-primary">
                     <span className="inline-flex items-center gap-2">
-                      <span
-                        aria-hidden
-                        className="h-2.5 w-2.5 rounded-sm"
-                        style={{ background: b.color }}
-                      />
+                      <span aria-hidden className="h-2.5 w-2.5 rounded-sm" style={{ background: b.color }} />
                       {b.label}
                     </span>
                   </td>
-                  <td className="py-1.5 text-right text-text-secondary">
-                    {formatDollars(b.amount)}
-                  </td>
-                  <td className="py-1.5 text-right text-text-secondary">
-                    {formatPercent(b.share)}
-                  </td>
+                  <td className="py-1.5 text-right text-text-secondary">{formatDollars(b.amount)}</td>
+                  <td className="py-1.5 text-right text-text-secondary">{formatPercent(b.share)}</td>
                 </tr>
               ))}
             </tbody>

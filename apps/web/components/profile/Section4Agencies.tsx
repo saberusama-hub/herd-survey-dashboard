@@ -10,7 +10,7 @@ import { Sparkline } from '@/components/charts/Sparkline';
 import { ChartFrame } from '@/components/editorial/ChartFrame';
 import { SectionDivider } from '@/components/editorial/SectionDivider';
 import { formatDollars, formatPercent } from '@/lib/format';
-import { getUniversityNihICs, type NihIcRow, type UniversityProfile } from '@/lib/queries';
+import { type NihIcRow, type UniversityProfile, getUniversityNihICs } from '@/lib/queries';
 
 interface Props {
   profile: UniversityProfile;
@@ -119,10 +119,7 @@ export function Section4Agencies({ profile, institutionSk }: Props) {
 
   const icView = useMemo(() => {
     if (!icRows || icRows.length === 0) return null;
-    const latest = icRows.reduce(
-      (m, r) => (r.fiscal_year > m ? r.fiscal_year : m),
-      icRows[0].fiscal_year,
-    );
+    const latest = icRows.reduce((m, r) => (r.fiscal_year > m ? r.fiscal_year : m), icRows[0].fiscal_year);
     const rows = icRows
       .filter((r) => r.fiscal_year === latest)
       .map((r) => ({
@@ -167,22 +164,16 @@ export function Section4Agencies({ profile, institutionSk }: Props) {
         dek="Bars are direct-labeled with the dollar amount and the share of this institution's federal R&D."
         source="HERD Q09 · agg_uni_agency_split"
         methodology={{
-          what:
-            'Which federal agencies actually paid this university for research in the most recent reported year — and how much each one chipped in.',
-          how:
-            'We take HERD Q09 ("Federal R&D by agency") for the latest fiscal year and group reported obligations into the seven canonical agency buckets (HHS includes NIH, plus NSF / DOD / DOE / NASA / USDA / Other federal). Bars are sorted by amount.',
+          what: 'Which federal agencies actually paid this university for research in the most recent reported year — and how much each one chipped in.',
+          how: 'We take HERD Q09 ("Federal R&D by agency") for the latest fiscal year and group reported obligations into the seven canonical agency buckets (HHS includes NIH, plus NSF / DOD / DOE / NASA / USDA / Other federal). Bars are sorted by amount.',
           caveats:
             'HERD Q09 is reported by the institution’s sponsored-research office. Sub-agencies (e.g., NIH, ARO, ONR) are rolled up to their parent department, so the same dollar appears once in its parent bucket.',
         }}
       >
-        <ResponsiveSvg height={chartHeight}>
-          {(w, h) => <AgencyBars width={w} height={h} bars={bars} />}
-        </ResponsiveSvg>
+        <ResponsiveSvg height={chartHeight}>{(w, h) => <AgencyBars width={w} height={h} bars={bars} />}</ResponsiveSvg>
       </ChartFrame>
 
-      {dominantNote && (
-        <p className="mt-2 text-[11px] italic text-text-tertiary">{dominantNote}</p>
-      )}
+      {dominantNote && <p className="mt-2 text-[11px] italic text-text-tertiary">{dominantNote}</p>}
 
       {/* NIH IC drill-down: visible only when HHS is one of the agency buckets */}
       {hhsBar && (
@@ -193,16 +184,12 @@ export function Section4Agencies({ profile, institutionSk }: Props) {
             aria-expanded={icExpanded}
             className="text-[12px] text-accent hover:underline"
           >
-            {icExpanded
-              ? 'Hide NIH Institute breakdown'
-              : 'Break down HHS by NIH Institute →'}
+            {icExpanded ? 'Hide NIH Institute breakdown' : 'Break down HHS by NIH Institute →'}
           </button>
 
           {icExpanded && (
             <div className="mt-4">
-              {icError && (
-                <p className="text-[11px] text-negative">Failed to load NIH IC data: {icError}</p>
-              )}
+              {icError && <p className="text-[11px] text-negative">Failed to load NIH IC data: {icError}</p>}
               {!icError && icRows === null && (
                 <p className="text-[11px] text-text-tertiary">Loading NIH Institute breakdown…</p>
               )}
@@ -213,10 +200,8 @@ export function Section4Agencies({ profile, institutionSk }: Props) {
                   dek="Each NIH grant is administered by one Institute or Center (IC). This drills the HHS bar above into the actual ICs that paid out."
                   source="fact_nih_project.admin_ic_code · agg_uni_nih_ic"
                   methodology={{
-                    what:
-                      'How HHS dollars to this university split across the 27 NIH Institutes and Centers — the actual scientific divisions inside NIH that wrote the checks.',
-                    how:
-                      'We aggregate fact_nih_project.total_cost_nominal by admin_ic_code (administering IC). The HERD-side institution_sk join uses dim_institution_crosswalk; non-NIH HHS components (CDC, AHRQ, HRSA, etc.) are not in fact_nih_project and therefore not shown here.',
+                    what: 'How HHS dollars to this university split across the 27 NIH Institutes and Centers — the actual scientific divisions inside NIH that wrote the checks.',
+                    how: 'We aggregate fact_nih_project.total_cost_nominal by admin_ic_code (administering IC). The HERD-side institution_sk join uses dim_institution_crosswalk; non-NIH HHS components (CDC, AHRQ, HRSA, etc.) are not in fact_nih_project and therefore not shown here.',
                     caveats:
                       'admin_ic represents the IC that manages the project, which can differ from the IC that actually contributes the funds for multi-IC awards. Counts are projects, not grants — sub-projects share their parent application_id.',
                   }}
@@ -227,9 +212,7 @@ export function Section4Agencies({ profile, institutionSk }: Props) {
                 </ChartFrame>
               )}
               {icView && icView.rows.length === 0 && (
-                <p className="text-[11px] text-text-tertiary">
-                  No NIH project rows found for this institution.
-                </p>
+                <p className="text-[11px] text-text-tertiary">No NIH project rows found for this institution.</p>
               )}
             </div>
           )}
@@ -250,12 +233,7 @@ export function Section4Agencies({ profile, institutionSk }: Props) {
                   {formatDollars(b.amount)} &middot; {formatPercent(b.share)}
                 </p>
               </div>
-              <Sparkline
-                data={sparkData[b.bucket] ?? []}
-                color={b.color}
-                width={80}
-                height={28}
-              />
+              <Sparkline data={sparkData[b.bucket] ?? []} color={b.color} width={80} height={28} />
             </div>
           ))}
         </div>
@@ -295,20 +273,8 @@ function IcBars({
           const bh = y.bandwidth();
           return (
             <g key={b.ic_code}>
-              <rect
-                x={0}
-                y={by}
-                width={bw}
-                height={bh}
-                fill="hsl(var(--agency-nih))"
-                rx={2}
-              />
-              <text
-                x={bw + 6}
-                y={by + bh / 2}
-                dy="0.35em"
-                className="fill-text-secondary text-[11px] tnum"
-              >
+              <rect x={0} y={by} width={bw} height={bh} fill="hsl(var(--agency-nih))" rx={2} />
+              <text x={bw + 6} y={by + bh / 2} dy="0.35em" className="fill-text-secondary text-[11px] tnum">
                 {formatDollars(b.amount)}
               </text>
             </g>
@@ -374,12 +340,7 @@ function AgencyBars({
           return (
             <g key={b.bucket}>
               <rect x={0} y={by} width={bw} height={bh} fill={b.color} rx={2} />
-              <text
-                x={bw + 6}
-                y={by + bh / 2}
-                dy="0.35em"
-                className="fill-text-secondary text-[11px] tnum"
-              >
+              <text x={bw + 6} y={by + bh / 2} dy="0.35em" className="fill-text-secondary text-[11px] tnum">
                 {formatDollars(b.amount)}
               </text>
             </g>

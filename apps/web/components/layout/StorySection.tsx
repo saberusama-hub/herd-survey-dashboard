@@ -1,8 +1,8 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import scrollama from 'scrollama';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
+import scrollama from 'scrollama';
 
 export interface StoryStep {
   /** Unique id used as React key. */
@@ -63,12 +63,7 @@ export function StorySection({ chart, steps, align = 'right', chartBg, className
         className,
       )}
     >
-      <div
-        className={cn(
-          'lg:col-span-7 space-y-[80vh] pt-[20vh] pb-[20vh]',
-          align === 'left' ? 'lg:col-start-6' : '',
-        )}
-      >
+      <div className={cn('lg:col-span-7 space-y-[80vh] pt-[20vh] pb-[20vh]', align === 'left' ? 'lg:col-start-6' : '')}>
         {steps.map((s) => (
           <section
             key={s.id}
@@ -84,17 +79,9 @@ export function StorySection({ chart, steps, align = 'right', chartBg, className
         ))}
       </div>
 
-      <aside
-        className={cn(
-          'lg:col-span-5',
-          align === 'left' ? 'lg:col-start-1 lg:row-start-1' : '',
-        )}
-      >
+      <aside className={cn('lg:col-span-5', align === 'left' ? 'lg:col-start-1 lg:row-start-1' : '')}>
         <div
-          className={cn(
-            'lg:sticky lg:top-24 rounded-lg border border-rule p-4',
-            chartBg ? '' : 'bg-surface-elevated',
-          )}
+          className={cn('lg:sticky lg:top-24 rounded-lg border border-rule p-4', chartBg ? '' : 'bg-surface-elevated')}
           style={chartBg ? { background: chartBg } : undefined}
         >
           {chart(activeId)}

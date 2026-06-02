@@ -4,9 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 // pick up the mocked `query` function. The mocked `query` returns a canned
 // row shape used by `searchInstitutions`.
 vi.mock('./duckdb', () => ({
-  query: vi.fn().mockResolvedValue([
-    { sk: 'INST0000123', name: 'Johns Hopkins University', state: 'MD' },
-  ]),
+  query: vi.fn().mockResolvedValue([{ sk: 'INST0000123', name: 'Johns Hopkins University', state: 'MD' }]),
   queryOne: vi.fn(),
 }));
 

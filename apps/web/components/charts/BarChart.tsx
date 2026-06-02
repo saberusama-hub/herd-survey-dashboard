@@ -65,87 +65,84 @@ export function BarChart({
 
   return (
     <div className="relative">
-    <ResponsiveContainer width="100%" height={height}>
-      <RechartsBarChart
-        data={data}
-        layout={horizontal ? 'vertical' : 'horizontal'}
-        margin={{ top: 8, right: 16, bottom: 8, left: 8 }}
-      >
-        <CartesianGrid {...GRID_STYLE} vertical={horizontal} horizontal={!horizontal} />
-        {horizontal ? (
-          <>
-            <XAxis type="number" {...AXIS_STYLE} tickLine={false} axisLine={false} tickFormatter={yFormat} />
-            <YAxis
-              dataKey={xKey}
-              type="category"
-              {...AXIS_STYLE}
-              tickLine={false}
-              axisLine={{ stroke: 'hsl(var(--border))' }}
-              width={140}
-            />
-          </>
-        ) : (
-          <>
-            <XAxis
-              dataKey={xKey}
-              {...AXIS_STYLE}
-              tickLine={false}
-              axisLine={{ stroke: 'hsl(var(--border))' }}
-              tickFormatter={xFormat}
-            />
-            <YAxis {...AXIS_STYLE} tickLine={false} axisLine={false} tickFormatter={yFormat} width={64} />
-          </>
-        )}
-        <Tooltip
-          cursor={{ fill: 'hsl(var(--accent-soft) / 0.4)' }}
-          contentStyle={{
-            background: 'hsl(var(--surface-elevated))',
-            border: '1px solid hsl(var(--border))',
-            borderRadius: 6,
-            fontSize: 12,
-          }}
-          labelStyle={{ color: 'hsl(var(--text-secondary))', fontWeight: 500 }}
-          formatter={(value: number, name: string) => [yFormat(value), name]}
-          labelFormatter={(label) => (typeof label === 'number' ? formatFy(label) : String(label))}
-        />
-        {showLegend && series.length > 1 && (
-          <Legend wrapperStyle={{ fontSize: 12, color: 'hsl(var(--text-secondary))' }} />
-        )}
-        {series.map((s, i) => {
-          const baseColor = s.color ?? colorFor(i);
-          const bar = (
-            <Bar
-              key={s.key}
-              dataKey={s.key}
-              name={s.label}
-              fill={baseColor}
-              stackId={stacked ? 'stack' : undefined}
-              radius={[2, 2, 0, 0]}
-              isAnimationActive={false}
-            >
-              {useHighlight && i === 0
-                ? data.map((_, di) => (
-                    <Cell
-                      key={`cell-${di}`}
-                      fill={di === highlightIndex ? accentColor : muteColor}
-                    />
-                  ))
-                : null}
-            </Bar>
-          );
-          return bar;
-        })}
-      </RechartsBarChart>
-    </ResponsiveContainer>
-    {annotations && annotations.length > 0 && (
-      <div className="pointer-events-none absolute inset-0">
-        <svg className="h-full w-full" role="presentation">
-          {annotations.map((a, ai) => (
-            <Annotation key={ai} x={a.x} y={a.y} label={a.label} />
-          ))}
-        </svg>
-      </div>
-    )}
+      <ResponsiveContainer width="100%" height={height}>
+        <RechartsBarChart
+          data={data}
+          layout={horizontal ? 'vertical' : 'horizontal'}
+          margin={{ top: 8, right: 16, bottom: 8, left: 8 }}
+        >
+          <CartesianGrid {...GRID_STYLE} vertical={horizontal} horizontal={!horizontal} />
+          {horizontal ? (
+            <>
+              <XAxis type="number" {...AXIS_STYLE} tickLine={false} axisLine={false} tickFormatter={yFormat} />
+              <YAxis
+                dataKey={xKey}
+                type="category"
+                {...AXIS_STYLE}
+                tickLine={false}
+                axisLine={{ stroke: 'hsl(var(--border))' }}
+                width={140}
+              />
+            </>
+          ) : (
+            <>
+              <XAxis
+                dataKey={xKey}
+                {...AXIS_STYLE}
+                tickLine={false}
+                axisLine={{ stroke: 'hsl(var(--border))' }}
+                tickFormatter={xFormat}
+              />
+              <YAxis {...AXIS_STYLE} tickLine={false} axisLine={false} tickFormatter={yFormat} width={64} />
+            </>
+          )}
+          <Tooltip
+            cursor={{ fill: 'hsl(var(--accent-soft) / 0.4)' }}
+            contentStyle={{
+              background: 'hsl(var(--surface-elevated))',
+              border: '1px solid hsl(var(--border))',
+              borderRadius: 6,
+              fontSize: 12,
+            }}
+            labelStyle={{ color: 'hsl(var(--text-secondary))', fontWeight: 500 }}
+            formatter={(value: number, name: string) => [yFormat(value), name]}
+            labelFormatter={(label) => (typeof label === 'number' ? formatFy(label) : String(label))}
+          />
+          {showLegend && series.length > 1 && (
+            <Legend wrapperStyle={{ fontSize: 12, color: 'hsl(var(--text-secondary))' }} />
+          )}
+          {series.map((s, i) => {
+            const baseColor = s.color ?? colorFor(i);
+            const bar = (
+              <Bar
+                key={s.key}
+                dataKey={s.key}
+                name={s.label}
+                fill={baseColor}
+                stackId={stacked ? 'stack' : undefined}
+                radius={[2, 2, 0, 0]}
+                isAnimationActive={false}
+              >
+                {useHighlight && i === 0
+                  ? data.map((_, di) => (
+                      <Cell key={`cell-${di}`} fill={di === highlightIndex ? accentColor : muteColor} />
+                    ))
+                  : null}
+              </Bar>
+            );
+            return bar;
+          })}
+        </RechartsBarChart>
+      </ResponsiveContainer>
+      {annotations && annotations.length > 0 && (
+        <div className="pointer-events-none absolute inset-0">
+          <svg className="h-full w-full" role="presentation">
+            {annotations.map((a, ai) => (
+              <Annotation key={ai} x={a.x} y={a.y} label={a.label} />
+            ))}
+          </svg>
+        </div>
+      )}
     </div>
   );
 }

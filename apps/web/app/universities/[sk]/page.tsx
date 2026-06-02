@@ -1,5 +1,5 @@
-import { notFound } from 'next/navigation';
 import institutions from '@/public/data/dim_institution.json';
+import { notFound } from 'next/navigation';
 
 import { ProfileBody } from './ProfileBody';
 

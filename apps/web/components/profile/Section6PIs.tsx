@@ -75,40 +75,26 @@ export function Section6PIs({ profile }: Props) {
     }).filter((r) => r.amount > 0);
     const teamTotal = teamBars.reduce((s, r) => s + r.amount, 0);
     const single = teamBars.find((r) => r.bucket === '1');
-    const multi = teamBars
-      .filter((r) => r.bucket !== '1')
-      .reduce((s, r) => s + r.amount, 0);
+    const multi = teamBars.filter((r) => r.bucket !== '1').reduce((s, r) => s + r.amount, 0);
     const multiPiShare = teamTotal > 0 ? multi / teamTotal : null;
 
     const tiles: KpiTile[] = [
       {
         label: `Distinct federal PIs · FY${latestPi.fiscal_year}`,
         value: formatCount(Number(latestPi.distinct_pi_count) || 0),
-        hint: (
-          <span className="text-text-tertiary">
-            unique PIs (lead + co-PIs) with any NSF or NIH grant
-          </span>
-        ),
+        hint: <span className="text-text-tertiary">unique PIs (lead + co-PIs) with any NSF or NIH grant</span>,
       },
       {
         label: `Federal $ per PI · FY${latestPi.fiscal_year}`,
         value: formatDollars(Number(latestPi.amount_per_pi) || 0, {
           decimals: 2,
         }),
-        hint: (
-          <span className="text-text-tertiary">
-            total NSF+NIH funding ÷ distinct PI count
-          </span>
-        ),
+        hint: <span className="text-text-tertiary">total NSF+NIH funding ÷ distinct PI count</span>,
       },
       {
         label: `Multi-PI team share · FY${latestTeamFy}`,
         value: formatPercent(multiPiShare),
-        hint: (
-          <span className="text-text-tertiary">
-            share of federal $ to grants with 2+ PIs
-          </span>
-        ),
+        hint: <span className="text-text-tertiary">share of federal $ to grants with 2+ PIs</span>,
       },
     ];
 
@@ -121,9 +107,10 @@ export function Section6PIs({ profile }: Props) {
         peakFy = r.fiscal_year;
       }
     }
-    const peakPiNote = peakCount > 0
-      ? `PI headcount peaked at ${formatCount(peakCount)} in FY${peakFy}. Counts include co-PIs via the NIH PI bridge plus NSF lead PIs.`
-      : null;
+    const peakPiNote =
+      peakCount > 0
+        ? `PI headcount peaked at ${formatCount(peakCount)} in FY${peakFy}. Counts include co-PIs via the NIH PI bridge plus NSF lead PIs.`
+        : null;
 
     return {
       tiles,
@@ -171,10 +158,8 @@ export function Section6PIs({ profile }: Props) {
           dek="Every unique person who held a NSF or NIH grant in the year — lead PIs plus co-PIs from multi-PI projects."
           source="agg_uni_pi_universe (raw NSF awards ∪ NIH PI bridge)"
           methodology={{
-            what:
-              'How many individual researchers at this university held a federal NSF or NIH grant in each year.',
-            how:
-              'For every fiscal year we count distinct PIs that appear in the raw NSF Awards file or the NIH RePORTER PI bridge. The two universes are unioned and deduplicated by name + institution.',
+            what: 'How many individual researchers at this university held a federal NSF or NIH grant in each year.',
+            how: 'For every fiscal year we count distinct PIs that appear in the raw NSF Awards file or the NIH RePORTER PI bridge. The two universes are unioned and deduplicated by name + institution.',
             caveats:
               'FY2005 is masked — upstream entity resolution lumped subunits (e.g., Harvard Medical School) into the parent in FY2005 only, affecting 81 institutions. NSF counts only the lead PI per award (the agency does not ship the full co-PI roster), so true team headcount is slightly higher than shown.',
           }}
@@ -199,10 +184,8 @@ export function Section6PIs({ profile }: Props) {
           }
           source="agg_uni_team_size (NSF n_pi ∪ NIH PI bridge count)"
           methodology={{
-            what:
-              'Of every federal dollar coming into this university, how much went to lone researchers vs. larger collaborative teams.',
-            how:
-              'Each NSF or NIH grant is bucketed by its team size (1, 2-5, 6-10, 11-20, 21+ PIs). Team size comes from the NSF `n_pi` field and the NIH `PI_IDS` array (unnested). We sum the dollar amount of grants in each bucket for the latest fiscal year.',
+            what: 'Of every federal dollar coming into this university, how much went to lone researchers vs. larger collaborative teams.',
+            how: 'Each NSF or NIH grant is bucketed by its team size (1, 2-5, 6-10, 11-20, 21+ PIs). Team size comes from the NSF `n_pi` field and the NIH `PI_IDS` array (unnested). We sum the dollar amount of grants in each bucket for the latest fiscal year.',
             caveats:
               'NSF does not publish the full co-PI roster — each grant is placed in its reported team-size bucket but the individual co-PIs are not counted separately. This nudges the bigger-team buckets slightly conservative.',
           }}
@@ -210,9 +193,7 @@ export function Section6PIs({ profile }: Props) {
           <BarChart
             data={teamBars as unknown as Array<Record<string, unknown>>}
             xKey="label"
-            series={[
-              { key: 'amount', label: 'Total federal $', color: 'hsl(var(--accent))' },
-            ]}
+            series={[{ key: 'amount', label: 'Total federal $', color: 'hsl(var(--accent))' }]}
             xFormat={(v) => String(v)}
             yFormat={(v) => formatDollars(v)}
             height={260}
@@ -229,17 +210,14 @@ export function Section6PIs({ profile }: Props) {
           source="agg_uni_pi_distribution"
           note={
             distRows.length > 0
-              ? `Top decile carries ${formatDollars(
-                  distRows[distRows.length - 1]?.avg_amount ?? 0,
-                  { decimals: 2 },
-                )} per PI on average.`
+              ? `Top decile carries ${formatDollars(distRows[distRows.length - 1]?.avg_amount ?? 0, {
+                  decimals: 2,
+                })} per PI on average.`
               : undefined
           }
           methodology={{
-            what:
-              'Whether federal money at this university is spread evenly across researchers, or concentrated in a few big-grant labs.',
-            how:
-              'In the latest reported year we sort every PI by total NSF+NIH dollars received, split the roster into ten equal buckets (deciles), and plot the average $/PI in each decile. Decile 1 = lowest-funded 10% of PIs; decile 10 = highest-funded 10%.',
+            what: 'Whether federal money at this university is spread evenly across researchers, or concentrated in a few big-grant labs.',
+            how: 'In the latest reported year we sort every PI by total NSF+NIH dollars received, split the roster into ten equal buckets (deciles), and plot the average $/PI in each decile. Decile 1 = lowest-funded 10% of PIs; decile 10 = highest-funded 10%.',
             caveats:
               'A "PI" here means lead or co-PI on any NSF/NIH grant — including small no-cost extensions. PIs working at multiple institutions are counted at each.',
           }}
@@ -250,9 +228,7 @@ export function Section6PIs({ profile }: Props) {
         </ChartFrame>
       </div>
 
-      {peakPiNote && (
-        <p className="mt-3 text-[11px] italic text-text-tertiary">{peakPiNote}</p>
-      )}
+      {peakPiNote && <p className="mt-3 text-[11px] italic text-text-tertiary">{peakPiNote}</p>}
     </section>
   );
 }

@@ -56,12 +56,14 @@ export default function GeographyStory() {
             content: (
               <div className="space-y-3">
                 <p className="h-eyebrow text-accent">FY2005 · setting the scene</p>
-                <h2 className="font-serif text-3xl font-semibold tracking-tight">Where the money was, twenty years ago</h2>
+                <h2 className="font-serif text-3xl font-semibold tracking-tight">
+                  Where the money was, twenty years ago
+                </h2>
                 <p className="t-body-lg">
                   In FY2005, federal R&amp;D was clustered in a fairly predictable pattern: Massachusetts (Boston and
-                  Cambridge), New York (Cornell + Columbia + NYU), Maryland (NIH&apos;s home + Johns Hopkins), California
-                  (the UC system + Stanford), and the long tail of major state research universities. Watch what
-                  happens next.
+                  Cambridge), New York (Cornell + Columbia + NYU), Maryland (NIH&apos;s home + Johns Hopkins),
+                  California (the UC system + Stanford), and the long tail of major state research universities. Watch
+                  what happens next.
                 </p>
               </div>
             ),
@@ -71,11 +73,13 @@ export default function GeographyStory() {
             content: (
               <div className="space-y-3">
                 <p className="h-eyebrow text-cat-2">FY2010 · the East Coast holds, the South starts to grow</p>
-                <h2 className="font-serif text-3xl font-semibold tracking-tight">The first wave: South Atlantic gains</h2>
+                <h2 className="font-serif text-3xl font-semibold tracking-tight">
+                  The first wave: South Atlantic gains
+                </h2>
                 <p className="t-body-lg">
                   By FY2010, North Carolina (Duke + UNC + NC State) and Georgia (Georgia Tech) had emerged as serious
-                  centers — the Research Triangle had become more than the name suggested. Maryland kept growing,
-                  thanks to Johns Hopkins APL contracts plus the NIH proximity. New York and California stayed flat.
+                  centers — the Research Triangle had become more than the name suggested. Maryland kept growing, thanks
+                  to Johns Hopkins APL contracts plus the NIH proximity. New York and California stayed flat.
                 </p>
               </div>
             ),
@@ -85,12 +89,14 @@ export default function GeographyStory() {
             content: (
               <div className="space-y-3">
                 <p className="h-eyebrow text-cat-3">FY2018 · Maryland triples, Texas joins, Midwest consolidates</p>
-                <h2 className="font-serif text-3xl font-semibold tracking-tight">The second wave: Texas and Maryland</h2>
+                <h2 className="font-serif text-3xl font-semibold tracking-tight">
+                  The second wave: Texas and Maryland
+                </h2>
                 <p className="t-body-lg">
-                  Texas A&amp;M&apos;s federal R&amp;D more than doubled in a few years (largely DOD aviation research). UT
-                  Austin grew similarly. Maryland kept pulling ahead, hitting 3x its FY2005 base. Wichita State grew
-                  18x off a single DOD aviation program. Meanwhile, several Rust Belt research universities lost
-                  ground — Indiana and Ohio consolidated downward.
+                  Texas A&amp;M&apos;s federal R&amp;D more than doubled in a few years (largely DOD aviation research).
+                  UT Austin grew similarly. Maryland kept pulling ahead, hitting 3x its FY2005 base. Wichita State grew
+                  18x off a single DOD aviation program. Meanwhile, several Rust Belt research universities lost ground
+                  — Indiana and Ohio consolidated downward.
                 </p>
               </div>
             ),
@@ -104,9 +110,9 @@ export default function GeographyStory() {
                 <p className="t-body-lg">
                   As of FY2024, California is again the single largest state for federal R&amp;D (UCSD + Stanford + UCLA
                   + UCB are extraordinary). Maryland holds second. Texas has stabilized at third. The South Atlantic
-                  research belt (NC, GA, FL) is now a permanent feature of the map. CHIPS+IRA money beginning to land
-                  is starting to redraw the map yet again, with semiconductor-adjacent states (NY, AZ, OH) primed for
-                  the next wave.
+                  research belt (NC, GA, FL) is now a permanent feature of the map. CHIPS+IRA money beginning to land is
+                  starting to redraw the map yet again, with semiconductor-adjacent states (NY, AZ, OH) primed for the
+                  next wave.
                 </p>
               </div>
             ),
@@ -129,9 +135,7 @@ export default function GeographyStory() {
               </p>
               <USStateMap values={valuesMap} selected={highlighted[0] ?? null} height={360} />
               {highlighted.length > 0 && (
-                <p className="t-small text-text-secondary">
-                  Watching: {highlighted.join(' · ')}
-                </p>
+                <p className="t-small text-text-secondary">Watching: {highlighted.join(' · ')}</p>
               )}
               <p className="t-caption">Sheet 07 cross-source reconciliation · HERD federal R&amp;D · USD nominal</p>
             </div>

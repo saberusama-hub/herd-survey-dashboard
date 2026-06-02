@@ -6,11 +6,7 @@ import { useDuckDB } from '@/app/providers';
 import { KpiStrip, type KpiTile } from '@/components/editorial/KpiStrip';
 import { SectionDivider } from '@/components/editorial/SectionDivider';
 import { formatDollars, formatPercent } from '@/lib/format';
-import {
-  type UniversityProfile,
-  type UniversityRank,
-  getUniversityRank,
-} from '@/lib/queries';
+import { type UniversityProfile, type UniversityRank, getUniversityRank } from '@/lib/queries';
 
 interface Props {
   profile: UniversityProfile;
@@ -45,8 +41,7 @@ export function Section1Hero({ profile, state }: Props) {
 
   // 20-year CAGR (nominal). Use earliest reported FY, not literal FY2005, so
   // institutions that joined the panel later don't show NaN.
-  const yearsSpan =
-    earliest && latest ? latest.fiscal_year - earliest.fiscal_year : null;
+  const yearsSpan = earliest && latest ? latest.fiscal_year - earliest.fiscal_year : null;
   const cagr =
     earliest && latest && yearsSpan && yearsSpan > 0 && earliest.total_rd_nominal > 0
       ? (latest.total_rd_nominal / earliest.total_rd_nominal) ** (1 / yearsSpan) - 1
@@ -54,12 +49,8 @@ export function Section1Hero({ profile, state }: Props) {
 
   // Federal share % (latest FY) from sources.
   const sourcesLatest = profile.sources.filter((s) => s.fiscal_year === fy);
-  const federalAmount =
-    sourcesLatest.find((s) => s.source_category === 'federal')?.amount_nominal ?? 0;
-  const totalAmount = sourcesLatest.reduce(
-    (sum, s) => sum + (Number(s.amount_nominal) || 0),
-    0,
-  );
+  const federalAmount = sourcesLatest.find((s) => s.source_category === 'federal')?.amount_nominal ?? 0;
+  const totalAmount = sourcesLatest.reduce((sum, s) => sum + (Number(s.amount_nominal) || 0), 0);
   const federalShare = totalAmount > 0 ? federalAmount / totalAmount : null;
 
   useEffect(() => {
@@ -84,16 +75,9 @@ export function Section1Hero({ profile, state }: Props) {
       hint: <span className="text-text-tertiary">{state}-based institution</span>,
     },
     {
-      label:
-        earliest && latest
-          ? `CAGR · FY${earliest.fiscal_year}–FY${latest.fiscal_year}`
-          : '20-yr CAGR',
+      label: earliest && latest ? `CAGR · FY${earliest.fiscal_year}–FY${latest.fiscal_year}` : '20-yr CAGR',
       value: formatPercent(cagr, { decimals: 1 }),
-      hint: (
-        <span className="text-text-tertiary">
-          {yearsSpan ? `over ${yearsSpan} years, nominal` : '—'}
-        </span>
-      ),
+      hint: <span className="text-text-tertiary">{yearsSpan ? `over ${yearsSpan} years, nominal` : '—'}</span>,
     },
     {
       label: fy ? `Federal share · FY${fy}` : 'Federal share',

@@ -16,7 +16,9 @@ export function HomeAgencyMix() {
 
   useEffect(() => {
     if (!ready) return;
-    fyAgencyMix(FY).then(setRows).catch(() => setRows([]));
+    fyAgencyMix(FY)
+      .then(setRows)
+      .catch(() => setRows([]));
   }, [ready]);
 
   const total = useMemo(() => rows.reduce((s, r) => s + (r.total ?? 0), 0), [rows]);

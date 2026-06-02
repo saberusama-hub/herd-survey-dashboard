@@ -4,7 +4,7 @@ import { useDuckDB } from '@/app/providers';
 import { LineChart } from '@/components/charts/LineChart';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { StorySection } from '@/components/layout/StorySection';
-import { type TimelineEvent } from '@/lib/annotations';
+import type { TimelineEvent } from '@/lib/annotations';
 import { query } from '@/lib/duckdb';
 import type { Row } from '@/lib/types';
 import { useEffect, useState } from 'react';
@@ -94,8 +94,8 @@ export default function ThreeCrisesStory() {
                 <p className="h-eyebrow text-accent">A line, then four bands</p>
                 <h2 className="font-serif text-3xl font-semibold tracking-tight">The line, plain</h2>
                 <p className="t-body-lg">
-                  Total federal R&amp;D obligations to U.S. universities — sum of every agency, every dollar — from FY2005
-                  to FY2024. Two decades. One curve. Scroll to add context, one shock at a time.
+                  Total federal R&amp;D obligations to U.S. universities — sum of every agency, every dollar — from
+                  FY2005 to FY2024. Two decades. One curve. Scroll to add context, one shock at a time.
                 </p>
               </div>
             ),
@@ -104,12 +104,14 @@ export default function ThreeCrisesStory() {
             id: 'arra',
             content: (
               <div className="space-y-3">
-                <p className="h-eyebrow" style={{ color: 'hsl(var(--positive))' }}>FY2009 – FY2010 · ARRA</p>
+                <p className="h-eyebrow" style={{ color: 'hsl(var(--positive))' }}>
+                  FY2009 – FY2010 · ARRA
+                </p>
                 <h2 className="font-serif text-3xl font-semibold tracking-tight">The first shock: a stimulus</h2>
                 <p className="t-body-lg">
                   The American Recovery and Reinvestment Act injected $787 billion into the U.S. economy. $13.4 billion
-                  flowed through NIH and NSF in just two years. The bulge in the curve is visible without any annotation;
-                  the curve simply lifts and then settles, but never quite returns to trend.
+                  flowed through NIH and NSF in just two years. The bulge in the curve is visible without any
+                  annotation; the curve simply lifts and then settles, but never quite returns to trend.
                 </p>
               </div>
             ),
@@ -118,8 +120,12 @@ export default function ThreeCrisesStory() {
             id: 'sequester',
             content: (
               <div className="space-y-3">
-                <p className="h-eyebrow" style={{ color: 'hsl(var(--negative))' }}>FY2013 – FY2015 · Sequester</p>
-                <h2 className="font-serif text-3xl font-semibold tracking-tight">The second shock: an arrow downward</h2>
+                <p className="h-eyebrow" style={{ color: 'hsl(var(--negative))' }}>
+                  FY2013 – FY2015 · Sequester
+                </p>
+                <h2 className="font-serif text-3xl font-semibold tracking-tight">
+                  The second shock: an arrow downward
+                </h2>
                 <p className="t-body-lg">
                   The Budget Control Act of 2011 forced automatic across-the-board cuts. Non-defense discretionary
                   spending fell about 5%. NIH lost $1.5B. NSF lost $200M. The curve flattens — three years of basically
@@ -132,12 +138,16 @@ export default function ThreeCrisesStory() {
             id: 'covid',
             content: (
               <div className="space-y-3">
-                <p className="h-eyebrow" style={{ color: 'hsl(var(--positive))' }}>FY2020 – FY2022 · COVID</p>
-                <h2 className="font-serif text-3xl font-semibold tracking-tight">The third shock: a different kind of surge</h2>
+                <p className="h-eyebrow" style={{ color: 'hsl(var(--positive))' }}>
+                  FY2020 – FY2022 · COVID
+                </p>
+                <h2 className="font-serif text-3xl font-semibold tracking-tight">
+                  The third shock: a different kind of surge
+                </h2>
                 <p className="t-body-lg">
                   Operation Warp Speed and the CARES Act unleashed an unprecedented infusion of federal R&amp;D. HHS
-                  development funding alone spiked by $37.6 billion. Not all of it went to universities, but enough did to
-                  visibly tilt the curve. Then, just as fast, it evaporated by FY2023.
+                  development funding alone spiked by $37.6 billion. Not all of it went to universities, but enough did
+                  to visibly tilt the curve. Then, just as fast, it evaporated by FY2023.
                 </p>
               </div>
             ),
@@ -150,8 +160,9 @@ export default function ThreeCrisesStory() {
                 <h2 className="font-serif text-3xl font-semibold tracking-tight">The next chapter, still landing</h2>
                 <p className="t-body-lg">
                   The CHIPS &amp; Science Act and the Inflation Reduction Act authorized $52.7B+ for semiconductor and
-                  clean-energy R&amp;D. The full impact won&apos;t be visible for several FY cycles, but the right edge of the
-                  curve is already starting to inflect upward — and the agencies most affected (DOE, NSF, DOC) all show it.
+                  clean-energy R&amp;D. The full impact won&apos;t be visible for several FY cycles, but the right edge
+                  of the curve is already starting to inflect upward — and the agencies most affected (DOE, NSF, DOC)
+                  all show it.
                 </p>
               </div>
             ),

@@ -1,10 +1,10 @@
-import { describe, expect, it } from 'vitest';
 // react-dom/server resolves to a node-specific entry that vite-node has
 // trouble locating; pull the browser-server build directly, which exports the
 // same surface and works in vitest's vite-node loader. @types/react-dom
 // doesn't declare the subpath, so suppress that one TS error.
 // @ts-expect-error - react-dom/server.browser exists at runtime, no DT types
 import { renderToStaticMarkup } from 'react-dom/server.browser';
+import { describe, expect, it } from 'vitest';
 import { ChartFrame } from './ChartFrame';
 
 /**
@@ -16,12 +16,7 @@ import { ChartFrame } from './ChartFrame';
 describe('ChartFrame', () => {
   it('renders eyebrow / title / dek / source line', () => {
     const html = renderToStaticMarkup(
-      <ChartFrame
-        eyebrow="Section 4"
-        title="Federal funding"
-        dek="By agency, FY2024"
-        source="HERD Q09"
-      >
+      <ChartFrame eyebrow="Section 4" title="Federal funding" dek="By agency, FY2024" source="HERD Q09">
         <div data-testid="chart">chart</div>
       </ChartFrame>,
     );

@@ -11,11 +11,7 @@ import { ChartFrame } from '@/components/editorial/ChartFrame';
 import { KpiStrip, type KpiTile } from '@/components/editorial/KpiStrip';
 import { SectionDivider } from '@/components/editorial/SectionDivider';
 import { formatDollars, formatPercent } from '@/lib/format';
-import {
-  getUniversitySpecialization,
-  type SpecializationRow,
-  type UniversityProfile,
-} from '@/lib/queries';
+import { type SpecializationRow, type UniversityProfile, getUniversitySpecialization } from '@/lib/queries';
 
 interface Props {
   profile: UniversityProfile;
@@ -61,9 +57,7 @@ export function Section7Disciplines({ profile, institutionSk }: Props) {
         value: `${score.toFixed(2)}×`,
         delta: `${score >= 1 ? 'Over' : 'Under'}-indexed · rank #${rank} nationally`,
         hint: (
-          <span className="text-text-tertiary">
-            {formatDollars(Number(s.uni_topic_amount) || 0)} federal $ tagged
-          </span>
+          <span className="text-text-tertiary">{formatDollars(Number(s.uni_topic_amount) || 0)} federal $ tagged</span>
         ),
       };
     });
@@ -74,19 +68,14 @@ export function Section7Disciplines({ profile, institutionSk }: Props) {
       return null;
     }
     // Latest FY across the two sources.
-    const allFys = [
-      ...fieldMix.map((r) => r.fiscal_year),
-      ...topics.map((r) => r.fiscal_year),
-    ];
+    const allFys = [...fieldMix.map((r) => r.fiscal_year), ...topics.map((r) => r.fiscal_year)];
     if (allFys.length === 0) return null;
     const latestFy = allFys.reduce((m, fy) => (fy > m ? fy : m), allFys[0]);
 
     // Field mix bars (8 HERD categories, latest FY).
     const latestFieldRows = fieldMix.filter((r) => r.fiscal_year === latestFy);
     const totalAmt = latestFieldRows.reduce((s, r) => s + (Number(r.amount_nominal) || 0), 0);
-    const stemAmt = latestFieldRows
-      .filter((r) => r.is_stem)
-      .reduce((s, r) => s + (Number(r.amount_nominal) || 0), 0);
+    const stemAmt = latestFieldRows.filter((r) => r.is_stem).reduce((s, r) => s + (Number(r.amount_nominal) || 0), 0);
     const stemShare = totalAmt > 0 ? stemAmt / totalAmt : null;
 
     let shannon = 0;
@@ -182,10 +171,8 @@ export function Section7Disciplines({ profile, institutionSk }: Props) {
             dek="Latest reported year. Bars are sorted descending and direct-labeled with the dollar amount."
             source="HERD Q03 · agg_uni_field_mix"
             methodology={{
-              what:
-                'Which broad academic disciplines drove R&D spending at this university in the latest year — life sciences, engineering, social sciences, humanities, and so on.',
-              how:
-                'We sum HERD Q03 ("R&D expenditures by field of science") for the latest fiscal year across the eight HERD field categories. STEM bars are accent-colored; humanities + social sciences are muted.',
+              what: 'Which broad academic disciplines drove R&D spending at this university in the latest year — life sciences, engineering, social sciences, humanities, and so on.',
+              how: 'We sum HERD Q03 ("R&D expenditures by field of science") for the latest fiscal year across the eight HERD field categories. STEM bars are accent-colored; humanities + social sciences are muted.',
               caveats:
                 'HERD field categories are coarse — "Life sciences" lumps biology + medicine; "Engineering" lumps every engineering discipline. For finer-grained labels, see the Topics chart below.',
             }}
@@ -203,32 +190,22 @@ export function Section7Disciplines({ profile, institutionSk }: Props) {
             dek="30-topic taxonomy over NSF + NIH grant text (titles + NSF abstracts + NIH project terms). Sparkline = 20-year topic trajectory."
             source="agg_uni_topic (regex-matched, non-exclusive)"
             methodology={{
-              what:
-                'What this university actually researches — concrete topics like "Cancer," "Quantum computing," or "Climate" — and how each topic has trended over 20 years.',
-              how:
-                'Each NSF and NIH grant is tagged against a 30-topic regex taxonomy that scans the grant title, NSF abstract, and NIH project terms for keyword matches. We sum the tagged dollars per topic per year for this institution.',
+              what: 'What this university actually researches — concrete topics like "Cancer," "Quantum computing," or "Climate" — and how each topic has trended over 20 years.',
+              how: 'Each NSF and NIH grant is tagged against a 30-topic regex taxonomy that scans the grant title, NSF abstract, and NIH project terms for keyword matches. We sum the tagged dollars per topic per year for this institution.',
               caveats:
                 'Topics are NOT mutually exclusive — one grant can match multiple topics (e.g., "Cancer" and "AI/ML"). Patterns were tightened in May 2026 to reduce false positives on "Neuroscience" and "Earth observation." Sums per FY can exceed 100% of grants for that reason.',
             }}
           >
             <ul className="divide-y divide-rule/60">
               {topicsToShow.map((r) => (
-                <li
-                  key={r.topic}
-                  className="flex items-center justify-between gap-4 py-2.5"
-                >
+                <li key={r.topic} className="flex items-center justify-between gap-4 py-2.5">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-text-primary">{r.topic}</p>
                     <p className="text-[11px] text-text-tertiary tnum">
                       {formatDollars(r.amount)} &middot; {r.grants.toLocaleString()} grants
                     </p>
                   </div>
-                  <Sparkline
-                    data={topicSpark[r.topic] ?? []}
-                    color="hsl(var(--accent))"
-                    width={120}
-                    height={30}
-                  />
+                  <Sparkline data={topicSpark[r.topic] ?? []} color="hsl(var(--accent))" width={120} height={30} />
                 </li>
               ))}
             </ul>
@@ -238,9 +215,7 @@ export function Section7Disciplines({ profile, institutionSk }: Props) {
                 onClick={() => setShowAllTopics((v) => !v)}
                 className="mt-3 text-[12px] text-accent hover:underline"
               >
-                {showAllTopics
-                  ? 'Show top 10'
-                  : `Show all ${sortedTopics.length} topics`}
+                {showAllTopics ? 'Show top 10' : `Show all ${sortedTopics.length} topics`}
               </button>
             )}
           </ChartFrame>
@@ -254,8 +229,8 @@ export function Section7Disciplines({ profile, institutionSk }: Props) {
             </p>
             <KpiStrip tiles={specializationKpis} cols={3} />
             <p className="mt-3 text-[11px] italic text-text-tertiary">
-              Specialization score = (uni's share of that topic's national federal $) ÷ (uni's share of national HERD R&amp;D).
-              Score &gt; 1 ⇒ over-indexed for the uni's size. See{' '}
+              Specialization score = (uni's share of that topic's national federal $) ÷ (uni's share of national HERD
+              R&amp;D). Score &gt; 1 ⇒ over-indexed for the uni's size. See{' '}
               <a className="text-accent hover:underline" href="/methodology#specialization">
                 methodology
               </a>{' '}
@@ -303,12 +278,7 @@ function FieldBars({
           return (
             <g key={b.label}>
               <rect x={0} y={by} width={bw} height={bh} fill={color} rx={2} />
-              <text
-                x={bw + 6}
-                y={by + bh / 2}
-                dy="0.35em"
-                className="fill-text-secondary text-[11px] tnum"
-              >
+              <text x={bw + 6} y={by + bh / 2} dy="0.35em" className="fill-text-secondary text-[11px] tnum">
                 {formatDollars(b.amount)}
               </text>
             </g>

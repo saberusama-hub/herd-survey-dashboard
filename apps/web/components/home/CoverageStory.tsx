@@ -14,7 +14,9 @@ export function HomeCoverageStory() {
 
   useEffect(() => {
     if (!ready) return;
-    bottomUpCoverageByFy().then(setRows).catch(() => setRows([]));
+    bottomUpCoverageByFy()
+      .then(setRows)
+      .catch(() => setRows([]));
   }, [ready]);
 
   const peak = rows.length ? Math.max(...rows.map((r) => r.coverage_pct ?? 0)) : null;
@@ -46,9 +48,7 @@ export function HomeCoverageStory() {
           <div className="rounded border border-rule bg-surface-elevated p-3">
             <div className="h-eyebrow text-text-tertiary mb-1">Peak coverage</div>
             <div className="flex items-baseline gap-2">
-              <span className="font-mono text-xl font-medium tabular-nums">
-                {formatPct(peakRow.coverage_pct)}
-              </span>
+              <span className="font-mono text-xl font-medium tabular-nums">{formatPct(peakRow.coverage_pct)}</span>
               <span className="text-2xs text-text-tertiary">FY{peakRow.fiscal_year}</span>
             </div>
           </div>

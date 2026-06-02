@@ -94,14 +94,14 @@ const config: Config = {
       },
       fontSize: {
         '2xs': ['0.6875rem', { lineHeight: '1rem' }],
-        'hero': ['3.5rem', { lineHeight: '1.05', letterSpacing: '-0.02em' }],
-        'display': ['2.5rem', { lineHeight: '1.1', letterSpacing: '-0.015em' }],
+        hero: ['3.5rem', { lineHeight: '1.05', letterSpacing: '-0.02em' }],
+        display: ['2.5rem', { lineHeight: '1.1', letterSpacing: '-0.015em' }],
         'num-hero': ['3rem', { lineHeight: '1', letterSpacing: '-0.01em' }],
-        'num': ['0.9375rem', { lineHeight: '1.4' }],
+        num: ['0.9375rem', { lineHeight: '1.4' }],
       },
       borderRadius: { sm: '2px', DEFAULT: '4px', md: '6px', lg: '8px' },
       boxShadow: {
-        'card': '0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 1px 0 rgb(0 0 0 / 0.02)',
+        card: '0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 1px 0 rgb(0 0 0 / 0.02)',
         'card-hover': '0 4px 8px -2px rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.04)',
       },
     },

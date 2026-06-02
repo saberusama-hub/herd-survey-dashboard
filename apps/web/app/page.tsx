@@ -1,17 +1,14 @@
 'use client';
 
 import { useDuckDB } from '@/app/providers';
+import { ResponsiveSvg } from '@/components/charts/ResponsiveSvg';
 import { ChartFrame } from '@/components/editorial/ChartFrame';
 import { KpiStrip, type KpiTile } from '@/components/editorial/KpiStrip';
 import { UniversitySearchBox } from '@/components/editorial/UniversitySearchBox';
-import { ResponsiveSvg } from '@/components/charts/ResponsiveSvg';
 import { query } from '@/lib/duckdb';
-import type { Row } from '@/lib/types';
 import { formatDollars, formatPercent } from '@/lib/format';
-import {
-  type UniversityIndexRow,
-  getUniversityIndex,
-} from '@/lib/queries';
+import { type UniversityIndexRow, getUniversityIndex } from '@/lib/queries';
+import type { Row } from '@/lib/types';
 import { AxisBottom, AxisLeft } from '@visx/axis';
 import { Group } from '@visx/group';
 import { scaleBand, scaleLinear } from '@visx/scale';
@@ -19,14 +16,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 
 // ───────── Color tokens used across the home charts ─────────
-const SOURCE_ORDER = [
-  'federal',
-  'state',
-  'industry',
-  'institutional',
-  'nonprofit',
-  'other',
-] as const;
+const SOURCE_ORDER = ['federal', 'state', 'industry', 'institutional', 'nonprofit', 'other'] as const;
 type SourceKey = (typeof SOURCE_ORDER)[number];
 
 const SOURCE_LABEL: Record<SourceKey, string> = {
@@ -235,41 +225,28 @@ export default function HomePage() {
       {
         label: kpis ? `FY${kpis.fy24} total university R&D` : 'Latest total R&D',
         value: kpis ? formatDollars(kpis.fy24_total) : '—',
-        hint: (
-          <span className="text-text-tertiary text-[11px]">
-            HERD Q01, all six funding sources combined
-          </span>
-        ),
+        hint: <span className="text-text-tertiary text-[11px]">HERD Q01, all six funding sources combined</span>,
       },
       {
         label: kpis ? `FY${kpis.fy24} federal share` : 'Latest federal share',
         value: kpis ? formatDollars(kpis.fy24_federal) : '—',
         hint: (
           <span className="text-text-tertiary text-[11px]">
-            {fy24FederalPct !== null
-              ? `${formatPercent(fy24FederalPct)} of the total`
-              : 'federal slice of HERD'}
+            {fy24FederalPct !== null ? `${formatPercent(fy24FederalPct)} of the total` : 'federal slice of HERD'}
           </span>
         ),
       },
       {
         label: '20-yr cumulative federal R&D',
         value: kpis ? formatDollars(kpis.cum20_federal) : '—',
-        hint: (
-          <span className="text-text-tertiary text-[11px]">
-            FY2005–FY{kpis?.fy24 ?? '—'}, nominal dollars
-          </span>
-        ),
+        hint: <span className="text-text-tertiary text-[11px]">FY2005–FY{kpis?.fy24 ?? '—'}, nominal dollars</span>,
       },
       {
         label: topAgency ? `Largest funder, FY${topAgency.fy}` : 'Largest funder',
-        value: topAgency
-          ? `${AGENCY_LABEL[topAgency.agency_bucket] ?? topAgency.agency_bucket}`
-          : '—',
+        value: topAgency ? `${AGENCY_LABEL[topAgency.agency_bucket] ?? topAgency.agency_bucket}` : '—',
         hint: topAgency ? (
           <span className="text-text-tertiary text-[11px]">
-            {formatDollars(topAgency.amount_nominal)} ·{' '}
-            {formatPercent(topAgency.pct_of_federal)} of federal R&D
+            {formatDollars(topAgency.amount_nominal)} · {formatPercent(topAgency.pct_of_federal)} of federal R&D
           </span>
         ) : undefined,
       },
@@ -335,8 +312,8 @@ export default function HomePage() {
           U.S. University Research Funding
         </h1>
         <p className="text-lg md:text-xl italic text-text-secondary max-w-2xl leading-relaxed">
-          Twenty years. Eight hundred institutions. Seven federal agencies. One
-          data lake — queryable, exportable, reproducible.
+          Twenty years. Eight hundred institutions. Seven federal agencies. One data lake — queryable, exportable,
+          reproducible.
         </p>
         {/* Search box: prominent placement so visitors looking for a specific
             uni see the input immediately, before the KPI strip. */}
@@ -358,10 +335,8 @@ export default function HomePage() {
           dek="Click a row to view that profile."
           source="HERD totals · USD nominal · agg_uni_total_rd"
           methodology={{
-            what:
-              'A quick ranking of the ten biggest U.S. research universities by total R&D spending in the most recent reported year.',
-            how:
-              'For the latest fiscal year in `agg_uni_total_rd` we sort all HERD-tracked universities by `total_rd_nominal` (combined federal + state + industry + institutional + nonprofit + other) and take the top 10.',
+            what: 'A quick ranking of the ten biggest U.S. research universities by total R&D spending in the most recent reported year.',
+            how: 'For the latest fiscal year in `agg_uni_total_rd` we sort all HERD-tracked universities by `total_rd_nominal` (combined federal + state + industry + institutional + nonprofit + other) and take the top 10.',
             caveats:
               'Total R&D includes every source category — not just federal. Some universities (system aggregates) report only at the parent level; their figure may absorb branch-campus spending.',
           }}
@@ -381,15 +356,9 @@ export default function HomePage() {
                         {(i + 1).toString().padStart(2, '0')}
                       </span>
                       <span className="truncate text-text-primary">{r.name}</span>
-                      {r.state && (
-                        <span className="text-text-tertiary text-xs flex-shrink-0">
-                          {r.state}
-                        </span>
-                      )}
+                      {r.state && <span className="text-text-tertiary text-xs flex-shrink-0">{r.state}</span>}
                     </span>
-                    <span className="text-accent tnum flex-shrink-0">
-                      {formatDollars(r.total_rd_fy2024)}
-                    </span>
+                    <span className="text-accent tnum flex-shrink-0">{formatDollars(r.total_rd_fy2024)}</span>
                   </Link>
                 </li>
               ))}
@@ -406,10 +375,8 @@ export default function HomePage() {
           dek="The biggest concrete research areas across NSF + NIH grants — the topics where most federal money landed."
           source="agg_national_topic"
           methodology={{
-            what:
-              'A ranking of the ten research topics that attracted the most federal grant dollars in the most recent year — concrete subject areas like Cancer, AI/ML, Climate.',
-            how:
-              'Every NSF and NIH grant is scanned against a hand-tuned 30-topic regex taxonomy (titles + NSF abstracts + NIH project terms). We sum the tagged dollars per topic for the latest FY and take the top 10.',
+            what: 'A ranking of the ten research topics that attracted the most federal grant dollars in the most recent year — concrete subject areas like Cancer, AI/ML, Climate.',
+            how: 'Every NSF and NIH grant is scanned against a hand-tuned 30-topic regex taxonomy (titles + NSF abstracts + NIH project terms). We sum the tagged dollars per topic for the latest FY and take the top 10.',
             caveats:
               'Topics are NOT mutually exclusive — one grant can match several (e.g., "Cancer" + "AI/ML"). Dollar totals across topics can exceed the federal total because of this overlap.',
           }}
@@ -442,10 +409,8 @@ export default function HomePage() {
           dek="Which federal departments paid the most to U.S. universities in the most recent reported year."
           source="HERD Q09 · agg_national_agency_trend"
           methodology={{
-            what:
-              'How federal research dollars split across the major funding agencies in the most recent year — HHS (NIH), NSF, DOD, DOE, NASA, USDA, and "Other".',
-            how:
-              'We take HERD Q09 ("Federal R&D by agency") for the latest reported FY and sum across all universities into the seven canonical buckets. Each bar shows total dollars and share of federal R&D.',
+            what: 'How federal research dollars split across the major funding agencies in the most recent year — HHS (NIH), NSF, DOD, DOE, NASA, USDA, and "Other".',
+            how: 'We take HERD Q09 ("Federal R&D by agency") for the latest reported FY and sum across all universities into the seven canonical buckets. Each bar shows total dollars and share of federal R&D.',
             caveats:
               'HERD Q09 lags Q01 by about one year, so this view may report one year behind the source-of-funds chart on the same page. Sub-agencies (NIH institutes, DOD sub-commands) are rolled to parent.',
           }}
@@ -454,14 +419,7 @@ export default function HomePage() {
             <p className="text-sm text-text-tertiary">Loading…</p>
           ) : (
             <ResponsiveSvg height={Math.max(220, agencyBars.length * 36 + 40)}>
-              {(w, h) => (
-                <HorizontalBarChart
-                  width={w}
-                  height={h}
-                  bars={agencyBars}
-                  href="/national#agencies"
-                />
-              )}
+              {(w, h) => <HorizontalBarChart width={w} height={h} bars={agencyBars} href="/national#agencies" />}
             </ResponsiveSvg>
           )}
           <p className="mt-3 text-[11px] text-text-tertiary">
@@ -477,10 +435,8 @@ export default function HomePage() {
           dek="How much each funding source has contributed across two decades — the absolute magnitude of federal, institutional, state, industry, nonprofit, and other."
           source="agg_national_overview"
           methodology={{
-            what:
-              'A horizontal bar showing the total dollars each funding source has put into U.S. university research over the full 20-year window.',
-            how:
-              'We sum HERD Q01 reported amounts across all institutions and all fiscal years, grouped by source category (federal, state, industry, institutional, nonprofit, other). Bars are sorted by total contribution.',
+            what: 'A horizontal bar showing the total dollars each funding source has put into U.S. university research over the full 20-year window.',
+            how: 'We sum HERD Q01 reported amounts across all institutions and all fiscal years, grouped by source category (federal, state, industry, institutional, nonprofit, other). Bars are sorted by total contribution.',
             caveats:
               'Nominal dollars (not inflation-adjusted). "Nonprofit" is conservative for FY2005–FY2009 because HERD did not collect that category in that window (ARDES non-response).',
           }}
@@ -489,9 +445,7 @@ export default function HomePage() {
             <p className="text-sm text-text-tertiary">Loading…</p>
           ) : (
             <ResponsiveSvg height={Math.max(220, sourceBars.length * 36 + 40)}>
-              {(w, h) => (
-                <HorizontalBarChart width={w} height={h} bars={sourceBars} />
-              )}
+              {(w, h) => <HorizontalBarChart width={w} height={h} bars={sourceBars} />}
             </ResponsiveSvg>
           )}
         </ChartFrame>
@@ -502,10 +456,8 @@ export default function HomePage() {
           dek="Where federal research money lands geographically — the ten states that received the largest share in the most recent year."
           source="agg_uni_source_split × dim_institution"
           methodology={{
-            what:
-              'A ranking of the ten U.S. states whose universities received the most federal research funding in the most recent year.',
-            how:
-              'For the latest fiscal year we join `agg_uni_source_split` (federal-source rows) to `dim_institution.state_code`, sum federal dollars per state, and take the top 10.',
+            what: 'A ranking of the ten U.S. states whose universities received the most federal research funding in the most recent year.',
+            how: 'For the latest fiscal year we join `agg_uni_source_split` (federal-source rows) to `dim_institution.state_code`, sum federal dollars per state, and take the top 10.',
             caveats:
               'Each university is counted in its headquarters state — branch-campus spending in other states is not reattributed. Hospitals and FFRDCs are excluded (the join is HERD-only).',
           }}
@@ -605,20 +557,8 @@ function HorizontalBarChart({
           const bh = y.bandwidth();
           return (
             <g key={b.label}>
-              <rect
-                x={0}
-                y={by}
-                width={bw}
-                height={bh}
-                fill={b.color ?? color}
-                rx={2}
-              />
-              <text
-                x={bw + 6}
-                y={by + bh / 2}
-                dy="0.35em"
-                className="fill-text-secondary text-[11px] tnum"
-              >
+              <rect x={0} y={by} width={bw} height={bh} fill={b.color ?? color} rx={2} />
+              <text x={bw + 6} y={by + bh / 2} dy="0.35em" className="fill-text-secondary text-[11px] tnum">
                 {formatDollars(b.amount)}
               </text>
             </g>

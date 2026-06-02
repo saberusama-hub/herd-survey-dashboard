@@ -86,20 +86,14 @@ export function Section2TotalRD({ profile }: Props) {
         {latestValue !== null && (
           <span className="ml-auto text-sm text-text-secondary tnum">
             FY{data[data.length - 1].fiscal_year}:{' '}
-            <span className="font-semibold text-text-primary">
-              {formatDollars(latestValue, { decimals: 2 })}
-            </span>
+            <span className="font-semibold text-text-primary">{formatDollars(latestValue, { decimals: 2 })}</span>
           </span>
         )}
       </div>
 
       <ChartFrame
         eyebrow="HERD R&D expenditure"
-        title={
-          mode === 'nominal'
-            ? 'Nominal dollars (as reported)'
-            : 'Inflation-adjusted (FY2024 dollars)'
-        }
+        title={mode === 'nominal' ? 'Nominal dollars (as reported)' : 'Inflation-adjusted (FY2024 dollars)'}
         dek={
           mode === 'nominal'
             ? 'Year-on-year reported HERD expenditure in current-year dollars.'
@@ -108,8 +102,7 @@ export function Section2TotalRD({ profile }: Props) {
         source="HERD Q01 · agg_uni_total_rd"
         note={peakNote ?? undefined}
         methodology={{
-          what:
-            'How much money this university spent on research each year, in plain dollars or rebased to today’s prices.',
+          what: 'How much money this university spent on research each year, in plain dollars or rebased to today’s prices.',
           how:
             mode === 'nominal'
               ? 'We take the HERD Q01 "total R&D" line reported by the institution for each fiscal year. Nominal mode shows the raw reported dollars (no inflation adjustment).'
@@ -129,9 +122,7 @@ export function Section2TotalRD({ profile }: Props) {
         />
       </ChartFrame>
 
-      {yoyNote && (
-        <p className="mt-2 text-[11px] italic text-text-tertiary">{yoyNote}</p>
-      )}
+      {yoyNote && <p className="mt-2 text-[11px] italic text-text-tertiary">{yoyNote}</p>}
     </section>
   );
 }
@@ -143,8 +134,7 @@ function ModeToggle({
   mode: DollarMode;
   onChange: (m: DollarMode) => void;
 }) {
-  const base =
-    'rounded-full px-3 py-1 text-xs transition border border-rule tnum';
+  const base = 'rounded-full px-3 py-1 text-xs transition border border-rule tnum';
   const active = 'bg-accent text-white border-accent';
   const idle = 'bg-surface text-text-secondary hover:bg-mute-3/40';
   return (

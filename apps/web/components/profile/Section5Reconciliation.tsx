@@ -32,22 +32,14 @@ export function Section5Reconciliation({ profile }: Props) {
     // Aggregate HERD federal per FY.
     const herdByFy = new Map<number, number>();
     for (const r of profile.agencies) {
-      herdByFy.set(
-        r.fiscal_year,
-        (herdByFy.get(r.fiscal_year) ?? 0) + (Number(r.amount_nominal) || 0),
-      );
+      herdByFy.set(r.fiscal_year, (herdByFy.get(r.fiscal_year) ?? 0) + (Number(r.amount_nominal) || 0));
     }
     // Aggregate bottom-up streams per FY.
     const buByFy = new Map<number, number>();
     for (const r of profile.federalFunds) {
-      buByFy.set(
-        r.fiscal_year,
-        (buByFy.get(r.fiscal_year) ?? 0) + (Number(r.amount_nominal) || 0),
-      );
+      buByFy.set(r.fiscal_year, (buByFy.get(r.fiscal_year) ?? 0) + (Number(r.amount_nominal) || 0));
     }
-    const fys = Array.from(new Set([...herdByFy.keys(), ...buByFy.keys()])).sort(
-      (a, b) => a - b,
-    );
+    const fys = Array.from(new Set([...herdByFy.keys(), ...buByFy.keys()])).sort((a, b) => a - b);
     const rows = fys.map((fy) => ({
       fiscal_year: fy,
       herd: herdByFy.get(fy) ?? 0,
@@ -55,8 +47,7 @@ export function Section5Reconciliation({ profile }: Props) {
     }));
     const latestFy = fys.length > 0 ? fys[fys.length - 1] : null;
     const latestRow = rows[rows.length - 1];
-    const latestCoverage =
-      latestRow && latestRow.herd > 0 ? latestRow.bottom_up / latestRow.herd : null;
+    const latestCoverage = latestRow && latestRow.herd > 0 ? latestRow.bottom_up / latestRow.herd : null;
     // Largest absolute coverage gap (HERD - bottom-up) across the years.
     let maxGap = { fy: 0, gap: 0 };
     for (const r of rows) {
@@ -108,10 +99,8 @@ export function Section5Reconciliation({ profile }: Props) {
         <div className="mb-4 rounded border border-rule bg-surface px-4 py-3 text-sm">
           <p className="text-text-secondary">
             FY{latestFy} bottom-up coverage:{' '}
-            <span className="font-semibold text-text-primary tnum">
-              {formatPercent(latestCoverage)}
-            </span>{' '}
-            of HERD-reported federal R&D was found in the bottom-up streams.
+            <span className="font-semibold text-text-primary tnum">{formatPercent(latestCoverage)}</span> of
+            HERD-reported federal R&D was found in the bottom-up streams.
           </p>
         </div>
       )}
@@ -123,10 +112,8 @@ export function Section5Reconciliation({ profile }: Props) {
         source="HERD Q09 · raw NIH RePORTER + NSF Awards + USAspending"
         note="HERD measures expenditures; bottom-up streams measure obligations or outlays. A 15–25% gap is expected; larger gaps may reflect sub-agency allocation method or PIID collision in USASpending. See Methodology."
         methodology={{
-          what:
-            'A reality check: does the university’s reported federal funding (HERD) match what we can actually find by counting up individual grants and contracts in the federal databases?',
-          how:
-            'Left bar = HERD Q09 total federal R&D for the year (top-down, self-reported). Right bar = sum of NIH RePORTER + NSF Awards + USAspending contracts + USAspending assistance for the same institution and year (bottom-up, transaction-level).',
+          what: 'A reality check: does the university’s reported federal funding (HERD) match what we can actually find by counting up individual grants and contracts in the federal databases?',
+          how: 'Left bar = HERD Q09 total federal R&D for the year (top-down, self-reported). Right bar = sum of NIH RePORTER + NSF Awards + USAspending contracts + USAspending assistance for the same institution and year (bottom-up, transaction-level).',
           caveats:
             'HERD measures expenditures spent in the FY; the bottom-up streams measure obligations awarded. A 15–25% gap is normal. Larger gaps usually point to sub-agency allocation, PIID collisions in USAspending, or sub-award flows we cannot see.',
         }}
@@ -146,32 +133,21 @@ export function Section5Reconciliation({ profile }: Props) {
 
         <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] text-text-secondary">
           <li className="inline-flex items-center gap-1.5">
-            <span
-              aria-hidden
-              className="h-2.5 w-2.5 rounded-sm"
-              style={{ background: colors.herd }}
-            />
+            <span aria-hidden className="h-2.5 w-2.5 rounded-sm" style={{ background: colors.herd }} />
             HERD-reported federal R&D
           </li>
           <li className="inline-flex items-center gap-1.5">
-            <span
-              aria-hidden
-              className="h-2.5 w-2.5 rounded-sm"
-              style={{ background: colors.bottom_up }}
-            />
+            <span aria-hidden className="h-2.5 w-2.5 rounded-sm" style={{ background: colors.bottom_up }} />
             Bottom-up streams (NIH + NSF + USASpending)
           </li>
         </ul>
       </ChartFrame>
 
-      {gapNote && (
-        <p className="mt-2 text-[11px] italic text-text-tertiary">{gapNote}</p>
-      )}
+      {gapNote && <p className="mt-2 text-[11px] italic text-text-tertiary">{gapNote}</p>}
 
       <p className="mt-1 text-[11px] italic text-text-tertiary">
-        Note: the Federal Funds Vol&nbsp;70→71 taxonomy break (FY2015–FY2016) is not
-        re-applied at the per-institution level here — only NSF national totals
-        carry that flag.
+        Note: the Federal Funds Vol&nbsp;70→71 taxonomy break (FY2015–FY2016) is not re-applied at the per-institution
+        level here — only NSF national totals carry that flag.
       </p>
 
       {/* Compact year-by-year coverage table */}
@@ -195,15 +171,9 @@ export function Section5Reconciliation({ profile }: Props) {
                 return (
                   <tr key={r.fiscal_year} className="border-b border-rule/60">
                     <td className="py-1.5 text-text-primary">FY{r.fiscal_year}</td>
-                    <td className="py-1.5 text-right text-text-secondary">
-                      {formatDollars(r.herd)}
-                    </td>
-                    <td className="py-1.5 text-right text-text-secondary">
-                      {formatDollars(r.bottom_up)}
-                    </td>
-                    <td className="py-1.5 text-right text-text-secondary">
-                      {formatPercent(cov)}
-                    </td>
+                    <td className="py-1.5 text-right text-text-secondary">{formatDollars(r.herd)}</td>
+                    <td className="py-1.5 text-right text-text-secondary">{formatDollars(r.bottom_up)}</td>
+                    <td className="py-1.5 text-right text-text-secondary">{formatPercent(cov)}</td>
                   </tr>
                 );
               })}

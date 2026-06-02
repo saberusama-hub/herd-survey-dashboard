@@ -40,8 +40,7 @@ export function ProfileBody({ sk, fallbackName, state }: Props) {
         if (!cancelled) setProfile(p);
       })
       .catch((e) => {
-        if (!cancelled)
-          setLoadError(e instanceof Error ? e : new Error(String(e)));
+        if (!cancelled) setLoadError(e instanceof Error ? e : new Error(String(e)));
       });
     return () => {
       cancelled = true;
@@ -89,8 +88,8 @@ export function ProfileBody({ sk, fallbackName, state }: Props) {
       {/* Footer per spec §3.3 */}
       <footer className="mt-16 border-t border-rule pt-8 space-y-3">
         <p className="text-[11px] text-text-tertiary max-w-prose">
-          Source: Federal R&amp;D data from NSF Federal Funds (Vol 70 FY2005–FY2023, Vol 71 FY2015–FY2024);
-          NIH RePORTER; USASpending; NSF Awards; institution-reported HERD/ARDES.
+          Source: Federal R&amp;D data from NSF Federal Funds (Vol 70 FY2005–FY2023, Vol 71 FY2015–FY2024); NIH
+          RePORTER; USASpending; NSF Awards; institution-reported HERD/ARDES.
         </p>
         <div className="flex flex-wrap gap-3">
           <a

@@ -28,15 +28,7 @@ interface Props {
  * Every chart on the platform must use ChartTitle so all charts share the
  * same hierarchy: eyebrow / title / subtitle / source / actions.
  */
-export function ChartTitle({
-  eyebrow,
-  title,
-  subtitle,
-  source,
-  actions,
-  className,
-  align = 'left',
-}: Props) {
+export function ChartTitle({ eyebrow, title, subtitle, source, actions, className, align = 'left' }: Props) {
   return (
     <header
       className={cn(
@@ -51,9 +43,7 @@ export function ChartTitle({
           {title}
         </h3>
         {subtitle ? (
-          <p className="t-small font-italic-serif text-text-secondary leading-snug max-w-prose">
-            {subtitle}
-          </p>
+          <p className="t-small font-italic-serif text-text-secondary leading-snug max-w-prose">{subtitle}</p>
         ) : null}
         {source ? <p className="t-caption mt-1">{source}</p> : null}
       </div>

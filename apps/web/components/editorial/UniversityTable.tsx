@@ -1,9 +1,9 @@
 'use client';
 
-import Link from 'next/link';
-import { useMemo, useState } from 'react';
 import { formatDollars, formatPercent } from '@/lib/format';
 import type { UniversityIndexRow } from '@/lib/queries';
+import Link from 'next/link';
+import { useMemo, useState } from 'react';
 
 type SortKey = keyof UniversityIndexRow;
 type SortDir = 'asc' | 'desc';
@@ -90,17 +90,14 @@ export function UniversityTable({ rows }: Props) {
   const [search, setSearch] = useState('');
 
   const states = useMemo(
-    () =>
-      Array.from(new Set(rows.map((r) => r.state).filter((s): s is string => Boolean(s)))).sort(),
+    () => Array.from(new Set(rows.map((r) => r.state).filter((s): s is string => Boolean(s)))).sort(),
     [rows],
   );
 
   const sorted = useMemo(() => {
     const q = search.trim().toLowerCase();
     const filtered = rows.filter(
-      (r) =>
-        (stateFilter === '' || r.state === stateFilter) &&
-        (q === '' || (r.name ?? '').toLowerCase().includes(q)),
+      (r) => (stateFilter === '' || r.state === stateFilter) && (q === '' || (r.name ?? '').toLowerCase().includes(q)),
     );
     // Sentinel pushes nulls to the bottom regardless of direction.
     const sentinel = sortDir === 'asc' ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
@@ -199,22 +196,15 @@ export function UniversityTable({ rows }: Props) {
             {visible.map((r) => (
               <tr key={r.institution_sk} className="border-t border-rule hover:bg-mute-3">
                 <td className="py-1.5 px-3 whitespace-nowrap">
-                  <Link
-                    href={`/universities/${r.institution_sk}`}
-                    className="text-accent hover:underline"
-                  >
+                  <Link href={`/universities/${r.institution_sk}`} className="text-accent hover:underline">
                     {r.name}
                   </Link>
                 </td>
-                <td className="py-1.5 px-3 whitespace-nowrap text-text-secondary tnum">
-                  {r.state ?? '—'}
-                </td>
+                <td className="py-1.5 px-3 whitespace-nowrap text-text-secondary tnum">{r.state ?? '—'}</td>
                 {COLS.slice(2).map((c) => (
                   <td
                     key={c.key}
-                    className={`py-1.5 px-3 whitespace-nowrap ${
-                      c.align === 'right' ? 'text-right tnum' : 'text-left'
-                    }`}
+                    className={`py-1.5 px-3 whitespace-nowrap ${c.align === 'right' ? 'text-right tnum' : 'text-left'}`}
                   >
                     {c.fmt ? c.fmt(r[c.key]) : String(r[c.key] ?? '—')}
                   </td>
@@ -223,10 +213,7 @@ export function UniversityTable({ rows }: Props) {
             ))}
             {visible.length === 0 && (
               <tr>
-                <td
-                  colSpan={COLS.length}
-                  className="py-6 px-3 text-center text-text-tertiary text-sm"
-                >
+                <td colSpan={COLS.length} className="py-6 px-3 text-center text-text-tertiary text-sm">
                   No institutions match the current filters.
                 </td>
               </tr>

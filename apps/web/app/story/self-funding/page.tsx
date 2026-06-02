@@ -80,7 +80,9 @@ export default function SelfFundingStory() {
             content: (
               <div className="space-y-3">
                 <p className="h-eyebrow text-accent">Setup</p>
-                <h2 className="font-serif text-3xl font-semibold tracking-tight">Federal vs institutional, side by side</h2>
+                <h2 className="font-serif text-3xl font-semibold tracking-tight">
+                  Federal vs institutional, side by side
+                </h2>
                 <p className="t-body-lg">
                   Every U.S. university reports its R&amp;D expenditures and the source of those dollars to NCSES every
                   year. The two largest sources are the federal government and the institutions themselves — endowment
@@ -97,8 +99,8 @@ export default function SelfFundingStory() {
                 <h2 className="font-serif text-3xl font-semibold tracking-tight">The line that&apos;s declining</h2>
                 <p className="t-body-lg">
                   In FY2005, federal dollars funded roughly 64% of all university R&amp;D. By FY2024, that share had
-                  fallen to about 53% — and the trend through every recent fiscal cycle has been further down. Note
-                  that this is a <em>share</em> story, not a dollar story; federal R&amp;D in absolute terms continued to
+                  fallen to about 53% — and the trend through every recent fiscal cycle has been further down. Note that
+                  this is a <em>share</em> story, not a dollar story; federal R&amp;D in absolute terms continued to
                   grow.
                 </p>
               </div>
@@ -125,9 +127,9 @@ export default function SelfFundingStory() {
                 <p className="h-eyebrow text-cat-2">HBCU sector — held flat</p>
                 <h2 className="font-serif text-3xl font-semibold tracking-tight">The HBCU plateau</h2>
                 <p className="t-body-lg">
-                  When the federal share fell, institutional capacity had to absorb the rest. HBCU sector R&amp;D
-                  stayed almost completely flat in real dollars from FY2005 to FY2024 — even as the overall federal R&amp;D
-                  pie expanded 38% in nominal terms. The federal share for the sector tracks the national line, but the
+                  When the federal share fell, institutional capacity had to absorb the rest. HBCU sector R&amp;D stayed
+                  almost completely flat in real dollars from FY2005 to FY2024 — even as the overall federal R&amp;D pie
+                  expanded 38% in nominal terms. The federal share for the sector tracks the national line, but the
                   underlying base never grew. The cost of an enterprise-funded model falls hardest on the institutions
                   least able to fund it.
                 </p>

@@ -50,7 +50,7 @@ export function LazyChart({ children, height = 320, className, fallback, eager =
       {inView ? (
         <Suspense fallback={fallback ?? <ChartSkeleton height={height} />}>{children}</Suspense>
       ) : (
-        fallback ?? <ChartSkeleton height={height} />
+        (fallback ?? <ChartSkeleton height={height} />)
       )}
     </div>
   );

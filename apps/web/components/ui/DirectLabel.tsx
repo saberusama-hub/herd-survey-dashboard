@@ -23,11 +23,7 @@ interface LabelProps {
 export function DirectLabelChip({ label, color, maxChars = 24, variant = 'line', className, style }: LabelProps) {
   const display = label.length > maxChars ? `${label.slice(0, maxChars - 1)}…` : label;
   return (
-    <span
-      className={cn('inline-flex items-center gap-1.5 text-2xs', className)}
-      style={style}
-      title={label}
-    >
+    <span className={cn('inline-flex items-center gap-1.5 text-2xs', className)} style={style} title={label}>
       <span
         aria-hidden
         className={cn(variant === 'swatch' ? 'h-2.5 w-2.5 rounded-sm' : 'h-1.5 w-1.5 rounded-full')}
@@ -68,13 +64,7 @@ interface LineEndProps {
  * appears only at the right edge, kills the legend).
  */
 export function LineEndLabel({ x, y, index, total, label, color }: LineEndProps) {
-  if (
-    !Number.isFinite(x) ||
-    !Number.isFinite(y) ||
-    index === undefined ||
-    total === undefined ||
-    index !== total - 1
-  ) {
+  if (!Number.isFinite(x) || !Number.isFinite(y) || index === undefined || total === undefined || index !== total - 1) {
     return null;
   }
   if (!label) return null;

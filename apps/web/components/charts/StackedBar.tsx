@@ -33,16 +33,7 @@ interface Props {
  * (768 px) the orientation flips to horizontal so long category labels and
  * tall stacks remain readable on phones.
  */
-export function StackedBar({
-  data,
-  keys,
-  xKey,
-  colors,
-  width,
-  height,
-  orientation = 'vertical',
-  ariaLabel,
-}: Props) {
+export function StackedBar({ data, keys, xKey, colors, width, height, orientation = 'vertical', ariaLabel }: Props) {
   const isMobile = useIsMobile();
   const o = isMobile ? 'horizontal' : orientation;
   const label = ariaLabel ?? `Stacked bar chart of ${keys.join(', ')} by ${xKey}`;

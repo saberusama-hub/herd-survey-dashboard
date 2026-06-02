@@ -1194,10 +1194,7 @@ export interface SpecializationRow extends Row {
 }
 
 /** Latest-FY specialization snapshot for one university, top-N by score. */
-export async function getUniversitySpecialization(
-  sk: string,
-  topN = 5,
-): Promise<SpecializationRow[]> {
+export async function getUniversitySpecialization(sk: string, topN = 5): Promise<SpecializationRow[]> {
   const safe = sq(sk);
   return query<SpecializationRow>(`
     WITH latest AS (
@@ -1318,10 +1315,7 @@ function growthColumn(window: GrowthWindow): string {
 }
 
 /** Top-N universities by CAGR over the chosen window. */
-export async function getTopClimbers(
-  window: GrowthWindow = '5yr',
-  topN = 10,
-): Promise<GrowthRow[]> {
+export async function getTopClimbers(window: GrowthWindow = '5yr', topN = 10): Promise<GrowthRow[]> {
   const col = growthColumn(window);
   return query<GrowthRow>(`
     SELECT
@@ -1340,10 +1334,7 @@ export async function getTopClimbers(
 }
 
 /** Bottom-N universities by CAGR over the chosen window. */
-export async function getTopFallers(
-  window: GrowthWindow = '5yr',
-  topN = 10,
-): Promise<GrowthRow[]> {
+export async function getTopFallers(window: GrowthWindow = '5yr', topN = 10): Promise<GrowthRow[]> {
   const col = growthColumn(window);
   return query<GrowthRow>(`
     SELECT
@@ -1362,9 +1353,7 @@ export async function getTopFallers(
 }
 
 /** Map institution_sk → cagr_5yr for the universities-table column. */
-export async function getGrowthByInstitution(): Promise<
-  Array<{ institution_sk: string; cagr_5yr: number | null }>
-> {
+export async function getGrowthByInstitution(): Promise<Array<{ institution_sk: string; cagr_5yr: number | null }>> {
   return query<{ institution_sk: string; cagr_5yr: number | null }>(`
     SELECT institution_sk, cagr_5yr
     FROM agg_uni_growth

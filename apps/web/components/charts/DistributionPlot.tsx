@@ -45,14 +45,7 @@ export function DistributionPlot({ data, width, height, ariaLabel }: Props) {
           const bx = x(String(d.decile)) ?? 0;
           const by = y(d.avg_amount);
           return (
-            <rect
-              key={d.decile}
-              x={bx}
-              y={by}
-              width={bw}
-              height={Math.max(0, innerH - by)}
-              fill="hsl(var(--accent))"
-            />
+            <rect key={d.decile} x={bx} y={by} width={bw} height={Math.max(0, innerH - by)} fill="hsl(var(--accent))" />
           );
         })}
         <AxisBottom

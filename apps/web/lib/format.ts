@@ -27,10 +27,7 @@ export interface FormatDollarsOptions {
 }
 
 /** Canonical dollar formatter. */
-export function formatDollars(
-  value: Nullish<number>,
-  opts: FormatDollarsOptions = {},
-): string {
+export function formatDollars(value: Nullish<number>, opts: FormatDollarsOptions = {}): string {
   if (value === null || value === undefined || Number.isNaN(value)) return DASH;
   const { style = 'compact', noSymbol = false, unit, decimals } = opts;
   const sym = noSymbol ? '' : '$';

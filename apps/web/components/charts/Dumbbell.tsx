@@ -97,9 +97,7 @@ export function Dumbbell({
               fill="hsl(var(--text-primary))"
             >
               {r.label}
-              {r.sublabel ? (
-                <tspan fill="hsl(var(--text-tertiary))" fontSize={10}>{` · ${r.sublabel}`}</tspan>
-              ) : null}
+              {r.sublabel ? <tspan fill="hsl(var(--text-tertiary))" fontSize={10}>{` · ${r.sublabel}`}</tspan> : null}
             </text>
           );
         })}
@@ -123,13 +121,7 @@ export function Dumbbell({
         {rows.map((r) => {
           const cy = (y(r.label) ?? 0) + y.bandwidth() / 2;
           return (
-            <Circle
-              key={`left-${r.label}`}
-              cx={chartLeft + x(r.left)}
-              cy={cy}
-              r={4}
-              fill={leftColor}
-            >
+            <Circle key={`left-${r.label}`} cx={chartLeft + x(r.left)} cy={cy} r={4} fill={leftColor}>
               <title>{`${r.label} — ${leftLabel}: ${xFormat(r.left)}`}</title>
             </Circle>
           );
@@ -138,13 +130,7 @@ export function Dumbbell({
         {rows.map((r) => {
           const cy = (y(r.label) ?? 0) + y.bandwidth() / 2;
           return (
-            <Circle
-              key={`right-${r.label}`}
-              cx={chartLeft + x(r.right)}
-              cy={cy}
-              r={4}
-              fill={rightColor}
-            >
+            <Circle key={`right-${r.label}`} cx={chartLeft + x(r.right)} cy={cy} r={4} fill={rightColor}>
               <title>{`${r.label} — ${rightLabel}: ${xFormat(r.right)}`}</title>
             </Circle>
           );

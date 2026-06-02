@@ -48,17 +48,12 @@ export function Section8Concentration({ profile }: Props) {
       },
       {
         label: `Shannon entropy · FY${latest.fiscal_year}`,
-        value: Number.isFinite(latest.shannon_entropy)
-          ? Number(latest.shannon_entropy).toFixed(2)
-          : '—',
+        value: Number.isFinite(latest.shannon_entropy) ? Number(latest.shannon_entropy).toFixed(2) : '—',
         hint: <span className="text-text-tertiary">higher = more even spread</span>,
       },
       {
         label: `5-yr CoV · FY${latest.fiscal_year}`,
-        value:
-          latest.cov_5yr !== null && Number.isFinite(latest.cov_5yr)
-            ? formatPercent(latest.cov_5yr)
-            : '—',
+        value: latest.cov_5yr !== null && Number.isFinite(latest.cov_5yr) ? formatPercent(latest.cov_5yr) : '—',
         hint: <span className="text-text-tertiary">total R&D volatility</span>,
       },
     ];
@@ -73,11 +68,12 @@ export function Section8Concentration({ profile }: Props) {
     if (finite.length >= 2) {
       const first = finite[0];
       const last = finite[finite.length - 1];
-      const dir = Number(last.hhi) > Number(first.hhi)
-        ? 'rising concentration'
-        : Number(last.hhi) < Number(first.hhi)
-          ? 'falling concentration (more diversified)'
-          : 'flat concentration';
+      const dir =
+        Number(last.hhi) > Number(first.hhi)
+          ? 'rising concentration'
+          : Number(last.hhi) < Number(first.hhi)
+            ? 'falling concentration (more diversified)'
+            : 'flat concentration';
       hhiTrendNote = `HHI moved from ${Math.round(Number(first.hhi)).toLocaleString('en-US')} in FY${first.fiscal_year} to ${Math.round(Number(last.hhi)).toLocaleString('en-US')} in FY${last.fiscal_year} — ${dir}.`;
     }
 
@@ -116,10 +112,8 @@ export function Section8Concentration({ profile }: Props) {
           source="agg_uni_concentration"
           note="HHI thresholds — < 1500 = diversified; 1500–2500 = moderately concentrated; > 2500 = highly concentrated."
           methodology={{
-            what:
-              'Whether this university leans heavily on one or two federal agencies for its research money, or has spread funding across many.',
-            how:
-              'For each fiscal year we compute the Herfindahl-Hirschman Index (HHI) of the seven HERD agency buckets — square each agency’s share of the institution’s federal R&D, sum them, multiply by 10,000. The result ranges 0 (perfectly even) to 10,000 (all funding from one agency).',
+            what: 'Whether this university leans heavily on one or two federal agencies for its research money, or has spread funding across many.',
+            how: 'For each fiscal year we compute the Herfindahl-Hirschman Index (HHI) of the seven HERD agency buckets — square each agency’s share of the institution’s federal R&D, sum them, multiply by 10,000. The result ranges 0 (perfectly even) to 10,000 (all funding from one agency).',
             caveats:
               'HHI is computed at the parent-agency level (HHS, NSF, DOD, DOE, NASA, USDA, Other). Sub-agency diversity (e.g., across NIH institutes) is not captured.',
           }}
@@ -135,9 +129,7 @@ export function Section8Concentration({ profile }: Props) {
         </ChartFrame>
       </div>
 
-      {hhiTrendNote && (
-        <p className="mt-3 text-[11px] italic text-text-tertiary">{hhiTrendNote}</p>
-      )}
+      {hhiTrendNote && <p className="mt-3 text-[11px] italic text-text-tertiary">{hhiTrendNote}</p>}
     </section>
   );
 }

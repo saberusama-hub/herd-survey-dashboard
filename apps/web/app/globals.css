@@ -5,17 +5,17 @@
 @layer base {
   :root {
     /* ===== Editorial palette (Economist-style cherry + warm paper) ===== */
-    --ink: 222 14% 5%;                     /* #0D1117 */
-    --paper: 42 33% 96%;                   /* #F7F5EF warm off-white */
+    --ink: 222 14% 5%; /* #0D1117 */
+    --paper: 42 33% 96%; /* #F7F5EF warm off-white */
     --surface: 0 0% 100%;
     --background: 42 33% 96%;
-    --accent: 351 76% 41%;                 /* #C8102E cherry */
+    --accent: 351 76% 41%; /* #C8102E cherry */
     --accent-strong: 351 76% 31%;
-    --accent-soft: 351 60% 92%;            /* legacy alias — light cherry wash */
-    --surface-elevated: 0 0% 100%;         /* legacy alias */
-    --mute-1: 220 12% 42%;                 /* #5D6470 — WCAG AA on paper */
-    --mute-2: 220 13% 72%;                 /* #B1B7C0 */
-    --mute-3: 220 13% 88%;                 /* #DCDFE5 */
+    --accent-soft: 351 60% 92%; /* legacy alias — light cherry wash */
+    --surface-elevated: 0 0% 100%; /* legacy alias */
+    --mute-1: 220 12% 42%; /* #5D6470 — WCAG AA on paper */
+    --mute-2: 220 13% 72%; /* #B1B7C0 */
+    --mute-3: 220 13% 88%; /* #DCDFE5 */
     --border: 220 13% 88%;
     --rule: 220 13% 88%;
     --ring: 351 76% 41%;
@@ -23,32 +23,32 @@
     /* ===== Text ===== */
     --text-primary: 222 14% 5%;
     --text-secondary: 220 9% 28%;
-    --text-tertiary: 220 12% 42%;          /* WCAG AA: #5D6470 on paper ≥ 4.5:1 */
-    --text-quaternary: 220 13% 72%;        /* legacy alias → mute-2 */
+    --text-tertiary: 220 12% 42%; /* WCAG AA: #5D6470 on paper ≥ 4.5:1 */
+    --text-quaternary: 220 13% 72%; /* legacy alias → mute-2 */
 
     /* ===== Semantic ===== */
     --positive: 142 60% 32%;
     --negative: 0 73% 41%;
     --warning: 40 86% 32%;
-    --highlight: 351 76% 41%;              /* highlight === accent (cherry) */
+    --highlight: 351 76% 41%; /* highlight === accent (cherry) */
 
     /* ===== Agency-categorical (fixed assignment per spec §4.1) ===== */
-    --agency-nih: 213 53% 27%;             /* #1F3A68 navy */
-    --agency-nsf: 351 76% 41%;             /* #C8102E cherry — same as accent */
-    --agency-dod: 91 56% 17%;              /* #2D5016 forest */
-    --agency-doe: 43 90% 38%;              /* #B8860B goldenrod */
-    --agency-nasa: 315 38% 28%;            /* #6B2E5E plum */
-    --agency-usda: 25 53% 35%;             /* #8B5A2B sienna */
-    --agency-other: 220 9% 46%;            /* #6B7280 slate */
+    --agency-nih: 213 53% 27%; /* #1F3A68 navy */
+    --agency-nsf: 351 76% 41%; /* #C8102E cherry — same as accent */
+    --agency-dod: 91 56% 17%; /* #2D5016 forest */
+    --agency-doe: 43 90% 38%; /* #B8860B goldenrod */
+    --agency-nasa: 315 38% 28%; /* #6B2E5E plum */
+    --agency-usda: 25 53% 35%; /* #8B5A2B sienna */
+    --agency-other: 220 9% 46%; /* #6B7280 slate */
 
     /* ===== Legacy categorical aliases (mapped to fixed agency colors) ===== */
-    --cat-1: 351 76% 41%;                  /* NSF cherry */
-    --cat-2: 213 53% 27%;                  /* NIH navy */
-    --cat-3: 91 56% 17%;                   /* DOD forest */
-    --cat-4: 43 90% 38%;                   /* DOE goldenrod */
-    --cat-5: 315 38% 28%;                  /* NASA plum */
-    --cat-6: 25 53% 35%;                   /* USDA sienna */
-    --cat-7: 220 9% 46%;                   /* Other slate */
+    --cat-1: 351 76% 41%; /* NSF cherry */
+    --cat-2: 213 53% 27%; /* NIH navy */
+    --cat-3: 91 56% 17%; /* DOD forest */
+    --cat-4: 43 90% 38%; /* DOE goldenrod */
+    --cat-5: 315 38% 28%; /* NASA plum */
+    --cat-6: 25 53% 35%; /* USDA sienna */
+    --cat-7: 220 9% 46%; /* Other slate */
 
     /* ===== Sequential blues (choropleth) ===== */
     --seq-1: 214 100% 96%;
@@ -57,13 +57,13 @@
     --seq-4: 217 91% 60%;
     --seq-5: 221 83% 53%;
     --seq-6: 224 76% 48%;
-    --seq-7: 226 71% 33%;                  /* #1E3A8A */
+    --seq-7: 226 71% 33%; /* #1E3A8A */
 
     /* ===== Diverging (reconciliation gap — pink / green) ===== */
     --div-neg-3: 322 78% 35%;
     --div-neg-2: 322 70% 50%;
     --div-neg-1: 322 60% 70%;
-    --div-zero:  0 0% 95%;
+    --div-zero: 0 0% 95%;
     --div-pos-1: 134 50% 70%;
     --div-pos-2: 134 60% 45%;
     --div-pos-3: 134 70% 25%;
@@ -71,15 +71,15 @@
 
   .dark {
     /* ===== Surfaces ===== */
-    --ink: 220 14% 91%;                    /* #E8EAED */
-    --paper: 218 18% 9%;                   /* #13161C */
-    --surface: 222 16% 12%;                /* #1A1E26 */
+    --ink: 220 14% 91%; /* #E8EAED */
+    --paper: 218 18% 9%; /* #13161C */
+    --surface: 222 16% 12%; /* #1A1E26 */
     --background: 218 18% 9%;
-    --accent: 352 71% 55%;                 /* #E03A50 — desaturated 20% */
+    --accent: 352 71% 55%; /* #E03A50 — desaturated 20% */
     --accent-strong: 352 71% 65%;
     --accent-soft: 352 50% 22%;
     --surface-elevated: 222 16% 12%;
-    --mute-1: 220 9% 70%;                  /* lighter for AA on dark paper */
+    --mute-1: 220 9% 70%; /* lighter for AA on dark paper */
     --mute-2: 220 13% 30%;
     --mute-3: 220 13% 22%;
     --border: 220 13% 22%;
@@ -89,7 +89,7 @@
     /* ===== Text ===== */
     --text-primary: 220 14% 91%;
     --text-secondary: 220 9% 78%;
-    --text-tertiary: 220 9% 70%;           /* WCAG AA on #13161C */
+    --text-tertiary: 220 9% 70%; /* WCAG AA on #13161C */
     --text-quaternary: 220 13% 30%;
 
     /* ===== Semantic ===== */
@@ -129,7 +129,7 @@
     --div-neg-3: 322 60% 60%;
     --div-neg-2: 322 55% 50%;
     --div-neg-1: 322 45% 40%;
-    --div-zero:  0 0% 20%;
+    --div-zero: 0 0% 20%;
     --div-pos-1: 134 40% 35%;
     --div-pos-2: 134 55% 50%;
     --div-pos-3: 134 65% 65%;

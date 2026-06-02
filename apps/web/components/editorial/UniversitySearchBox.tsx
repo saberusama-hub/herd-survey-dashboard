@@ -107,9 +107,7 @@ export function UniversitySearchBox({
                 className="block px-4 py-2 text-sm hover:bg-mute-3 focus:bg-mute-3 focus:outline-none"
               >
                 <span className="font-medium text-text-primary">{r.name}</span>
-                {r.state && (
-                  <span className="ml-2 text-text-tertiary tnum">({r.state})</span>
-                )}
+                {r.state && <span className="ml-2 text-text-tertiary tnum">({r.state})</span>}
               </Link>
             </li>
           ))}

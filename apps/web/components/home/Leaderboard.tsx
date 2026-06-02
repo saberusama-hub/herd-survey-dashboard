@@ -4,12 +4,7 @@ import { useDuckDB } from '@/app/providers';
 import { Sparkline } from '@/components/charts/Sparkline';
 import { ChartTitle } from '@/components/ui/ChartTitle';
 import { formatDollars } from '@/lib/format';
-import {
-  type InstFySpark,
-  type TopRecipient,
-  sparklinesForCohort,
-  topRecipientsByFy,
-} from '@/lib/queries';
+import { type InstFySpark, type TopRecipient, sparklinesForCohort, topRecipientsByFy } from '@/lib/queries';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -24,12 +19,20 @@ export function HomeLeaderboard() {
 
   useEffect(() => {
     if (!ready) return;
-    topRecipientsByFy(FY, N).then(setTop).catch(() => setTop([]));
+    topRecipientsByFy(FY, N)
+      .then(setTop)
+      .catch(() => setTop([]));
   }, [ready]);
 
   useEffect(() => {
     if (!ready || top.length === 0) return;
-    sparklinesForCohort(top.map((t) => t.institution_sk), FY_MIN, FY).then(setSparks).catch(() => setSparks([]));
+    sparklinesForCohort(
+      top.map((t) => t.institution_sk),
+      FY_MIN,
+      FY,
+    )
+      .then(setSparks)
+      .catch(() => setSparks([]));
   }, [ready, top]);
 
   // Pivot sparks: { institution_sk → [{x, y}] }

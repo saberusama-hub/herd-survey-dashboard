@@ -23,12 +23,7 @@ interface Props {
  */
 export function KpiStrip({ tiles, cols }: Props) {
   const c = cols ?? (Math.min(tiles.length, 4) as 2 | 3 | 4);
-  const gridClass =
-    c === 2
-      ? 'grid-cols-2'
-      : c === 3
-        ? 'grid-cols-2 lg:grid-cols-3'
-        : 'grid-cols-2 lg:grid-cols-4';
+  const gridClass = c === 2 ? 'grid-cols-2' : c === 3 ? 'grid-cols-2 lg:grid-cols-3' : 'grid-cols-2 lg:grid-cols-4';
 
   return (
     <div className={`grid ${gridClass} gap-4`}>

@@ -55,7 +55,10 @@ export function BrushableLine({
   const [brushRange, setBrushRange] = useState<[number, number]>(initialBrush ?? [xMin, xMax]);
 
   const allYs = useMemo(
-    () => series.flatMap((s) => s.data.filter((d) => d.y !== null && d.x >= brushRange[0] && d.x <= brushRange[1]).map((d) => d.y as number)),
+    () =>
+      series.flatMap((s) =>
+        s.data.filter((d) => d.y !== null && d.x >= brushRange[0] && d.x <= brushRange[1]).map((d) => d.y as number),
+      ),
     [series, brushRange],
   );
   const yMax = allYs.length ? Math.max(...allYs) : 1;
@@ -185,9 +188,7 @@ export function BrushableLine({
             start: { x: xBrushScale(brushRange[0]) },
             end: { x: xBrushScale(brushRange[1]) },
           }}
-          onChange={(domainState) =>
-            handleBrush(domainState ? { x0: domainState.x0, x1: domainState.x1 } : null)
-          }
+          onChange={(domainState) => handleBrush(domainState ? { x0: domainState.x0, x1: domainState.x1 } : null)}
           onClick={() => handleBrush(null)}
           selectedBoxStyle={{
             fill: 'hsl(var(--accent-soft))',

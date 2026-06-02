@@ -30,10 +30,7 @@ export function GroupedBar({ data, groupKey, seriesKeys, colors, width, height }
   const innerH = Math.max(0, height - margin.top - margin.bottom);
 
   const groups = data.map((d) => String(d[groupKey]));
-  const max = Math.max(
-    1,
-    ...data.flatMap((d) => seriesKeys.map((k) => Number(d[k]) || 0)),
-  );
+  const max = Math.max(1, ...data.flatMap((d) => seriesKeys.map((k) => Number(d[k]) || 0)));
 
   const x0 = scaleBand({ domain: groups, range: [0, innerW], padding: 0.2 });
   const x1 = scaleBand({ domain: seriesKeys, range: [0, x0.bandwidth()], padding: 0.05 });
