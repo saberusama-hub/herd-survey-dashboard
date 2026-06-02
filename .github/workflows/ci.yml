@@ -27,3 +27,47 @@ jobs:
       - run: pnpm lint
       - run: pnpm test
       - run: pnpm build
+
+      # Axe a11y audit against the built static export. Runs cleanly on the
+      # Linux CI runner — locally on macOS it deadlocks on the DuckDB-WASM
+      # worker interaction (see docs/qa/qa-report-2026-06-02.md).
+      - name: Serve static export
+        run: |
+          python3 -m http.server -d apps/web/out 3000 &
+          for i in {1..20}; do
+            curl -sf http://localhost:3000/ > /dev/null && break
+            sleep 1
+          done
+      - name: Run axe a11y smoke
+        run: |
+          # ubuntu-latest runners ship google-chrome-stable preinstalled
+          CHROME=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium-browser)
+          echo "Using Chrome: $CHROME"
+          CHROME="$CHROME" node scripts/qa/axe_smoke.js
+
+      - name: Bundle size budget check
+        run: |
+          MAX_GZ_KB=250
+          MAX_PARQUET_MB=50
+          fail=0
+          echo "## JS chunks (gzipped, must be ≤ ${MAX_GZ_KB} KB each)"
+          for f in apps/web/out/_next/static/chunks/*.js; do
+            gz=$(gzip -c "$f" | wc -c)
+            kb=$((gz / 1024))
+            printf '  %-60s %5d KB gz\n' "$(basename "$f")" "$kb"
+            if [ "$kb" -gt "$MAX_GZ_KB" ]; then
+              echo "  ✗ FAIL: $(basename "$f") = ${kb} KB gz > ${MAX_GZ_KB} KB"
+              fail=1
+            fi
+          done
+          echo ""
+          echo "## Parquets (must be ≤ ${MAX_PARQUET_MB} MB each)"
+          for f in apps/web/public/data/*.parquet; do
+            mb=$(($(stat -c%s "$f") / 1024 / 1024))
+            printf '  %-60s %4d MB\n' "$(basename "$f")" "$mb"
+            if [ "$mb" -gt "$MAX_PARQUET_MB" ]; then
+              echo "  ✗ FAIL: $(basename "$f") = ${mb} MB > ${MAX_PARQUET_MB} MB"
+              fail=1
+            fi
+          done
+          exit $fail
