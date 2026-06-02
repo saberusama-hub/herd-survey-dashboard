@@ -19,7 +19,7 @@ export function ComingSoon({ eyebrow, title, description, plannedFor }: Props) {
           <Badge variant="outline">Coming in {plannedFor}</Badge>
           <p className="text-text-secondary">
             This page is part of the Phase 2 build. In the meantime, the data is already in the bundle —{' '}
-            <Link href="/downloads/" className="text-accent hover:underline">
+            <Link href="/downloads/" className="text-accent underline underline-offset-2">
               download the parquet
             </Link>{' '}
             or query it via the MCP server in claude.ai (Plan 03).

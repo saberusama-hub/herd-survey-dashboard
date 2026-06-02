@@ -231,7 +231,7 @@ export function Section7Disciplines({ profile, institutionSk }: Props) {
             <p className="mt-3 text-[11px] italic text-text-tertiary">
               Specialization score = (uni's share of that topic's national federal $) ÷ (uni's share of national HERD
               R&amp;D). Score &gt; 1 ⇒ over-indexed for the uni's size. See{' '}
-              <a className="text-accent hover:underline" href="/methodology#specialization">
+              <a className="text-accent underline underline-offset-2" href="/methodology#specialization">
                 methodology
               </a>{' '}
               for the formula.

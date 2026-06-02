@@ -179,7 +179,7 @@ export default function MethodologyPage() {
         <h2 className="h-section">30-topic research taxonomy</h2>
         <p className="text-text-secondary">
           Section 7 of every profile and the{' '}
-          <a className="text-accent hover:underline" href="/national#topics">
+          <a className="text-accent underline underline-offset-2" href="/national#topics">
             /national #topics
           </a>{' '}
           panel use a 30-topic taxonomy applied to grant text. For NSF the matcher reads
@@ -267,7 +267,7 @@ export default function MethodologyPage() {
         <h2 className="h-section">Team-size methodology</h2>
         <p className="text-text-secondary">
           Section 6 of every profile and{' '}
-          <a className="text-accent hover:underline" href="/national#team-size">
+          <a className="text-accent underline underline-offset-2" href="/national#team-size">
             /national #team-size
           </a>{' '}
           bucket every grant by the number of PIs on it. The bucketing is identical for NSF and NIH:
