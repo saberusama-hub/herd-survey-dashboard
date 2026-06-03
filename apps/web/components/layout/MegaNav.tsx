@@ -15,6 +15,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/topics', label: 'Topics' },
   { href: '/sbir', label: 'SBIR / STTR' },
   { href: '/methodology', label: 'Methodology' },
+  { href: '/sources', label: 'Sources' },
   { href: '/downloads', label: 'Downloads' },
 ];
 
