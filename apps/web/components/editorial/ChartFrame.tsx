@@ -2,6 +2,10 @@
 
 import { type ReactNode, useId, useState } from 'react';
 
+import type { SourceCitation } from '@/lib/sources';
+
+import { SourceLine } from './SourceLine';
+
 export interface ChartMethodology {
   /** Plain-English "what this chart shows" — one sentence, no jargon. */
   what: string;
@@ -15,7 +19,20 @@ interface Props {
   eyebrow?: string;
   title: string;
   dek?: string;
+  /**
+   * Legacy free-text source. Prefer the structured {@link sources} prop, which
+   * cites the upstream federal raw dataset (publisher + identifier + subset),
+   * not the intermediate parquet. Kept for backward compatibility.
+   */
   source?: string;
+  /**
+   * Structured source citations. Each entry names one upstream federal raw
+   * dataset (NCSES HERD, NIH ExPORTER, NSF Awards, etc.) and the specific
+   * subset used (table, column, year filter). Rendered as a bulleted block
+   * when multiple sources contribute, inline when a single source. A reader
+   * can Google any chunk of the citation and land on the publisher's archive.
+   */
+  sources?: SourceCitation[];
   note?: string;
   /**
    * Plain-English description of what the chart shows + how it's computed.
@@ -39,9 +56,11 @@ interface Props {
  * Clicking it reveals a plain-language "what this is / how computed / caveats"
  * panel for layperson readers.
  */
-export function ChartFrame({ eyebrow, title, dek, source, note, methodology, children }: Props) {
+export function ChartFrame({ eyebrow, title, dek, source, sources, note, methodology, children }: Props) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
+  const hasStructured = Array.isArray(sources) && sources.length > 0;
+  const hasFooter = hasStructured || Boolean(source) || Boolean(note);
 
   return (
     <figure className="space-y-3">
@@ -84,12 +103,28 @@ export function ChartFrame({ eyebrow, title, dek, source, note, methodology, chi
         )}
       </header>
       <div>{children}</div>
-      {(source || note) && (
-        <figcaption className="border-t border-rule pt-2 text-[11px] text-text-tertiary">
-          {source && <span>Source: {source}</span>}
-          {source && note && <span> · </span>}
-          {note && <span>Note: {note}</span>}
-          <span> · Chart: Research Data Platform</span>
+      {hasFooter && (
+        <figcaption className="border-t border-rule pt-2 text-[11px] leading-relaxed text-text-tertiary">
+          {hasStructured ? (
+            <SourceLine
+              sources={sources as SourceCitation[]}
+              variant={(sources as SourceCitation[]).length > 1 ? 'block' : 'inline'}
+            />
+          ) : source ? (
+            <span>Source: {source}</span>
+          ) : null}
+          {note && (
+            <span className="block mt-1">
+              <span className="font-medium text-text-secondary">Note:</span> {note}
+            </span>
+          )}
+          <span className="mt-1 block text-text-tertiary">
+            Chart: Research Data Platform · Trace every number back to its federal raw archive at{' '}
+            <a href="/sources" className="underline-offset-2 hover:text-accent hover:underline">
+              /sources
+            </a>
+            .
+          </span>
         </figcaption>
       )}
     </figure>
