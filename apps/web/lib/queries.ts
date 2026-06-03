@@ -1232,10 +1232,12 @@ export interface TopicLeaderRow extends Row {
 
 /** For each topic, top-N universities by uni_topic_amount in the latest FY. */
 export async function getNationalTopicLeaders(topN = 5): Promise<TopicLeaderRow[]> {
+  // Use a scalar subquery for the latest FY rather than a CROSS JOIN with a
+  // CTE. DuckDB-WASM rejects `FROM x, cte LEFT JOIN y ...` with
+  // "Non-inner join on correlated columns not supported" because the
+  // LEFT JOIN gets pushed into a correlated subquery against the cross-join
+  // product.
   return query<TopicLeaderRow>(`
-    WITH latest AS (
-      SELECT MAX(fiscal_year) AS fy FROM agg_uni_specialization
-    )
     SELECT
       s.topic,
       s.institution_sk,
@@ -1244,9 +1246,9 @@ export async function getNationalTopicLeaders(topN = 5): Promise<TopicLeaderRow[
       s.uni_topic_amount,
       s.specialization_score,
       s.topic_rank_national
-    FROM agg_uni_specialization s, latest
+    FROM agg_uni_specialization s
     LEFT JOIN dim_institution di ON di.institution_sk = s.institution_sk
-    WHERE s.fiscal_year = latest.fy
+    WHERE s.fiscal_year = (SELECT MAX(fiscal_year) FROM agg_uni_specialization)
       AND s.topic_rank_national <= ${topN}
     ORDER BY s.topic, s.topic_rank_national
   `);
@@ -1264,10 +1266,7 @@ export interface StateTopicRow extends Row {
 /** For each topic, top-N states by state_topic_amount in the latest FY. */
 export async function getStateTopicLeaders(topN = 10): Promise<StateTopicRow[]> {
   return query<StateTopicRow>(`
-    WITH latest AS (
-      SELECT MAX(fiscal_year) AS fy FROM agg_state_topic
-    ),
-    ranked AS (
+    WITH ranked AS (
       SELECT
         s.state_code,
         s.fiscal_year,
@@ -1278,8 +1277,8 @@ export async function getStateTopicLeaders(topN = 10): Promise<StateTopicRow[]> 
         ROW_NUMBER() OVER (
           PARTITION BY s.topic ORDER BY s.state_topic_amount DESC
         ) AS rn
-      FROM agg_state_topic s, latest
-      WHERE s.fiscal_year = latest.fy
+      FROM agg_state_topic s
+      WHERE s.fiscal_year = (SELECT MAX(fiscal_year) FROM agg_state_topic)
     )
     SELECT state_code, fiscal_year, topic, state_topic_amount,
            state_topic_share, top_uni_in_state
@@ -1546,6 +1545,7 @@ export async function getSbirDemographics(fyMin = 2020, fyMax = 2024): Promise<S
 
 export interface TopicSummary extends Row {
   topic: string;
+  fiscal_year: number;
   fy24_amount_m: number;
   fy24_share: number;
   fy24_grant_count: number;
@@ -1553,18 +1553,25 @@ export interface TopicSummary extends Row {
   top_uni_name: string | null;
 }
 
-/** Per-topic FY24 totals + 5yr CAGR + top uni for the topic. */
-export async function getTopicSummaries(): Promise<TopicSummary[]> {
+/**
+ * Per-topic totals + 5-yr trailing CAGR + top uni, parametrised by fiscal year.
+ *
+ * Column names retain the `fy24_*` prefix for backwards compatibility with
+ * the UI; the values are computed for the requested year (and the 5-yr
+ * trailing window ending at that year).
+ */
+export async function getTopicSummaries(year = 2024): Promise<TopicSummary[]> {
+  const fiveYearsBack = year - 5;
   return query<TopicSummary>(`
-    WITH fy24 AS (
-      SELECT topic, tagged_amount AS amount_24, share_of_total AS share_24, grant_count AS gc_24
+    WITH base AS (
+      SELECT topic, tagged_amount AS amount_now, share_of_total AS share_now, grant_count AS gc_now
       FROM agg_national_topic
-      WHERE fiscal_year = 2024
+      WHERE fiscal_year = ${year}
     ),
-    fy19 AS (
-      SELECT topic, tagged_amount AS amount_19
+    prior AS (
+      SELECT topic, tagged_amount AS amount_prior
       FROM agg_national_topic
-      WHERE fiscal_year = 2019
+      WHERE fiscal_year = ${fiveYearsBack}
     ),
     topu AS (
       SELECT topic, institution_sk
@@ -1572,23 +1579,24 @@ export async function getTopicSummaries(): Promise<TopicSummary[]> {
         SELECT topic, institution_sk,
                ROW_NUMBER() OVER (PARTITION BY topic ORDER BY uni_topic_amount DESC) AS rn
         FROM agg_uni_specialization
-        WHERE fiscal_year = 2024
+        WHERE fiscal_year = ${year}
       ) WHERE rn = 1
     )
     SELECT
-      fy24.topic,
-      fy24.amount_24 / 1e6 AS fy24_amount_m,
-      fy24.share_24 * 100 AS fy24_share,
-      fy24.gc_24::DOUBLE AS fy24_grant_count,
-      CASE WHEN fy19.amount_19 > 0
-        THEN (POW(fy24.amount_24 / fy19.amount_19, 1.0 / 5.0) - 1) * 100
+      base.topic,
+      ${year}::INTEGER AS fiscal_year,
+      base.amount_now / 1e6 AS fy24_amount_m,
+      base.share_now * 100 AS fy24_share,
+      base.gc_now::DOUBLE AS fy24_grant_count,
+      CASE WHEN prior.amount_prior > 0
+        THEN (POW(base.amount_now / prior.amount_prior, 1.0 / 5.0) - 1) * 100
         ELSE NULL END AS cagr_5yr_pct,
       di.canonical_name AS top_uni_name
-    FROM fy24
-    LEFT JOIN fy19 USING (topic)
+    FROM base
+    LEFT JOIN prior USING (topic)
     LEFT JOIN topu USING (topic)
     LEFT JOIN dim_institution di ON di.institution_sk = topu.institution_sk
-    ORDER BY fy24.amount_24 DESC
+    ORDER BY base.amount_now DESC
   `);
 }
 
@@ -1624,7 +1632,7 @@ export interface TopicTopUni extends Row {
   topic_rank_national: number;
 }
 
-export async function getTopicTopUnis(topic: string, topN = 15): Promise<TopicTopUni[]> {
+export async function getTopicTopUnis(topic: string, topN = 15, year = 2024): Promise<TopicTopUni[]> {
   const safeTopic = topic.replace(/'/g, "''");
   return query<TopicTopUni>(`
     SELECT
@@ -1637,7 +1645,7 @@ export async function getTopicTopUnis(topic: string, topN = 15): Promise<TopicTo
       s.topic_rank_national::DOUBLE AS topic_rank_national
     FROM agg_uni_specialization s
     LEFT JOIN dim_institution di ON di.institution_sk = s.institution_sk
-    WHERE s.topic = '${safeTopic}' AND s.fiscal_year = 2024
+    WHERE s.topic = '${safeTopic}' AND s.fiscal_year = ${year}
     ORDER BY s.uni_topic_amount DESC
     LIMIT ${topN}
   `);
@@ -1650,7 +1658,7 @@ export interface TopicTopState extends Row {
   top_uni_in_state: string | null;
 }
 
-export async function getTopicTopStates(topic: string, topN = 10): Promise<TopicTopState[]> {
+export async function getTopicTopStates(topic: string, topN = 10, year = 2024): Promise<TopicTopState[]> {
   const safeTopic = topic.replace(/'/g, "''");
   return query<TopicTopState>(`
     SELECT
@@ -1659,7 +1667,7 @@ export async function getTopicTopStates(topic: string, topN = 10): Promise<Topic
       state_topic_share * 100 AS state_topic_share,
       top_uni_in_state
     FROM agg_state_topic
-    WHERE topic = '${safeTopic}' AND fiscal_year = 2024
+    WHERE topic = '${safeTopic}' AND fiscal_year = ${year}
     ORDER BY state_topic_amount DESC
     LIMIT ${topN}
   `);

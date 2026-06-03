@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 
 import { useDuckDB } from '@/app/providers';
 import { LineChart } from '@/components/charts/LineChart';
@@ -20,8 +20,13 @@ import {
   getTopicTopUnis,
 } from '@/lib/queries';
 
+const FY_MIN = 2005;
+const FY_MAX = 2024;
+const ALL_YEARS = Array.from({ length: FY_MAX - FY_MIN + 1 }, (_, i) => FY_MAX - i);
+
 export default function TopicsPage() {
   const { ready } = useDuckDB();
+  const [summaryYear, setSummaryYear] = useState<number>(FY_MAX);
   const [summaries, setSummaries] = useState<TopicSummary[]>([]);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
 
@@ -29,17 +34,23 @@ export default function TopicsPage() {
     if (!ready) return;
     let cancelled = false;
     (async () => {
-      const data = await getTopicSummaries();
+      const data = await getTopicSummaries(summaryYear);
       if (cancelled) return;
       setSummaries(data);
-      if (data.length > 0 && !selectedTopic) setSelectedTopic(data[0].topic);
+      // Auto-pick a default drill-down topic if none is selected, or if the
+      // currently-selected topic disappeared from this year's data.
+      if (data.length > 0) {
+        if (!selectedTopic || !data.some((r) => r.topic === selectedTopic)) {
+          setSelectedTopic(data[0].topic);
+        }
+      }
     })();
     return () => {
       cancelled = true;
     };
-  }, [ready, selectedTopic]);
+  }, [ready, summaryYear, selectedTopic]);
 
-  const fy24Total = summaries.reduce((s, r) => s + r.fy24_amount_m, 0);
+  const fySummaryTotal = summaries.reduce((s, r) => s + r.fy24_amount_m, 0);
   const topicCount = summaries.length;
   const climberCount = summaries.filter((r) => (r.cagr_5yr_pct ?? 0) > 10).length;
 
@@ -67,48 +78,54 @@ export default function TopicsPage() {
               ],
             },
             {
-              label: 'FY2024 tagged total',
-              value: `$${(fy24Total / 1000).toFixed(1)}B`,
+              label: `FY${summaryYear} tagged total`,
+              value: `$${(fySummaryTotal / 1000).toFixed(1)}B`,
               hint: 'Sum of all topic tags (topics can overlap)',
               sources: [
-                { id: 'nsf_awards', subset: 'Award $ summed across all topic tags for FY2024' },
-                { id: 'nih_exporter', subset: 'Project $ summed across all topic tags for FY2024' },
+                { id: 'nsf_awards', subset: `Award $ summed across all topic tags for FY${summaryYear}` },
+                { id: 'nih_exporter', subset: `Project $ summed across all topic tags for FY${summaryYear}` },
               ],
             },
             {
               label: 'Topics growing > 10%/yr',
               value: String(climberCount),
-              hint: '5-yr CAGR',
+              hint: `5-yr CAGR ending FY${summaryYear}`,
               sources: [
-                { id: 'nsf_awards', subset: 'Tagged $ FY2019 → FY2024 5-yr CAGR per topic, count where > 10%' },
-                { id: 'nih_exporter', subset: 'Tagged $ FY2019 → FY2024 5-yr CAGR per topic, count where > 10%' },
+                {
+                  id: 'nsf_awards',
+                  subset: `Tagged $ FY${summaryYear - 5} → FY${summaryYear} 5-yr CAGR per topic, count where > 10%`,
+                },
+                {
+                  id: 'nih_exporter',
+                  subset: `Tagged $ FY${summaryYear - 5} → FY${summaryYear} 5-yr CAGR per topic, count where > 10%`,
+                },
               ],
             },
             {
-              label: 'Top topic FY24',
+              label: `Top topic FY${summaryYear}`,
               value: summaries[0].topic.split(' &')[0].slice(0, 14),
               hint: `$${(summaries[0].fy24_amount_m / 1000).toFixed(1)}B`,
               sources: [
-                { id: 'nsf_awards', subset: 'Highest tagged-$ topic for FY2024' },
-                { id: 'nih_exporter', subset: 'Highest tagged-$ topic for FY2024' },
+                { id: 'nsf_awards', subset: `Highest tagged-$ topic for FY${summaryYear}` },
+                { id: 'nih_exporter', subset: `Highest tagged-$ topic for FY${summaryYear}` },
               ],
             },
           ]}
         />
       )}
 
-      {/* All topics leaderboard */}
+      {/* All topics leaderboard with year selector */}
       <ChartFrame
         eyebrow="National ranking"
-        title="All 30 topics, FY2024"
+        title={`All 30 topics, FY${summaryYear}`}
         sources={[
           {
             id: 'nsf_awards',
-            subset: 'Award title + abstract regex-tagged with 30-topic taxonomy; $ summed per topic FY2024',
+            subset: `Award title + abstract regex-tagged with 30-topic taxonomy; $ summed per topic for FY${summaryYear}`,
           },
           {
             id: 'nih_exporter',
-            subset: 'Project title + project_terms regex-tagged with 30-topic taxonomy; $ summed per topic FY2024',
+            subset: `Project title + project_terms regex-tagged with 30-topic taxonomy; $ summed per topic for FY${summaryYear}`,
           },
           {
             id: 'ncses_herd',
@@ -116,17 +133,26 @@ export default function TopicsPage() {
           },
         ]}
         methodology={{
-          what: 'Total federal R&D dollars tagged with each topic in FY2024, with share-of-total (sum > 100% because topics overlap) and 5-year CAGR.',
-          how: 'agg_national_topic joined with agg_uni_specialization for the top university per topic. Tags applied via hand-curated case-insensitive regex on NIH project title+abstract and NSF award title+description.',
+          what: `Total federal R&D dollars tagged with each topic in FY${summaryYear}, with share-of-total (sum > 100% because topics overlap) and 5-year trailing CAGR.`,
+          how: 'agg_national_topic joined with agg_uni_specialization for the top university per topic. Tags applied via hand-curated case-insensitive regex on NIH project title+abstract and NSF award title+description. Year and CAGR window driven by the dropdown above the table.',
           caveats:
             'A grant can carry multiple tags (e.g. a cancer-immunology grant is in both). Shares therefore sum >100% — they represent the topic’s coverage of the federal R&D portfolio, not a partition. See /methodology#topics for the full regex set.',
         }}
       >
-        <SummaryTable rows={summaries} selected={selectedTopic} onSelect={setSelectedTopic} />
+        <YearPicker
+          label="Year"
+          value={summaryYear}
+          years={ALL_YEARS}
+          onChange={setSummaryYear}
+          helper={`Switch the leaderboard between any FY${FY_MIN} – FY${FY_MAX} ranking.`}
+        />
+        <SummaryTable rows={summaries} selected={selectedTopic} onSelect={setSelectedTopic} year={summaryYear} />
       </ChartFrame>
 
       {/* Per-topic drill-down */}
-      {selectedTopic && <TopicDetail topic={selectedTopic} />}
+      {summaries.length > 0 && (
+        <TopicDetail topic={selectedTopic} onTopicChange={setSelectedTopic} topics={summaries.map((r) => r.topic)} />
+      )}
     </div>
   );
 }
@@ -135,10 +161,12 @@ function SummaryTable({
   rows,
   selected,
   onSelect,
+  year,
 }: {
   rows: TopicSummary[];
   selected: string | null;
   onSelect: (t: string) => void;
+  year: number;
 }) {
   if (rows.length === 0) return <p className="text-sm text-text-tertiary">Loading…</p>;
   return (
@@ -147,7 +175,7 @@ function SummaryTable({
         <thead>
           <tr className="border-b border-rule text-text-tertiary text-left">
             <th className="py-2 pr-4 font-medium">Topic</th>
-            <th className="py-2 px-3 font-medium text-right whitespace-nowrap">FY24 $</th>
+            <th className="py-2 px-3 font-medium text-right whitespace-nowrap">FY{year} $</th>
             <th className="py-2 px-3 font-medium text-right whitespace-nowrap">Share</th>
             <th className="py-2 px-3 font-medium text-right whitespace-nowrap">Grants</th>
             <th className="py-2 px-3 font-medium text-right whitespace-nowrap">5y CAGR</th>
@@ -197,20 +225,29 @@ function SummaryTable({
   );
 }
 
-function TopicDetail({ topic }: { topic: string }) {
+function TopicDetail({
+  topic,
+  topics,
+  onTopicChange,
+}: {
+  topic: string | null;
+  topics: string[];
+  onTopicChange: (t: string) => void;
+}) {
   const { ready } = useDuckDB();
   const [timeline, setTimeline] = useState<TopicTimeline[]>([]);
   const [topUnis, setTopUnis] = useState<TopicTopUni[]>([]);
   const [topStates, setTopStates] = useState<TopicTopState[]>([]);
+  const [drillYear, setDrillYear] = useState<number>(FY_MAX);
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || !topic) return;
     let cancelled = false;
     (async () => {
       const [tl, tu, ts] = await Promise.all([
         getTopicTimeline(topic),
-        getTopicTopUnis(topic, 15),
-        getTopicTopStates(topic, 10),
+        getTopicTopUnis(topic, 15, drillYear),
+        getTopicTopStates(topic, 10, drillYear),
       ]);
       if (cancelled) return;
       setTimeline(tl);
@@ -220,11 +257,16 @@ function TopicDetail({ topic }: { topic: string }) {
     return () => {
       cancelled = true;
     };
-  }, [ready, topic]);
+  }, [ready, topic, drillYear]);
+
+  if (!topic) return null;
 
   return (
     <div className="space-y-6 border-t border-rule pt-8">
-      <h2 className="h-section">{topic} — drill-down</h2>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <h2 className="h-section">{topic} — drill-down</h2>
+        <TopicPicker value={topic} topics={topics} onChange={onTopicChange} />
+      </div>
 
       <ChartFrame
         eyebrow="Timeline"
@@ -256,15 +298,15 @@ function TopicDetail({ topic }: { topic: string }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <ChartFrame
           eyebrow="Top universities"
-          title="Top 15 by tagged FY2024 $"
+          title={`Top 15 by tagged FY${drillYear} $`}
           sources={[
             {
               id: 'nsf_awards',
-              subset: `Tagged award $ for topic "${topic}" per institution, ranked top 15 for FY2024`,
+              subset: `Tagged award $ for topic "${topic}" per institution, ranked top 15 for FY${drillYear}`,
             },
             {
               id: 'nih_exporter',
-              subset: `Tagged project $ for topic "${topic}" per institution, ranked top 15 for FY2024`,
+              subset: `Tagged project $ for topic "${topic}" per institution, ranked top 15 for FY${drillYear}`,
             },
             {
               id: 'ncses_herd',
@@ -272,6 +314,13 @@ function TopicDetail({ topic }: { topic: string }) {
             },
           ]}
         >
+          <YearPicker
+            label="Year"
+            value={drillYear}
+            years={ALL_YEARS}
+            onChange={setDrillYear}
+            helper="Switch ranking year for both tables in this drill-down."
+          />
           {topUnis.length === 0 ? (
             <p className="text-sm text-text-tertiary">Loading…</p>
           ) : (
@@ -281,19 +330,26 @@ function TopicDetail({ topic }: { topic: string }) {
 
         <ChartFrame
           eyebrow="Top states"
-          title="Top 10 by state-topic $"
+          title={`Top 10 by state-topic $, FY${drillYear}`}
           sources={[
             {
               id: 'nsf_awards',
-              subset: `Tagged award $ for topic "${topic}" joined to state_code, summed per state, ranked top 10 for FY2024`,
+              subset: `Tagged award $ for topic "${topic}" joined to state_code, summed per state, ranked top 10 for FY${drillYear}`,
             },
             {
               id: 'nih_exporter',
-              subset: `Tagged project $ for topic "${topic}" joined to state_code, summed per state, ranked top 10 for FY2024`,
+              subset: `Tagged project $ for topic "${topic}" joined to state_code, summed per state, ranked top 10 for FY${drillYear}`,
             },
             { id: 'ipeds', subset: 'HD directory: STABBR (state) attached to each institution_sk' },
           ]}
         >
+          <YearPicker
+            label="Year"
+            value={drillYear}
+            years={ALL_YEARS}
+            onChange={setDrillYear}
+            helper="Shared year selector — controls both tables."
+          />
           {topStates.length === 0 ? (
             <p className="text-sm text-text-tertiary">Loading…</p>
           ) : (
@@ -301,6 +357,73 @@ function TopicDetail({ topic }: { topic: string }) {
           )}
         </ChartFrame>
       </div>
+    </div>
+  );
+}
+
+function YearPicker({
+  label,
+  value,
+  years,
+  onChange,
+  helper,
+}: {
+  label: string;
+  value: number;
+  years: number[];
+  onChange: (y: number) => void;
+  helper?: string;
+}) {
+  const id = useId();
+  return (
+    <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+      <label htmlFor={id} className="text-[11px] uppercase tracking-wider text-text-tertiary">
+        {label}
+      </label>
+      <select
+        id={id}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="h-8 w-32 rounded-md border border-rule bg-surface-elevated px-2 text-sm tnum focus:outline-none focus:ring-2 focus:ring-ring"
+      >
+        {years.map((y) => (
+          <option key={y} value={y}>
+            FY{y}
+          </option>
+        ))}
+      </select>
+      {helper && <span className="text-[11px] italic text-text-tertiary">{helper}</span>}
+    </div>
+  );
+}
+
+function TopicPicker({
+  value,
+  topics,
+  onChange,
+}: {
+  value: string;
+  topics: string[];
+  onChange: (t: string) => void;
+}) {
+  const id = useId();
+  return (
+    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+      <label htmlFor={id} className="text-[11px] uppercase tracking-wider text-text-tertiary">
+        Topic
+      </label>
+      <select
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-8 max-w-xs rounded-md border border-rule bg-surface-elevated px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+      >
+        {topics.map((t) => (
+          <option key={t} value={t}>
+            {t}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }
