@@ -59,6 +59,11 @@ export function Section7Disciplines({ profile, institutionSk }: Props) {
         hint: (
           <span className="text-text-tertiary">{formatDollars(Number(s.uni_topic_amount) || 0)} federal $ tagged</span>
         ),
+        sources: [
+          { id: 'nsf_awards', subset: `Tagged award $ for topic "${s.topic}" at this institution × FY` },
+          { id: 'nih_exporter', subset: `Tagged project $ for topic "${s.topic}" at this institution × FY` },
+          { id: 'ncses_herd', subset: 'Q01 Total R&D as size denominator for the share-of-share normalization' },
+        ],
       };
     });
   }, [specialization]);
@@ -91,16 +96,19 @@ export function Section7Disciplines({ profile, institutionSk }: Props) {
         label: `STEM share · FY${latestFy}`,
         value: formatPercent(stemShare),
         hint: <span className="text-text-tertiary">of HERD R&D by field</span>,
+        sources: [{ id: 'ncses_herd', subset: 'Q03 (R&D by Field of Science) STEM dollars ÷ total R&D for latest FY' }],
       },
       {
         label: `Non-STEM share · FY${latestFy}`,
         value: formatPercent(stemShare !== null ? 1 - stemShare : null),
         hint: <span className="text-text-tertiary">humanities + social sciences</span>,
+        sources: [{ id: 'ncses_herd', subset: 'Q03 non-STEM dollars ÷ total R&D for latest FY' }],
       },
       {
         label: 'Field diversity (Shannon)',
         value: shannon ? shannon.toFixed(2) : '—',
         hint: <span className="text-text-tertiary">higher = more spread</span>,
+        sources: [{ id: 'ncses_herd', subset: 'Q03 field shares → Shannon entropy in nats for latest FY' }],
       },
     ];
 
@@ -169,7 +177,13 @@ export function Section7Disciplines({ profile, institutionSk }: Props) {
             eyebrow={`FY${latestFy} field mix`}
             title="R&D spending by HERD field of science"
             dek="Latest reported year. Bars are sorted descending and direct-labeled with the dollar amount."
-            source="HERD Q03 · agg_uni_field_mix"
+            sources={[
+              {
+                id: 'ncses_herd',
+                subset:
+                  'Q03 (R&D by Field of Science) for this institution, latest reported FY, across 8 HERD field categories',
+              },
+            ]}
             methodology={{
               what: 'Which broad academic disciplines drove R&D spending at this university in the latest year — life sciences, engineering, social sciences, humanities, and so on.',
               how: 'We sum HERD Q03 ("R&D expenditures by field of science") for the latest fiscal year across the eight HERD field categories. STEM bars are accent-colored; humanities + social sciences are muted.',
@@ -188,7 +202,18 @@ export function Section7Disciplines({ profile, institutionSk }: Props) {
             eyebrow={`FY${latestFy} research topics`}
             title={`Top ${showAllTopics ? sortedTopics.length : Math.min(10, sortedTopics.length)} research topics by federal $`}
             dek="30-topic taxonomy over NSF + NIH grant text (titles + NSF abstracts + NIH project terms). Sparkline = 20-year topic trajectory."
-            source="agg_uni_topic (regex-matched, non-exclusive)"
+            sources={[
+              {
+                id: 'nsf_awards',
+                subset:
+                  'Award title + abstract text regex-tagged with 30-topic taxonomy; $ summed per topic × FY for this institution',
+              },
+              {
+                id: 'nih_exporter',
+                subset:
+                  'Project title + project_terms regex-tagged with 30-topic taxonomy; $ summed per topic × FY for this institution',
+              },
+            ]}
             methodology={{
               what: 'What this university actually researches — concrete topics like "Cancer," "Quantum computing," or "Climate" — and how each topic has trended over 20 years.',
               how: 'Each NSF and NIH grant is tagged against a 30-topic regex taxonomy that scans the grant title, NSF abstract, and NIH project terms for keyword matches. We sum the tagged dollars per topic per year for this institution.',

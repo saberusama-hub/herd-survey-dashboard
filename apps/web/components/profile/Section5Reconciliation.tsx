@@ -109,7 +109,18 @@ export function Section5Reconciliation({ profile }: Props) {
         eyebrow="Federal R&D coverage"
         title="Top-down HERD vs bottom-up bottom-line, year by year"
         dek="Bars are grouped by fiscal year. Left bar (accent): HERD federal R&D. Right bar (gray): sum of bottom-up federal streams."
-        source="HERD Q09 · raw NIH RePORTER + NSF Awards + USAspending"
+        sources={[
+          {
+            id: 'ncses_herd',
+            subset: 'Q09 (Federal R&D by Agency) summed across all agency buckets for this institution × FY (top-down)',
+          },
+          { id: 'nih_exporter', subset: 'Project total_cost summed per FY for this institution (bottom-up)' },
+          { id: 'nsf_awards', subset: 'Award obligations summed per FY for this institution (bottom-up)' },
+          {
+            id: 'usaspending',
+            subset: 'Contract + assistance face value summed per FY for this institution (bottom-up)',
+          },
+        ]}
         note="HERD measures expenditures; bottom-up streams measure obligations or outlays. A 15–25% gap is expected; larger gaps may reflect sub-agency allocation method or PIID collision in USASpending. See Methodology."
         methodology={{
           what: 'A reality check: does the university’s reported federal funding (HERD) match what we can actually find by counting up individual grants and contracts in the federal databases?',

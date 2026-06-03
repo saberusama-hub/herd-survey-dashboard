@@ -61,21 +61,37 @@ export default function TopicsPage() {
               label: 'Topics tracked',
               value: String(topicCount),
               hint: 'Hand-curated regex taxonomy',
+              sources: [
+                { id: 'nsf_awards', subset: 'Award title + abstract text regex-tagged against 30 topics' },
+                { id: 'nih_exporter', subset: 'Project title + structured terms regex-tagged against 30 topics' },
+              ],
             },
             {
               label: 'FY2024 tagged total',
               value: `$${(fy24Total / 1000).toFixed(1)}B`,
               hint: 'Sum of all topic tags (topics can overlap)',
+              sources: [
+                { id: 'nsf_awards', subset: 'Award $ summed across all topic tags for FY2024' },
+                { id: 'nih_exporter', subset: 'Project $ summed across all topic tags for FY2024' },
+              ],
             },
             {
               label: 'Topics growing > 10%/yr',
               value: String(climberCount),
               hint: '5-yr CAGR',
+              sources: [
+                { id: 'nsf_awards', subset: 'Tagged $ FY2019 → FY2024 5-yr CAGR per topic, count where > 10%' },
+                { id: 'nih_exporter', subset: 'Tagged $ FY2019 → FY2024 5-yr CAGR per topic, count where > 10%' },
+              ],
             },
             {
               label: 'Top topic FY24',
               value: summaries[0].topic.split(' &')[0].slice(0, 14),
               hint: `$${(summaries[0].fy24_amount_m / 1000).toFixed(1)}B`,
+              sources: [
+                { id: 'nsf_awards', subset: 'Highest tagged-$ topic for FY2024' },
+                { id: 'nih_exporter', subset: 'Highest tagged-$ topic for FY2024' },
+              ],
             },
           ]}
         />
@@ -85,7 +101,20 @@ export default function TopicsPage() {
       <ChartFrame
         eyebrow="National ranking"
         title="All 30 topics, FY2024"
-        source="NIH ExPORTER + NSF Awards + 30-topic regex matcher"
+        sources={[
+          {
+            id: 'nsf_awards',
+            subset: 'Award title + abstract regex-tagged with 30-topic taxonomy; $ summed per topic FY2024',
+          },
+          {
+            id: 'nih_exporter',
+            subset: 'Project title + project_terms regex-tagged with 30-topic taxonomy; $ summed per topic FY2024',
+          },
+          {
+            id: 'ncses_herd',
+            subset: 'Q01 Total R&D used to identify "top university" per topic via specialization score',
+          },
+        ]}
         methodology={{
           what: 'Total federal R&D dollars tagged with each topic in FY2024, with share-of-total (sum > 100% because topics overlap) and 5-year CAGR.',
           how: 'agg_national_topic joined with agg_uni_specialization for the top university per topic. Tags applied via hand-curated case-insensitive regex on NIH project title+abstract and NSF award title+description.',
@@ -200,7 +229,10 @@ function TopicDetail({ topic }: { topic: string }) {
       <ChartFrame
         eyebrow="Timeline"
         title={`Federal R&D tagged with "${topic}" — FY trend`}
-        source="agg_national_topic"
+        sources={[
+          { id: 'nsf_awards', subset: `Tagged award $ for topic "${topic}" summed per FY, FY2005–FY2024` },
+          { id: 'nih_exporter', subset: `Tagged project $ for topic "${topic}" summed per FY, FY2005–FY2024` },
+        ]}
         methodology={{
           what: 'Yearly tagged-amount totals for the selected topic, FY2005-2024.',
           how: 'agg_national_topic filtered to topic, ordered by fiscal_year. Tagged-amount is the sum of grant award $ where the title+abstract regex matches.',
@@ -222,7 +254,24 @@ function TopicDetail({ topic }: { topic: string }) {
       </ChartFrame>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <ChartFrame eyebrow="Top universities" title="Top 15 by tagged FY2024 $" source="agg_uni_specialization">
+        <ChartFrame
+          eyebrow="Top universities"
+          title="Top 15 by tagged FY2024 $"
+          sources={[
+            {
+              id: 'nsf_awards',
+              subset: `Tagged award $ for topic "${topic}" per institution, ranked top 15 for FY2024`,
+            },
+            {
+              id: 'nih_exporter',
+              subset: `Tagged project $ for topic "${topic}" per institution, ranked top 15 for FY2024`,
+            },
+            {
+              id: 'ncses_herd',
+              subset: 'Q01 Total R&D as denominator for specialization score (topic share ÷ size share)',
+            },
+          ]}
+        >
           {topUnis.length === 0 ? (
             <p className="text-sm text-text-tertiary">Loading…</p>
           ) : (
@@ -230,7 +279,21 @@ function TopicDetail({ topic }: { topic: string }) {
           )}
         </ChartFrame>
 
-        <ChartFrame eyebrow="Top states" title="Top 10 by state-topic $" source="agg_state_topic">
+        <ChartFrame
+          eyebrow="Top states"
+          title="Top 10 by state-topic $"
+          sources={[
+            {
+              id: 'nsf_awards',
+              subset: `Tagged award $ for topic "${topic}" joined to state_code, summed per state, ranked top 10 for FY2024`,
+            },
+            {
+              id: 'nih_exporter',
+              subset: `Tagged project $ for topic "${topic}" joined to state_code, summed per state, ranked top 10 for FY2024`,
+            },
+            { id: 'ipeds', subset: 'HD directory: STABBR (state) attached to each institution_sk' },
+          ]}
+        >
           {topStates.length === 0 ? (
             <p className="text-sm text-text-tertiary">Loading…</p>
           ) : (

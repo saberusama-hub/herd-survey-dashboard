@@ -99,7 +99,19 @@ export function Section2TotalRD({ profile }: Props) {
             ? 'Year-on-year reported HERD expenditure in current-year dollars.'
             : 'Same HERD expenditure rebased to FY2024 purchasing power via BLS CPI-U.'
         }
-        source="HERD Q01 · agg_uni_total_rd"
+        sources={
+          mode === 'nominal'
+            ? [
+                {
+                  id: 'ncses_herd',
+                  subset: 'Q01 (Total R&D Expenditures) per institution × FY, nominal dollars, FY2005–FY2024',
+                },
+              ]
+            : [
+                { id: 'ncses_herd', subset: 'Q01 (Total R&D Expenditures) per institution × FY, FY2005–FY2024' },
+                { id: 'bls_cpi_u', subset: 'Series CUUR0000SA0 annual averages used to deflate nominal → FY2024 real' },
+              ]
+        }
         note={peakNote ?? undefined}
         methodology={{
           what: 'How much money this university spent on research each year, in plain dollars or rebased to today’s prices.',

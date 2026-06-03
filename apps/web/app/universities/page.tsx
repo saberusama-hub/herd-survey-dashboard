@@ -1,6 +1,7 @@
 'use client';
 
 import { useDuckDB } from '@/app/providers';
+import { SourceLine } from '@/components/editorial/SourceLine';
 import { UniversityTable } from '@/components/editorial/UniversityTable';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { type UniversityIndexRow, getUniversityIndex } from '@/lib/queries';
@@ -47,7 +48,33 @@ export default function UniversitiesPage() {
           Failed to load institutions: {(error ?? loadError)?.message ?? 'unknown error'}
         </p>
       ) : rows ? (
-        <UniversityTable rows={rows} />
+        <>
+          <UniversityTable rows={rows} />
+          <div className="border-t border-rule pt-3 text-[11px] leading-relaxed text-text-tertiary">
+            <SourceLine
+              variant="block"
+              sources={[
+                { id: 'ncses_herd', subset: 'Q01 Total R&D FY2024, federal share, 5-yr/20-yr CAGR per institution' },
+                {
+                  id: 'nsf_awards',
+                  subset: 'Lead PI per award contributes to # PIs column',
+                },
+                {
+                  id: 'nih_exporter',
+                  subset: 'PI bridge file (project × PI) contributes to # PIs column',
+                },
+                { id: 'ipeds', subset: 'HD directory: institution name, state, IPEDS UNITID' },
+              ]}
+            />
+            <p className="mt-1">
+              Table: Research Data Platform · Trace every column back to its federal raw archive at{' '}
+              <a href="/sources" className="underline-offset-2 hover:text-accent hover:underline">
+                /sources
+              </a>
+              .
+            </p>
+          </div>
+        </>
       ) : (
         <p className="text-text-secondary text-sm">Loading universities…</p>
       )}

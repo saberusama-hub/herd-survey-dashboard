@@ -2,6 +2,7 @@
 
 import { useDuckDB } from '@/app/providers';
 import { LineChart } from '@/components/charts/LineChart';
+import { SourceLine } from '@/components/editorial/SourceLine';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { StorySection } from '@/components/layout/StorySection';
 import { KEY_EVENTS_BANDS } from '@/lib/annotations';
@@ -161,7 +162,19 @@ export default function SelfFundingStory() {
               referenceBands={KEY_EVENTS_BANDS.filter((e) => e.id === 'arra' || e.id === 'covid')}
               highlightIndex={HIGHLIGHT_BY_STEP[activeId] ?? null}
             />
-            <p className="t-caption">Sheet 01 institution funding panel · sector flag from dim_institution</p>
+            <div className="t-caption">
+              <SourceLine
+                variant="block"
+                sources={[
+                  {
+                    id: 'ncses_herd',
+                    subset:
+                      'Q01 federal-source and institutional-source dollars summed across all HERD-tracked institutions per FY; HBCU subset filtered via sector flag',
+                  },
+                  { id: 'ipeds', subset: 'HD directory: HBCU flag attached to each institution_sk' },
+                ]}
+              />
+            </div>
           </div>
         )}
       />

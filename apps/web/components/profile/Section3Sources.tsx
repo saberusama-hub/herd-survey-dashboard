@@ -102,7 +102,13 @@ export function Section3Sources({ profile }: Props) {
         eyebrow="HERD Q01 sources of funds"
         title="R&D expenditure by source, by fiscal year"
         dek="Each bar is one fiscal year's total HERD R&D, stacked by the six reporting source categories."
-        source="HERD Q01 · agg_uni_source_split"
+        sources={[
+          {
+            id: 'ncses_herd',
+            subset:
+              'Q01 (Sources of Funds) per institution × FY × source category (federal, state, industry, institutional, nonprofit, other), FY2005–FY2024',
+          },
+        ]}
         note={
           ardesWarning
             ? 'Nonprofit funding was not collected in HERD before FY2010 (ARDES non-response), so pre-FY2010 stacks understate that slice.'

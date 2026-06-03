@@ -73,16 +73,28 @@ export function Section1Hero({ profile, state }: Props) {
       label: fy ? `Total R&D · FY${fy}` : 'Total R&D',
       value: formatDollars(totalLatest, { decimals: 2 }),
       hint: <span className="text-text-tertiary">{state}-based institution</span>,
+      sources: [
+        { id: 'ncses_herd', subset: 'Q01 (Total R&D) for this institution, latest reported FY, nominal dollars' },
+      ],
     },
     {
       label: earliest && latest ? `CAGR · FY${earliest.fiscal_year}–FY${latest.fiscal_year}` : '20-yr CAGR',
       value: formatPercent(cagr, { decimals: 1 }),
       hint: <span className="text-text-tertiary">{yearsSpan ? `over ${yearsSpan} years, nominal` : '—'}</span>,
+      sources: [
+        { id: 'ncses_herd', subset: 'Q01 Total R&D earliest reported FY → latest, compound annual growth rate' },
+      ],
     },
     {
       label: fy ? `Federal share · FY${fy}` : 'Federal share',
       value: formatPercent(federalShare, { decimals: 1 }),
       hint: <span className="text-text-tertiary">of all R&D sources</span>,
+      sources: [
+        {
+          id: 'ncses_herd',
+          subset: 'Q01 federal-source dollars ÷ total all-source dollars for this institution, latest FY',
+        },
+      ],
     },
     {
       label: fy ? `National rank · FY${fy}` : 'National rank',
@@ -94,6 +106,7 @@ export function Section1Hero({ profile, state }: Props) {
       ) : (
         <span className="text-text-tertiary">computing…</span>
       ),
+      sources: [{ id: 'ncses_herd', subset: 'Q01 Total R&D ranked across all HERD institutions for latest FY' }],
     },
   ];
 

@@ -162,7 +162,13 @@ export function Section4Agencies({ profile, institutionSk }: Props) {
         eyebrow={`FY${latestFy} federal split`}
         title="Federal funding by agency, latest reported year"
         dek="Bars are direct-labeled with the dollar amount and the share of this institution's federal R&D."
-        source="HERD Q09 · agg_uni_agency_split"
+        sources={[
+          {
+            id: 'ncses_herd',
+            subset:
+              'Q09 (Federal R&D by Agency) for this institution, latest reported FY, grouped into the 7 canonical agency buckets (HHS, NSF, DOD, DOE, NASA, USDA, Other)',
+          },
+        ]}
         methodology={{
           what: 'Which federal agencies actually paid this university for research in the most recent reported year — and how much each one chipped in.',
           how: 'We take HERD Q09 ("Federal R&D by agency") for the latest fiscal year and group reported obligations into the seven canonical agency buckets (HHS includes NIH, plus NSF / DOD / DOE / NASA / USDA / Other federal). Bars are sorted by amount.',
@@ -198,7 +204,13 @@ export function Section4Agencies({ profile, institutionSk }: Props) {
                   eyebrow={`FY${icView.latestFy} NIH Institute split`}
                   title="Top 10 NIH Institutes funding this university"
                   dek="Each NIH grant is administered by one Institute or Center (IC). This drills the HHS bar above into the actual ICs that paid out."
-                  source="fact_nih_project.admin_ic_code · agg_uni_nih_ic"
+                  sources={[
+                    {
+                      id: 'nih_exporter',
+                      subset:
+                        'Project total_cost grouped by ADMIN_IC for this institution; top 10 ICs by dollar amount in the latest reported FY',
+                    },
+                  ]}
                   methodology={{
                     what: 'How HHS dollars to this university split across the 27 NIH Institutes and Centers — the actual scientific divisions inside NIH that wrote the checks.',
                     how: 'We aggregate fact_nih_project.total_cost_nominal by admin_ic_code (administering IC). The HERD-side institution_sk join uses dim_institution_crosswalk; non-NIH HHS components (CDC, AHRQ, HRSA, etc.) are not in fact_nih_project and therefore not shown here.',

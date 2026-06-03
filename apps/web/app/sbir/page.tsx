@@ -81,21 +81,35 @@ export default function SbirPage() {
                 label: 'Total awards FY05-24',
                 value: formatCount(overview.n_awards),
                 hint: `FY${overview.fy_min}–${overview.fy_max}`,
+                sources: [
+                  { id: 'sbir_sttr', subset: 'All SBIR + STTR Phase I/II awards across 11 agencies, FY2005–FY2024' },
+                ],
               },
               {
                 label: 'Real cumulative $',
                 value: `$${overview.total_real_b.toFixed(1)}B`,
                 hint: 'Inflation-adjusted to FY2024',
+                sources: [
+                  { id: 'sbir_sttr', subset: 'Award amounts FY2005–FY2024, summed' },
+                  { id: 'bls_cpi_u', subset: 'Series CUUR0000SA0 annual averages, FY2024 base' },
+                ],
               },
               {
                 label: 'Unique firms',
                 value: formatCount(overview.n_firms),
                 hint: 'Small businesses awarded',
+                sources: [{ id: 'sbir_sttr', subset: 'COUNT(DISTINCT firm_name) across all awards FY2005–FY2024' }],
               },
               {
                 label: 'University RI partners',
                 value: formatCount(overview.n_ri_unis),
                 hint: 'Research institutions on STTR / collaborative SBIR',
+                sources: [
+                  {
+                    id: 'sbir_sttr',
+                    subset: 'COUNT(DISTINCT ri_canonical_name) where research institution is named on award',
+                  },
+                ],
               },
             ]}
           />
@@ -106,11 +120,13 @@ export default function SbirPage() {
                 label: 'FY2024 total',
                 value: `$${(overview.fy24_total_real_m / 1000).toFixed(1)}B`,
                 hint: `${formatCount(overview.fy24_n_awards)} awards across ${overview.n_agencies} agencies`,
+                sources: [{ id: 'sbir_sttr', subset: 'Award amounts filtered to fiscal_year = 2024' }],
               },
               {
                 label: 'Avg award FY2024',
                 value: `$${((overview.fy24_total_real_m * 1000) / overview.fy24_n_awards / 1000).toFixed(0)}K`,
                 hint: 'Total ÷ award count',
+                sources: [{ id: 'sbir_sttr', subset: 'Total FY2024 $ ÷ FY2024 award count' }],
               },
             ]}
           />
@@ -121,7 +137,10 @@ export default function SbirPage() {
       <ChartFrame
         eyebrow="20-year trend"
         title="Annual SBIR / STTR award $, by program × phase"
-        source="SBIR.gov"
+        sources={[
+          { id: 'sbir_sttr', subset: 'Award amount summed by fiscal_year × program × phase, FY2005–FY2024' },
+          { id: 'bls_cpi_u', subset: 'Series CUUR0000SA0 annual averages used to convert nominal → FY2024 real $' },
+        ]}
         methodology={{
           what: 'Total award dollars per fiscal year, stacked by program (SBIR vs STTR) and phase (I = feasibility, II = R&D execution).',
           how: 'Sum of award_amount_real_2024 from sheet_06_sbir_sttr, grouped by fiscal_year × program × phase. All amounts adjusted to FY2024 dollars via BLS CPI-U.',
@@ -136,7 +155,13 @@ export default function SbirPage() {
       <ChartFrame
         eyebrow="Federal agencies"
         title="SBIR / STTR by agency, FY2020-2024 cumulative"
-        source="SBIR.gov"
+        sources={[
+          {
+            id: 'sbir_sttr',
+            subset:
+              'Filter fiscal_year BETWEEN 2020 AND 2024, group by agency_name; share = agency $ ÷ 5-yr program total',
+          },
+        ]}
         methodology={{
           what: 'Total real award dollars by federal agency over the most recent 5-year window, with share of program total.',
           how: 'sheet_06_sbir_sttr filtered to fiscal_year BETWEEN 2020 AND 2024, grouped by agency_name. Share computed against the 5-year program total.',
@@ -150,7 +175,12 @@ export default function SbirPage() {
       <ChartFrame
         eyebrow="Top recipients"
         title="Top 15 firms by SBIR / STTR funding, FY2020-2024"
-        source="SBIR.gov"
+        sources={[
+          {
+            id: 'sbir_sttr',
+            subset: 'Filter fiscal_year BETWEEN 2020 AND 2024, group by firm_name + firm_state, summed and ranked',
+          },
+        ]}
         methodology={{
           what: 'Firms ranked by total real award dollars over FY2020-2024.',
           how: 'sheet_06_sbir_sttr grouped by firm_name + firm_state, summed and ranked.',
@@ -165,7 +195,12 @@ export default function SbirPage() {
       <ChartFrame
         eyebrow="University research partners"
         title="Top 15 university research-institution (RI) partners, FY2020-2024"
-        source="SBIR.gov + Federal Funds bridge"
+        sources={[
+          {
+            id: 'sbir_sttr',
+            subset: 'ri_canonical_name filtered non-null (RI partner named on award), grouped + summed FY2020–FY2024',
+          },
+        ]}
         methodology={{
           what: 'Universities that appear as research-institution partners on the most SBIR / STTR awards. STTR mandates an RI partner; SBIR allows one.',
           how: 'sheet_06_sbir_sttr.ri_canonical_name (filtered for non-null), grouped and summed.',
@@ -180,7 +215,12 @@ export default function SbirPage() {
       <ChartFrame
         eyebrow="Geography"
         title="SBIR / STTR award $ by firm state, FY2024"
-        source="SBIR.gov"
+        sources={[
+          {
+            id: 'sbir_sttr',
+            subset: 'Filter fiscal_year = 2024, group by firm_state, summed; choropleth fills by total real $',
+          },
+        ]}
         methodology={{
           what: 'Total FY2024 award dollars by the firm headquarters state.',
           how: 'sheet_06_sbir_sttr filtered to fiscal_year = 2024, grouped by firm_state.',
@@ -196,7 +236,13 @@ export default function SbirPage() {
       </ChartFrame>
 
       {/* State table */}
-      <ChartFrame eyebrow="State leaderboard" title="Top 10 states by SBIR / STTR award $, FY2024" source="SBIR.gov">
+      <ChartFrame
+        eyebrow="State leaderboard"
+        title="Top 10 states by SBIR / STTR award $, FY2024"
+        sources={[
+          { id: 'sbir_sttr', subset: 'Filter fiscal_year = 2024, group by firm_state, summed and ranked top 10' },
+        ]}
+      >
         <StateTable rows={states.slice(0, 10)} />
       </ChartFrame>
 
@@ -204,7 +250,13 @@ export default function SbirPage() {
       <ChartFrame
         eyebrow="Demographic set-asides"
         title="Set-aside program participation, FY2020-2024"
-        source="SBIR.gov"
+        sources={[
+          {
+            id: 'sbir_sttr',
+            subset:
+              'Boolean flags is_woman_owned, is_hubzone, is_socially_economically_disadvantaged per award; share = flagged ÷ total awards FY2020–FY2024',
+          },
+        ]}
         methodology={{
           what: 'Share of awards going to small businesses that self-certify as woman-owned, HUBZone, or socially/economically disadvantaged.',
           how: 'Boolean flags is_woman_owned, is_hubzone, is_socially_economically_disadvantaged on each award row, summed and divided by the 5-year award total.',

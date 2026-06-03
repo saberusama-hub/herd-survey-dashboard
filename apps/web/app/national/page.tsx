@@ -597,7 +597,13 @@ export default function NationalPage() {
           eyebrow="HERD Q01 sources of funds"
           title="National R&D by source, FY2005–FY2024"
           dek="Each bar is one fiscal year's total HERD-reported R&D summed across every institution, stacked by source."
-          source="HERD Q01 · agg_national_overview"
+          sources={[
+            {
+              id: 'ncses_herd',
+              subset:
+                'Q01 (Sources of Funds) summed across all HERD-tracked institutions per FY × source category, FY2005–FY2024',
+            },
+          ]}
           note={
             overviewSummary
               ? `Peak FY${overviewSummary.peak.x} at ${formatDollars(overviewSummary.peak.y)}. Biggest year-on-year change: FY${overviewSummary.jump.x} (${overviewSummary.jump.label}).`
@@ -646,7 +652,13 @@ export default function NationalPage() {
           eyebrow="20-year trend"
           title="National federal R&D by agency"
           dek="Each line is one federal agency. Colors match the spec's fixed agency palette."
-          source="HERD Q09 · agg_national_agency_trend"
+          sources={[
+            {
+              id: 'ncses_herd',
+              subset:
+                'Q09 (Federal R&D by Agency) summed across all HERD-tracked institutions per FY × agency bucket, FY2005–FY2024',
+            },
+          ]}
           note={
             agencyLeader
               ? `${agencyLeader.key} was the dominant funder in FY${agencyLeader.fy} at ${formatDollars(agencyLeader.amount)}.`
@@ -682,7 +694,13 @@ export default function NationalPage() {
           eyebrow={nihIcView.latestFy ? `FY${nihIcView.latestFy} ranking` : 'NIH ICs'}
           title="National NIH funding by Institute / Center"
           dek="Sorted by total NIH funding in the latest reported fiscal year. % is share of national NIH total that year (sums to 100%)."
-          source="fact_nih_project.admin_ic_code · agg_national_nih_ic"
+          sources={[
+            {
+              id: 'nih_exporter',
+              subset:
+                'Project total_cost grouped by ADMIN_IC (27 NIH Institutes/Centers + legacy codes), summed across all U.S. universities for the latest FY',
+            },
+          ]}
           methodology={{
             what: 'Which NIH Institute or Center actually wrote the checks — Cancer (NCI), Allergy/Infectious (NIAID), Heart/Lung/Blood (NHLBI), General Medical (NIGMS), and so on.',
             how: 'We aggregate fact_nih_project.total_cost_nominal by administering IC (admin_ic_code). Each project is counted once at its administering IC; the 27 standard ICs plus a few legacy/special codes are included.',
@@ -700,7 +718,12 @@ export default function NationalPage() {
             eyebrow="20-year IC share trend"
             title="Top 5 NIH Institutes: share of national NIH $ over time"
             dek="One line per top-5 IC, plotted as % of national NIH $ each FY."
-            source="agg_national_nih_ic"
+            sources={[
+              {
+                id: 'nih_exporter',
+                subset: 'Project total_cost by ADMIN_IC per FY; share = IC dollars ÷ national NIH total that FY',
+              },
+            ]}
             methodology={{
               what: 'Whether the dominant NIH Institutes have held steady or shifted relative to each other over 20 years.',
               how: 'For each FY we compute IC share = IC dollars ÷ total NIH dollars that year. One line per IC, using the top-5 latest-FY ranking by dollar amount.',
@@ -743,7 +766,13 @@ export default function NationalPage() {
           eyebrow="Editorial line: concentration over time"
           title="Share of total U.S. R&D held by the top 10, 25, and 100 institutions"
           dek="% of national HERD R&D each cohort accounted for in each FY."
-          source="agg_national_concentration"
+          sources={[
+            {
+              id: 'ncses_herd',
+              subset:
+                'Q01 (Total R&D) ranked per FY; cohort shares = top-N institution sum ÷ national total, FY2005–FY2024',
+            },
+          ]}
           note={
             concSummary
               ? `Top-10 share: ${concSummary.top10First.toFixed(1)}% in FY${concSummary.firstFy} → ${concSummary.top10Last.toFixed(1)}% in FY${concSummary.lastFy}. Top-100 in FY${concSummary.lastFy}: ${concSummary.top100Last.toFixed(1)}%.`
@@ -780,7 +809,13 @@ export default function NationalPage() {
           eyebrow={stateSummary ? `FY${stateSummary.fy} totals` : 'State totals'}
           title="HERD R&D by state"
           dek="Choropleth of the latest available fiscal year. Hover a state for its total; the leaderboard at right shows the top 5."
-          source="agg_uni_total_rd × dim_institution"
+          sources={[
+            {
+              id: 'ncses_herd',
+              subset: 'Q01 (Total R&D) per institution × FY, summed by headquarters state, latest reported FY',
+            },
+            { id: 'ipeds', subset: 'HD directory: STABBR (state) attached to each institution_sk' },
+          ]}
           note={
             stateSummary
               ? `${stateSummary.nStates} states reported R&D in FY${stateSummary.fy}, totalling ${formatDollars(stateSummary.total)}.`
@@ -834,7 +869,21 @@ export default function NationalPage() {
           eyebrow="Pick a metric"
           title="National trend, FY2005 – FY2024"
           dek="One line, one national rollup. Use the selector to flip between dollar totals, the federal $ share of all R&D, and the distinct-PI count behind NIH+NSF top grants."
-          source="agg_uni_total_rd · agg_uni_source_split · agg_uni_pi_metrics"
+          sources={[
+            {
+              id: 'ncses_herd',
+              subset:
+                'Q01 Total R&D and Q01 federal-source dollars per institution × FY (drive Total R&D and Federal share metrics)',
+            },
+            {
+              id: 'nsf_awards',
+              subset: 'Lead PI per award; counted toward national distinct-PI count (drives # PIs metric)',
+            },
+            {
+              id: 'nih_exporter',
+              subset: 'PI bridge file (project × PI); counted toward national distinct-PI count (drives # PIs metric)',
+            },
+          ]}
           methodology={{
             what: 'Three different ways to slice the 20-year national story — total dollars, federal dependence, and how many researchers were on the federal payroll each year.',
             how: 'Total R&D = sum of `agg_uni_total_rd.total_rd_nominal` across all universities per FY. Federal share = federal-source dollars ÷ all-source dollars per FY. # PIs = sum of distinct-PI counts across institutions per FY (from `agg_uni_pi_universe`).',
@@ -892,7 +941,13 @@ export default function NationalPage() {
           eyebrow="HERD Q03 field of science"
           title="National STEM vs non-STEM R&D, by fiscal year"
           dek="Each bar is one fiscal year. STEM (S&E) is the accent color; humanities + social sciences sit on top."
-          source="HERD Q03 · agg_uni_field_mix"
+          sources={[
+            {
+              id: 'ncses_herd',
+              subset:
+                'Q03 (R&D by Field of Science) per institution × FY × field; STEM vs non-STEM split via the HERD field-classification flag, FY2005–FY2024',
+            },
+          ]}
           note={
             stemSummary && stemSummary.stemShare !== null
               ? `STEM share in FY${stemSummary.fy}: ${formatPercent(stemSummary.stemShare)} of national HERD R&D.`
@@ -946,7 +1001,18 @@ export default function NationalPage() {
           eyebrow={topicsView.latestFy ? `FY${topicsView.latestFy} ranking` : 'Research topics'}
           title="All 30 research topics by federal $"
           dek="Total tagged dollars per topic in the most recent fiscal year. Ranking is by dollar amount; share is of total federal $ that FY (sum can exceed 100% — topics overlap)."
-          source="agg_national_topic (regex-matched, non-exclusive)"
+          sources={[
+            {
+              id: 'nsf_awards',
+              subset:
+                'Award title + abstract text regex-matched against the 30-topic taxonomy; $ summed per topic for latest FY',
+            },
+            {
+              id: 'nih_exporter',
+              subset:
+                'Project title + structured terms regex-matched against the 30-topic taxonomy; $ summed per topic for latest FY',
+            },
+          ]}
           note="Topics use word-boundary regex on title + abstract / project terms. See /methodology for the exact pattern list."
           methodology={{
             what: 'A nationwide ranking of 30 concrete research topics — Cancer, AI/ML, Climate, Quantum, etc. — sorted by how many federal dollars matched each topic in the most recent year.',
@@ -964,7 +1030,16 @@ export default function NationalPage() {
           eyebrow="20-year topic share trend"
           title="Top 10 topics: share of national federal $ over time"
           dek="Share of all NSF + NIH federal dollars matching each topic, FY2005 – FY2024. Higher = topic captured a larger slice of the agency portfolio that year."
-          source="agg_national_topic"
+          sources={[
+            {
+              id: 'nsf_awards',
+              subset: 'Tagged award $ summed per topic per FY; share = topic $ ÷ total federal $ that FY',
+            },
+            {
+              id: 'nih_exporter',
+              subset: 'Tagged project $ summed per topic per FY; share = topic $ ÷ total federal $ that FY',
+            },
+          ]}
           methodology={{
             what: 'Whether the 10 most-funded research topics have grown or shrunk relative to the rest of the federal research portfolio over 20 years.',
             how: 'For each FY we compute each topic’s share = topic dollars ÷ total federal $ that year. One line per topic, using the top-10 latest-FY ranking.',
@@ -1003,7 +1078,17 @@ export default function NationalPage() {
             eyebrow="Top universities per topic"
             title="The top 5 universities funded for each top-10 topic"
             dek="For each of the 10 most-funded topics, the universities that received the largest tagged federal $ in the latest fiscal year."
-            source="agg_uni_specialization (latest FY)"
+            sources={[
+              { id: 'nsf_awards', subset: 'Tagged award $ per institution × topic, ranked within topic for latest FY' },
+              {
+                id: 'nih_exporter',
+                subset: 'Tagged project $ per institution × topic, ranked within topic for latest FY',
+              },
+              {
+                id: 'ncses_herd',
+                subset: 'Q01 Total R&D as the size denominator for the share-of-share normalization',
+              },
+            ]}
             methodology={{
               what: 'Where the biggest research-topic dollars actually land — for AI/ML, Cancer, Quantum, etc., which 5 universities are at the top.',
               how: "For the latest reported FY we rank universities by tagged federal $ within each topic (topic_rank_national), then list the top 5. Click a name to open that uni's profile.",
@@ -1057,7 +1142,17 @@ export default function NationalPage() {
           eyebrow={nihIcView.latestFy ? `FY${nihIcView.latestFy} state ranking` : 'State topic leaders'}
           title="Top 5 states per research topic"
           dek="Each panel shows one topic; bars are the top 5 states by tagged federal $ that year, with each state's share of the national topic total."
-          source="agg_state_topic"
+          sources={[
+            {
+              id: 'nsf_awards',
+              subset: 'Tagged award $ joined to institution_sk → state_code, summed per state × topic × FY',
+            },
+            {
+              id: 'nih_exporter',
+              subset: 'Tagged project $ joined to institution_sk → state_code, summed per state × topic × FY',
+            },
+            { id: 'ipeds', subset: 'HD directory: STABBR (state) attached to each institution_sk' },
+          ]}
           methodology={{
             what: 'For each major research topic, the U.S. states whose universities won the largest slice — a geographic read on where the AI dollars, the cancer dollars, the climate dollars actually went.',
             how: "agg_state_topic rolls each university's tagged topic dollars up to its headquarters state, then ranks states by total per (topic, FY). state_topic_share = state total ÷ national topic total.",
@@ -1116,7 +1211,13 @@ export default function NationalPage() {
           eyebrow={teamSizeView.latestFy ? `FY${teamSizeView.latestFy} mix` : 'Team size'}
           title="Federal $ by PI team size, latest fiscal year"
           dek="Each bar is one team-size bucket of NSF + NIH grants. Width is the bucket's total federal funding for the year."
-          source="agg_national_team_size (NSF n_pi ∪ NIH PI bridge count)"
+          sources={[
+            { id: 'nsf_awards', subset: 'Lead PI + n_pi field per award; bucketed by team count for the latest FY' },
+            {
+              id: 'nih_exporter',
+              subset: 'PI bridge file COUNT(DISTINCT pi_id) per project; bucketed by team count for the latest FY',
+            },
+          ]}
           note={
             teamSizeView.latestRows.length > 0
               ? `Single-PI grants captured ${formatPercent(teamSizeView.latestRows[0].share)} of federal $ in FY${teamSizeView.latestFy}. Multi-PI teams (2+ PIs) took the rest.`
@@ -1138,7 +1239,13 @@ export default function NationalPage() {
           eyebrow="20-year team-size mix"
           title="Federal $ by team size, FY2005 – FY2024"
           dek="Stacked bar per FY: single-PI grants on the bottom in accent. Larger team buckets stack on top in graduated greys."
-          source="agg_national_team_size"
+          sources={[
+            { id: 'nsf_awards', subset: 'Lead PI + n_pi field per award; bucketed by team count, FY2005–FY2024' },
+            {
+              id: 'nih_exporter',
+              subset: 'PI bridge file COUNT(DISTINCT pi_id) per project; bucketed by team count, FY2005–FY2024',
+            },
+          ]}
           methodology={{
             what: 'Whether U.S. research has shifted from solo PIs toward larger team grants over 20 years.',
             how: 'For each FY we sum federal $ in the five team-size buckets and stack them. The accent slice at the bottom is single-PI; bigger teams stack progressively above.',
@@ -1182,7 +1289,10 @@ export default function NationalPage() {
           eyebrow={piDistLatest.fy ? `FY${piDistLatest.fy} distribution` : 'PI $ distribution'}
           title="How federal $ spreads across PIs nationally"
           dek="Average dollar amount per PI in each decile of the latest-year roster, averaged across institutions (decile-of-deciles)."
-          source="agg_uni_pi_distribution"
+          sources={[
+            { id: 'nsf_awards', subset: 'Lead PI obligations bucketed into deciles per institution, latest FY' },
+            { id: 'nih_exporter', subset: 'PI total_cost bucketed into deciles per institution, latest FY' },
+          ]}
           note={
             piDistLatest.rows.length > 0
               ? `Top decile averages ${formatDollars(piDistLatest.rows[piDistLatest.rows.length - 1].avg_amount)} per PI, vs. ${formatDollars(piDistLatest.rows[0].avg_amount)} in the bottom decile.`
@@ -1213,7 +1323,13 @@ export default function NationalPage() {
           eyebrow="FY2019 → FY2024 CAGR"
           title="Who grew, who shrank?"
           dek="One panel of climbers (top 10 by 5-yr CAGR), one of fallers (bottom 10). Restricted to universities with FY2024 HERD R&D ≥ $5M to avoid tiny-base noise."
-          source="agg_uni_growth"
+          sources={[
+            {
+              id: 'ncses_herd',
+              subset:
+                'Q01 (Total R&D) per institution at FY2019 and FY2024; CAGR = (FY24/FY19)^(1/5) − 1, restricted to FY24 ≥ $5M cohort',
+            },
+          ]}
           methodology={{
             what: 'Which universities have been on the steepest 5-year upward or downward trajectory, in HERD-reported total R&D.',
             how: 'CAGR_5yr = (FY24 total / FY19 total)^(1/5) − 1. Universities are restricted to those with FY24 total R&D ≥ $5M (avoids divide-by-tiny CAGRs). Climbers are sorted descending; fallers ascending.',

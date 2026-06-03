@@ -45,16 +45,28 @@ export function Section8Concentration({ profile }: Props) {
                 : 'Highly concentrated'}
           </span>
         ),
+        sources: [
+          {
+            id: 'ncses_herd',
+            subset: 'Q09 agency shares for this institution squared and summed × 10,000 (HHI), latest FY',
+          },
+        ],
       },
       {
         label: `Shannon entropy · FY${latest.fiscal_year}`,
         value: Number.isFinite(latest.shannon_entropy) ? Number(latest.shannon_entropy).toFixed(2) : '—',
         hint: <span className="text-text-tertiary">higher = more even spread</span>,
+        sources: [
+          { id: 'ncses_herd', subset: 'Q09 agency shares for this institution → Shannon entropy in nats, latest FY' },
+        ],
       },
       {
         label: `5-yr CoV · FY${latest.fiscal_year}`,
         value: latest.cov_5yr !== null && Number.isFinite(latest.cov_5yr) ? formatPercent(latest.cov_5yr) : '—',
         hint: <span className="text-text-tertiary">total R&D volatility</span>,
+        sources: [
+          { id: 'ncses_herd', subset: 'Q01 (Total R&D) trailing-5yr coefficient of variation for this institution' },
+        ],
       },
     ];
     const lineData = sorted.map((r) => ({
@@ -109,7 +121,12 @@ export function Section8Concentration({ profile }: Props) {
           eyebrow="Concentration over time"
           title="Herfindahl–Hirschman index of agency mix"
           dek="A single line: how concentrated the federal-agency mix has been each year. HHI ranges 0–10,000 — below 1500 is conventionally diversified."
-          source="agg_uni_concentration"
+          sources={[
+            {
+              id: 'ncses_herd',
+              subset: 'Q09 agency shares for this institution × FY → HHI = Σ(share²) × 10,000, FY2005–FY2024',
+            },
+          ]}
           note="HHI thresholds — < 1500 = diversified; 1500–2500 = moderately concentrated; > 2500 = highly concentrated."
           methodology={{
             what: 'Whether this university leans heavily on one or two federal agencies for its research money, or has spread funding across many.',

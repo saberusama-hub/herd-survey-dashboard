@@ -23,10 +23,12 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useDuckDB } from '@/app/providers';
 import { BarChart } from '@/components/charts/BarChart';
 import { ChartFrame } from '@/components/editorial/ChartFrame';
+import { SourceLine } from '@/components/editorial/SourceLine';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/Card';
 import { formatCount, formatDollars, formatFy, formatPercent } from '@/lib/format';
 import { type UniversityProfile, getUniversityProfile, searchInstitutions } from '@/lib/queries';
+import type { SourceCitation } from '@/lib/sources';
 import { Download, Search, X } from 'lucide-react';
 
 const MIN_PICKS = 2;
@@ -50,6 +52,8 @@ interface MetricDef {
   format: MetricFormat;
   /** Source parquet(s) — documented for auditing */
   source: string;
+  /** Upstream federal raw sources that ultimately produce this metric. */
+  sources: SourceCitation[];
   /** Derives a per-FY series from a UniversityProfile. Returns rows even when
    *  data missing for a year (value=null) so the table view stays rectangular
    *  across the selected range; the chart filters nulls. */
@@ -159,6 +163,9 @@ const METRICS: MetricDef[] = [
     description: 'HERD-reported total R&D expenditure per fiscal year, nominal dollars.',
     format: 'dollars',
     source: 'agg_uni_total_rd.total_rd_nominal',
+    sources: [
+      { id: 'ncses_herd', subset: 'Q01 (Total R&D Expenditures) per institution × FY, nominal dollars, FY2005–FY2024' },
+    ],
     series: (p) => p.totalRd.map((r) => ({ fiscal_year: r.fiscal_year, value: Number(r.total_rd_nominal) || 0 })),
   },
   {
@@ -167,6 +174,10 @@ const METRICS: MetricDef[] = [
     description: 'Total R&D in constant FY2024 dollars (CPI-U deflated).',
     format: 'dollars',
     source: 'agg_uni_total_rd.total_rd_real',
+    sources: [
+      { id: 'ncses_herd', subset: 'Q01 (Total R&D Expenditures) per institution × FY' },
+      { id: 'bls_cpi_u', subset: 'Series CUUR0000SA0 annual averages used to deflate nominal → FY2024 real' },
+    ],
     series: (p) => p.totalRd.map((r) => ({ fiscal_year: r.fiscal_year, value: Number(r.total_rd_real) || 0 })),
   },
   {
@@ -175,6 +186,7 @@ const METRICS: MetricDef[] = [
     description: 'HERD federal R&D dollars per fiscal year.',
     format: 'dollars',
     source: "agg_uni_source_split where source_category='federal'",
+    sources: [{ id: 'ncses_herd', subset: 'Q01 (Sources of Funds) federal-source dollars per institution × FY' }],
     series: (p) =>
       byFyShareSum(
         p.sources,
@@ -189,6 +201,7 @@ const METRICS: MetricDef[] = [
     description: 'HERD state/local govt R&D dollars per fiscal year.',
     format: 'dollars',
     source: "agg_uni_source_split where source_category='state'",
+    sources: [{ id: 'ncses_herd', subset: 'Q01 (Sources of Funds) state/local-source dollars per institution × FY' }],
     series: (p) =>
       byFyShareSum(
         p.sources,
@@ -203,6 +216,7 @@ const METRICS: MetricDef[] = [
     description: 'HERD industry-funded R&D dollars per fiscal year.',
     format: 'dollars',
     source: "agg_uni_source_split where source_category='industry'",
+    sources: [{ id: 'ncses_herd', subset: 'Q01 (Sources of Funds) industry-source dollars per institution × FY' }],
     series: (p) =>
       byFyShareSum(
         p.sources,
@@ -217,6 +231,9 @@ const METRICS: MetricDef[] = [
     description: 'HERD institutional (own funds) R&D dollars per fiscal year.',
     format: 'dollars',
     source: "agg_uni_source_split where source_category='institutional'",
+    sources: [
+      { id: 'ncses_herd', subset: 'Q01 (Sources of Funds) institutional own-funds dollars per institution × FY' },
+    ],
     series: (p) =>
       byFyShareSum(
         p.sources,
@@ -231,6 +248,7 @@ const METRICS: MetricDef[] = [
     description: 'HERD nonprofit-funded R&D dollars per fiscal year.',
     format: 'dollars',
     source: "agg_uni_source_split where source_category='nonprofit'",
+    sources: [{ id: 'ncses_herd', subset: 'Q01 (Sources of Funds) nonprofit-source dollars per institution × FY' }],
     series: (p) =>
       byFyShareSum(
         p.sources,
@@ -245,6 +263,9 @@ const METRICS: MetricDef[] = [
     description: 'Federal funds as a share of total R&D, per fiscal year.',
     format: 'percent',
     source: 'agg_uni_source_split',
+    sources: [
+      { id: 'ncses_herd', subset: 'Q01 federal-source dollars ÷ total all-source dollars per institution × FY' },
+    ],
     series: (p) =>
       byFyShareSum(
         p.sources,
@@ -259,6 +280,7 @@ const METRICS: MetricDef[] = [
     description: 'Share of HERD R&D in STEM field categories, per fiscal year.',
     format: 'percent',
     source: 'agg_uni_field_mix',
+    sources: [{ id: 'ncses_herd', subset: 'Q03 STEM-field dollars ÷ total Q03 dollars per institution × FY' }],
     series: (p) =>
       byFyShareSum(
         p.fieldMix,
@@ -276,6 +298,10 @@ const METRICS: MetricDef[] = [
       'NSF contributes lead PI only (no public co-PI bridge) so this is a floor for NSF.',
     format: 'count',
     source: 'agg_uni_pi_universe.distinct_pi_count',
+    sources: [
+      { id: 'nsf_awards', subset: 'Lead PI per award for this institution × FY' },
+      { id: 'nih_exporter', subset: 'PI bridge file (project × PI) for this institution × FY' },
+    ],
     maskFy05: true,
     series: (p) =>
       p.piMetrics.map((r) => ({
@@ -289,6 +315,10 @@ const METRICS: MetricDef[] = [
     description: 'Total NSF + NIH dollars divided by distinct PI count. FY2005 masked.',
     format: 'dollars',
     source: 'agg_uni_pi_universe.amount_per_pi',
+    sources: [
+      { id: 'nsf_awards', subset: 'NSF $ for this institution × FY ÷ distinct PI count' },
+      { id: 'nih_exporter', subset: 'NIH $ for this institution × FY ÷ distinct PI count' },
+    ],
     maskFy05: true,
     series: (p) =>
       p.piMetrics.map((r) => ({
@@ -304,6 +334,12 @@ const METRICS: MetricDef[] = [
       'Higher = more concentrated in one agency.',
     format: 'index',
     source: 'agg_uni_agency_split (computed at query time)',
+    sources: [
+      {
+        id: 'ncses_herd',
+        subset: 'Q09 agency shares for this institution × FY → HHI = Σ(share²) × 10,000',
+      },
+    ],
     series: (p) => {
       const m = hhiByFy(
         p.agencies,
@@ -322,6 +358,12 @@ const METRICS: MetricDef[] = [
     description: 'Shannon entropy of HERD field-of-science mix (nats). Higher = more diverse research portfolio.',
     format: 'index',
     source: 'agg_uni_field_mix (computed at query time)',
+    sources: [
+      {
+        id: 'ncses_herd',
+        subset: 'Q03 field-of-science shares for this institution × FY → Shannon entropy in nats',
+      },
+    ],
     series: (p) => {
       const m = shannonByFy(
         p.fieldMix,
@@ -342,6 +384,12 @@ const METRICS: MetricDef[] = [
       'Higher = more volatile funding.',
     format: 'percent',
     source: 'agg_uni_concentration.cov_5yr',
+    sources: [
+      {
+        id: 'ncses_herd',
+        subset: 'Q01 (Total R&D) trailing-5yr coefficient of variation for this institution',
+      },
+    ],
     series: (p) =>
       p.concentration.map((r) => ({
         fiscal_year: r.fiscal_year,
@@ -354,6 +402,13 @@ const METRICS: MetricDef[] = [
     description: "This university's HERD R&D as a share of the state's total HERD R&D, per fiscal year.",
     format: 'percent',
     source: 'agg_uni_state_context.share_of_state',
+    sources: [
+      {
+        id: 'ncses_herd',
+        subset: 'Q01 (Total R&D) for this institution ÷ sum of Q01 across same-state institutions × FY',
+      },
+      { id: 'ipeds', subset: 'HD directory: STABBR (state) attached to each institution_sk' },
+    ],
     series: (p) =>
       p.stateContext.map((r) => ({
         fiscal_year: r.fiscal_year,
@@ -901,7 +956,7 @@ function SmallMultiples({
                     ? `FY${latest.fiscal_year}: ${formatMetricValue(latest.value, metric.format)}`
                     : 'No data in range'
                 }
-                source={`${metric.label} · FY${startFy}–FY${endFy}`}
+                sources={metric.sources}
                 note={
                   peak && data.length > 1
                     ? `Peak FY${peak.fy} · ${formatMetricValue(peak.v, metric.format)}`
@@ -1010,10 +1065,12 @@ function CompareTable({
         <div className="flex flex-col gap-1 md:flex-row md:items-end md:justify-between">
           <div>
             <h2 className="h-section">Table view</h2>
-            <p className="text-[11px] italic text-text-tertiary">
-              Rows = fiscal year, columns = university. Same metric as charts above. Source:{' '}
-              <code className="text-[11px] bg-accent-muted/40 rounded px-1">{metric.source}</code>.
-            </p>
+            <div className="text-[11px] italic text-text-tertiary">
+              <p>Rows = fiscal year, columns = university. Same metric as charts above.</p>
+              <div className="mt-1 not-italic">
+                <SourceLine sources={metric.sources} variant={metric.sources.length > 1 ? 'block' : 'inline'} />
+              </div>
+            </div>
           </div>
           <a
             href={csvHref}

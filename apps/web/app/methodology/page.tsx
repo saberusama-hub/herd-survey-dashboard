@@ -1,5 +1,6 @@
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { SOURCES, type SourceId } from '@/lib/sources';
 
 export const metadata = {
   title: 'Methodology',
@@ -17,49 +18,30 @@ export default function MethodologyPage() {
 
       <section className="space-y-4">
         <h2 className="h-section">Sources</h2>
+        <p className="text-text-secondary">
+          Every chart on this dashboard cites the underlying federal raw data archive in its footer. The list below is a
+          quick reference — for the full bibliography with publication identifiers, raw-data download links, and "how to
+          verify any number" recipes, see{' '}
+          <a className="text-accent underline underline-offset-2" href="/sources">
+            /sources
+          </a>
+          .
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <SourceCard
-            name="HERD"
-            agency="NCSES"
-            url="https://ncses.nsf.gov/surveys/higher-education-research-development/"
-            desc="Annual self-reported R&D expenditures from U.S. universities. The 'top-down' source."
-          />
-          <SourceCard
-            name="USAspending"
-            agency="Treasury/OMB"
-            url="https://www.usaspending.gov/"
-            desc="Federal contract + assistance awards. Includes pro-rated period-of-performance allocation to fiscal years."
-          />
-          <SourceCard
-            name="NIH ExPORTER"
-            agency="NIH"
-            url="https://exporter.nih.gov/"
-            desc="NIH project-level awards. Includes funding IC, PI, project title, dates, cost."
-          />
-          <SourceCard
-            name="NSF Awards"
-            agency="NSF"
-            url="https://www.nsf.gov/awardsearch/"
-            desc="NSF award-level data. Includes obligations by FY and award mechanism."
-          />
-          <SourceCard
-            name="SBIR.gov"
-            agency="SBA"
-            url="https://www.sbir.gov/"
-            desc="Small Business Innovation Research + Small Business Technology Transfer awards (universities mostly via STTR)."
-          />
-          <SourceCard
-            name="Federal Funds"
-            agency="NCSES"
-            url="https://ncses.nsf.gov/surveys/federal-funds-research-development/"
-            desc="Agency-reported R&D obligations + outlays, used for the bridge reconciliation (Sheet 11)."
-          />
-          <SourceCard
-            name="BLS CPI-U"
-            agency="BLS"
-            url="https://www.bls.gov/cpi/"
-            desc="Consumer Price Index for All Urban Consumers. Used for real-dollar conversion (FY2024 base)."
-          />
+          {(
+            [
+              'ncses_herd',
+              'usaspending',
+              'nih_exporter',
+              'nsf_awards',
+              'sbir_sttr',
+              'ncses_federal_funds',
+              'ipeds',
+              'bls_cpi_u',
+            ] as SourceId[]
+          ).map((id) => (
+            <SourceCard key={id} source={SOURCES[id]} />
+          ))}
         </div>
       </section>
 
@@ -604,18 +586,33 @@ export default function MethodologyPage() {
   );
 }
 
-function SourceCard({ name, agency, url, desc }: { name: string; agency: string; url: string; desc: string }) {
+function SourceCard({ source }: { source: (typeof SOURCES)[SourceId] }) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>
-          <a className="hover:text-accent" href={url} target="_blank" rel="noopener noreferrer">
-            {name}
+          <a className="hover:text-accent" href={source.homeUrl} target="_blank" rel="noopener noreferrer">
+            {source.shortName}
           </a>
         </CardTitle>
-        <div className="text-2xs uppercase tracking-wide text-text-tertiary">{agency}</div>
+        <div className="text-2xs uppercase tracking-wide text-text-tertiary">
+          {source.publisherAcronym}
+          {source.identifier && <span> · {source.identifier}</span>}
+        </div>
       </CardHeader>
-      <CardContent className="text-sm text-text-secondary">{desc}</CardContent>
+      <CardContent className="text-sm text-text-secondary space-y-2">
+        <p>{source.description}</p>
+        <p className="text-[11px] text-text-tertiary">
+          <a
+            className="hover:text-accent underline-offset-2 hover:underline"
+            href={source.rawDataUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Raw data archive →
+          </a>
+        </p>
+      </CardContent>
     </Card>
   );
 }

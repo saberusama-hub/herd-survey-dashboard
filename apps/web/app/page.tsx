@@ -212,6 +212,10 @@ export default function HomePage() {
             every uni, FFRDC, hospital, lab, etc. in the federal-grant universe
           </span>
         ),
+        sources: [
+          { id: 'ipeds', subset: 'HD directory file, latest available year' },
+          { id: 'usaspending', subset: 'Recipient UEI universe joined to IPEDS' },
+        ],
       },
       {
         label: 'HERD-surveyed universities',
@@ -221,11 +225,13 @@ export default function HomePage() {
             the funding-traced subset (every $ flow on this site is for these)
           </span>
         ),
+        sources: [{ id: 'ncses_herd', subset: 'Reporting universe, FY2005–FY2024' }],
       },
       {
         label: kpis ? `FY${kpis.fy24} total university R&D` : 'Latest total R&D',
         value: kpis ? formatDollars(kpis.fy24_total) : '—',
         hint: <span className="text-text-tertiary text-[11px]">HERD Q01, all six funding sources combined</span>,
+        sources: [{ id: 'ncses_herd', subset: 'Q01 Total R&D summed across all institutions (latest FY)' }],
       },
       {
         label: kpis ? `FY${kpis.fy24} federal share` : 'Latest federal share',
@@ -235,11 +241,15 @@ export default function HomePage() {
             {fy24FederalPct !== null ? `${formatPercent(fy24FederalPct)} of the total` : 'federal slice of HERD'}
           </span>
         ),
+        sources: [
+          { id: 'ncses_herd', subset: 'Q01 federal-source dollars summed across all institutions (latest FY)' },
+        ],
       },
       {
         label: '20-yr cumulative federal R&D',
         value: kpis ? formatDollars(kpis.cum20_federal) : '—',
         hint: <span className="text-text-tertiary text-[11px]">FY2005–FY{kpis?.fy24 ?? '—'}, nominal dollars</span>,
+        sources: [{ id: 'ncses_herd', subset: 'Q01 federal-source dollars summed across all institutions × FY' }],
       },
       {
         label: topAgency ? `Largest funder, FY${topAgency.fy}` : 'Largest funder',
@@ -249,6 +259,7 @@ export default function HomePage() {
             {formatDollars(topAgency.amount_nominal)} · {formatPercent(topAgency.pct_of_federal)} of federal R&D
           </span>
         ) : undefined,
+        sources: [{ id: 'ncses_herd', subset: 'Q09 Federal R&D by Agency, largest bucket in latest FY' }],
       },
     ],
     [kpis, fy24FederalPct, topAgency],
@@ -333,7 +344,12 @@ export default function HomePage() {
           eyebrow="Leaderboard · latest reported FY"
           title="Top 10 universities by total R&D"
           dek="Click a row to view that profile."
-          source="HERD totals · USD nominal · agg_uni_total_rd"
+          sources={[
+            {
+              id: 'ncses_herd',
+              subset: 'Q01 (Total R&D Expenditures) per institution, latest reported FY, ranked top 10',
+            },
+          ]}
           methodology={{
             what: 'A quick ranking of the ten biggest U.S. research universities by total R&D spending in the most recent reported year.',
             how: 'For the latest fiscal year in `agg_uni_total_rd` we sort all HERD-tracked universities by `total_rd_nominal` (combined federal + state + industry + institutional + nonprofit + other) and take the top 10.',
@@ -373,7 +389,18 @@ export default function HomePage() {
           eyebrow={topics[0]?.fy ? `FY${topics[0].fy} ranking` : 'Latest FY ranking'}
           title="Top 10 research topics by federal $"
           dek="The biggest concrete research areas across NSF + NIH grants — the topics where most federal money landed."
-          source="agg_national_topic"
+          sources={[
+            {
+              id: 'nsf_awards',
+              subset:
+                'Award titles + abstracts regex-matched against 30-topic taxonomy, $ summed per topic for latest FY',
+            },
+            {
+              id: 'nih_exporter',
+              subset:
+                'Project titles + terms regex-matched against 30-topic taxonomy, $ summed per topic for latest FY',
+            },
+          ]}
           methodology={{
             what: 'A ranking of the ten research topics that attracted the most federal grant dollars in the most recent year — concrete subject areas like Cancer, AI/ML, Climate.',
             how: 'Every NSF and NIH grant is scanned against a hand-tuned 30-topic regex taxonomy (titles + NSF abstracts + NIH project terms). We sum the tagged dollars per topic for the latest FY and take the top 10.',
@@ -408,7 +435,13 @@ export default function HomePage() {
           eyebrow={agencyFy ? `FY${agencyFy} share` : 'Latest FY share'}
           title="Federal funding agencies by share"
           dek="Which federal departments paid the most to U.S. universities in the most recent reported year."
-          source="HERD Q09 · agg_national_agency_trend"
+          sources={[
+            {
+              id: 'ncses_herd',
+              subset:
+                'Q09 (Federal R&D by Agency) summed across HERD-tracked institutions per FY × agency bucket, latest reported FY',
+            },
+          ]}
           methodology={{
             what: 'How federal research dollars split across the major funding agencies in the most recent year — HHS (NIH), NSF, DOD, DOE, NASA, USDA, and "Other".',
             how: 'We take HERD Q09 ("Federal R&D by agency") for the latest reported FY and sum across all universities into the seven canonical buckets. Each bar shows total dollars and share of federal R&D.',
@@ -442,7 +475,12 @@ export default function HomePage() {
           eyebrow="FY2005–latest cumulative"
           title="20-year R&D by source"
           dek="How much each funding source has contributed across two decades — the absolute magnitude of federal, institutional, state, industry, nonprofit, and other."
-          source="agg_national_overview"
+          sources={[
+            {
+              id: 'ncses_herd',
+              subset: 'Q01 (Sources of Funds) summed across all HERD-tracked institutions, cumulative FY2005–FY2024',
+            },
+          ]}
           methodology={{
             what: 'A horizontal bar showing the total dollars each funding source has put into U.S. university research over the full 20-year window.',
             how: 'We sum HERD Q01 reported amounts across all institutions and all fiscal years, grouped by source category (federal, state, industry, institutional, nonprofit, other). Bars are sorted by total contribution.',
@@ -470,7 +508,13 @@ export default function HomePage() {
           eyebrow="Latest reported FY"
           title="Top 10 states by federal R&D"
           dek="Where federal research money lands geographically — the ten states that received the largest share in the most recent year."
-          source="agg_uni_source_split × dim_institution"
+          sources={[
+            {
+              id: 'ncses_herd',
+              subset: 'Q01 federal-source dollars per institution, latest FY',
+            },
+            { id: 'ipeds', subset: 'HD directory: STABBR (state) for each institution_sk' },
+          ]}
           methodology={{
             what: 'A ranking of the ten U.S. states whose universities received the most federal research funding in the most recent year.',
             how: 'For the latest fiscal year we join `agg_uni_source_split` (federal-source rows) to `dim_institution.state_code`, sum federal dollars per state, and take the top 10.',

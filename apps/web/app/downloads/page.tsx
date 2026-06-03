@@ -1,5 +1,7 @@
+import { SourceLine } from '@/components/editorial/SourceLine';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { PARQUET_SOURCES } from '@/lib/data-sources';
 import manifest from '@/public/manifest.json' assert { type: 'json' };
 import { Download } from 'lucide-react';
 
@@ -100,7 +102,7 @@ function FileTable({ files }: { files: [string, ManifestFile][] }) {
       <table className="w-full text-sm min-w-[640px]">
         <thead>
           <tr className="border-b border-border text-text-secondary">
-            <th className="text-left font-medium px-3 md:px-6 py-3">File</th>
+            <th className="text-left font-medium px-3 md:px-6 py-3">File &middot; upstream raw source</th>
             <th className="text-right font-medium px-3 md:px-6 py-3">Rows</th>
             <th className="text-right font-medium px-3 md:px-6 py-3">Size</th>
             <th className="text-right font-medium px-3 md:px-6 py-3">Columns</th>
@@ -108,25 +110,41 @@ function FileTable({ files }: { files: [string, ManifestFile][] }) {
           </tr>
         </thead>
         <tbody>
-          {files.map(([name, info]) => (
-            <tr key={name} className="border-b border-border/60 last:border-0 hover:bg-accent-muted/20">
-              <td className="px-3 md:px-6 py-2.5 font-mono text-xs">{name}.parquet</td>
-              <td className="px-3 md:px-6 py-2.5 text-right tabular-nums">{info.rows.toLocaleString('en-US')}</td>
-              <td className="px-3 md:px-6 py-2.5 text-right tabular-nums text-text-secondary">
-                {(info.size_bytes / 1024).toFixed(0)} KB
-              </td>
-              <td className="px-3 md:px-6 py-2.5 text-right tabular-nums text-text-tertiary">{info.columns.length}</td>
-              <td className="px-3 md:px-6 py-2.5 text-right">
-                <a
-                  href={`/data/${name}.parquet`}
-                  download
-                  className="inline-flex items-center gap-1.5 text-accent hover:underline"
-                >
-                  <Download className="h-3.5 w-3.5" /> .parquet
-                </a>
-              </td>
-            </tr>
-          ))}
+          {files.map(([name, info]) => {
+            const provenance = PARQUET_SOURCES[name];
+            return (
+              <tr key={name} className="border-b border-border/60 last:border-0 hover:bg-accent-muted/20 align-top">
+                <td className="px-3 md:px-6 py-3">
+                  <p className="font-mono text-xs">{name}.parquet</p>
+                  {provenance && (
+                    <>
+                      <p className="mt-1 text-[11px] text-text-secondary leading-snug">{provenance.description}</p>
+                      <div className="mt-1.5 text-[11px] leading-snug text-text-tertiary">
+                        <SourceLine
+                          sources={provenance.sources}
+                          variant={provenance.sources.length > 1 ? 'block' : 'inline'}
+                        />
+                      </div>
+                    </>
+                  )}
+                </td>
+                <td className="px-3 md:px-6 py-3 text-right tabular-nums">{info.rows.toLocaleString('en-US')}</td>
+                <td className="px-3 md:px-6 py-3 text-right tabular-nums text-text-secondary">
+                  {(info.size_bytes / 1024).toFixed(0)} KB
+                </td>
+                <td className="px-3 md:px-6 py-3 text-right tabular-nums text-text-tertiary">{info.columns.length}</td>
+                <td className="px-3 md:px-6 py-3 text-right">
+                  <a
+                    href={`/data/${name}.parquet`}
+                    download
+                    className="inline-flex items-center gap-1.5 text-accent hover:underline"
+                  >
+                    <Download className="h-3.5 w-3.5" /> .parquet
+                  </a>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

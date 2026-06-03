@@ -2,6 +2,7 @@
 
 import { useDuckDB } from '@/app/providers';
 import { USStateMap } from '@/components/charts/USStateMap';
+import { SourceLine } from '@/components/editorial/SourceLine';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { StorySection } from '@/components/layout/StorySection';
 import { type StateRollup, stateRollup } from '@/lib/queries';
@@ -137,7 +138,14 @@ export default function GeographyStory() {
               {highlighted.length > 0 && (
                 <p className="t-small text-text-secondary">Watching: {highlighted.join(' · ')}</p>
               )}
-              <p className="t-caption">Sheet 07 cross-source reconciliation · HERD federal R&amp;D · USD nominal</p>
+              <div className="t-caption">
+                <SourceLine
+                  variant="inline"
+                  sources={[
+                    { id: 'ncses_herd', subset: `Q09 federal R&D per institution joined to state, summed for FY${fy}` },
+                  ]}
+                />
+              </div>
             </div>
           );
         }}

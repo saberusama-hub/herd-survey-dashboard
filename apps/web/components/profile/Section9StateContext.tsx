@@ -70,7 +70,13 @@ export function Section9StateContext({ profile }: Props) {
           eyebrow="Share of state R&D"
           title={firstFy && latestFy ? `FY${firstFy} → FY${latestFy} share` : 'Share of state R&D'}
           dek="This institution's R&D as a fraction of all R&D performed by HERD-tracked institutions in the same state."
-          source="agg_uni_state_context"
+          sources={[
+            {
+              id: 'ncses_herd',
+              subset: 'Q01 (Total R&D) for this institution ÷ sum of Q01 across same-state institutions × FY',
+            },
+            { id: 'ipeds', subset: 'HD directory: STABBR (state) attached to each institution_sk' },
+          ]}
           methodology={{
             what: 'How big a fish this university is in its own state — what slice of all university research spending in the state belongs to it.',
             how: 'For each fiscal year we divide this institution’s total HERD R&D by the sum of HERD R&D across every HERD-tracked university in the same state. The two endpoints (first and latest reported FY) are shown side by side; the sparkline traces the in-between years.',
@@ -116,7 +122,10 @@ export function Section9StateContext({ profile }: Props) {
           eyebrow="Peer institutions"
           title="Same state, similar R&D size"
           dek="Up to five same-state peers within ±25% of this institution's latest total R&D, sorted by R&D-size closeness."
-          source="agg_uni_peers"
+          sources={[
+            { id: 'ncses_herd', subset: 'Q01 (Total R&D) used for ±25% size matching of same-state peers' },
+            { id: 'ipeds', subset: 'HD directory: STABBR (state) attached to each institution_sk' },
+          ]}
           methodology={{
             what: 'A short list of other universities in the same state with roughly comparable research spending — useful for benchmarking.',
             how: 'Peers are HERD-tracked universities in the same `state_code` whose latest total R&D falls within ±25% of this institution’s. We rank by closeness in absolute dollars and keep up to five.',
@@ -155,7 +164,16 @@ export function Section9StateContext({ profile }: Props) {
           eyebrow="Patent productivity"
           title="Patents per federal award"
           dek="Patent counts come from USPTO assignee data — not yet loaded into this build."
-          source="agg_uni_patents (stub)"
+          sources={[
+            {
+              id: 'nsf_awards',
+              subset: 'Award counts per institution × FY used as denominator (numerator from USPTO not yet ingested)',
+            },
+            {
+              id: 'nih_exporter',
+              subset: 'Project counts per institution × FY used as denominator (numerator from USPTO not yet ingested)',
+            },
+          ]}
           note="USPTO ingestion is out of scope for the current data layer. The metric will appear here once that source is added."
           methodology={{
             what: 'How efficiently this university converts federal research grants into issued patents — a rough proxy for translational productivity.',

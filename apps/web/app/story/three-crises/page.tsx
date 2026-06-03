@@ -2,6 +2,7 @@
 
 import { useDuckDB } from '@/app/providers';
 import { LineChart } from '@/components/charts/LineChart';
+import { SourceLine } from '@/components/editorial/SourceLine';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { StorySection } from '@/components/layout/StorySection';
 import type { TimelineEvent } from '@/lib/annotations';
@@ -191,7 +192,18 @@ export default function ThreeCrisesStory() {
               directLabels={false}
               referenceBands={BAND_BY_STEP[activeId] ?? []}
             />
-            <p className="t-caption">Sheet 04 federal R&amp;D by agency · USD nominal</p>
+            <div className="t-caption">
+              <SourceLine
+                variant="inline"
+                sources={[
+                  {
+                    id: 'ncses_herd',
+                    subset:
+                      'Q09 (Federal R&D by Agency) summed across all HERD-tracked institutions per FY, FY2005–FY2024',
+                  },
+                ]}
+              />
+            </div>
           </div>
         )}
       />

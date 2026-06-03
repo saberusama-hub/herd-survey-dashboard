@@ -83,6 +83,10 @@ export function Section6PIs({ profile }: Props) {
         label: `Distinct federal PIs · FY${latestPi.fiscal_year}`,
         value: formatCount(Number(latestPi.distinct_pi_count) || 0),
         hint: <span className="text-text-tertiary">unique PIs (lead + co-PIs) with any NSF or NIH grant</span>,
+        sources: [
+          { id: 'nsf_awards', subset: 'Lead PI per award for this institution × FY' },
+          { id: 'nih_exporter', subset: 'PI bridge file (project × PI) for this institution × FY' },
+        ],
       },
       {
         label: `Federal $ per PI · FY${latestPi.fiscal_year}`,
@@ -90,11 +94,19 @@ export function Section6PIs({ profile }: Props) {
           decimals: 2,
         }),
         hint: <span className="text-text-tertiary">total NSF+NIH funding ÷ distinct PI count</span>,
+        sources: [
+          { id: 'nsf_awards', subset: 'Total NSF $ for this institution × FY ÷ distinct PI count' },
+          { id: 'nih_exporter', subset: 'Total NIH $ for this institution × FY ÷ distinct PI count' },
+        ],
       },
       {
         label: `Multi-PI team share · FY${latestTeamFy}`,
         value: formatPercent(multiPiShare),
         hint: <span className="text-text-tertiary">share of federal $ to grants with 2+ PIs</span>,
+        sources: [
+          { id: 'nsf_awards', subset: 'n_pi field per award; bucketed' },
+          { id: 'nih_exporter', subset: 'PI bridge count per project; bucketed' },
+        ],
       },
     ];
 
@@ -156,7 +168,13 @@ export function Section6PIs({ profile }: Props) {
           eyebrow="PI count trajectory"
           title="Distinct federal PIs per fiscal year"
           dek="Every unique person who held a NSF or NIH grant in the year — lead PIs plus co-PIs from multi-PI projects."
-          source="agg_uni_pi_universe (raw NSF awards ∪ NIH PI bridge)"
+          sources={[
+            { id: 'nsf_awards', subset: 'Lead PI per award for this institution; distinct PIs counted per FY' },
+            {
+              id: 'nih_exporter',
+              subset: 'PI bridge file (one row per project × PI) for this institution; distinct PIs counted per FY',
+            },
+          ]}
           methodology={{
             what: 'How many individual researchers at this university held a federal NSF or NIH grant in each year.',
             how: 'For every fiscal year we count distinct PIs that appear in the raw NSF Awards file or the NIH RePORTER PI bridge. The two universes are unioned and deduplicated by name + institution.',
@@ -182,7 +200,16 @@ export function Section6PIs({ profile }: Props) {
               ? `Single-PI grants drove ${formatDollars(single.amount, { decimals: 1 })}; the rest came from teams of 2+.`
               : 'Distribution of federal funding across grant team-size buckets.'
           }
-          source="agg_uni_team_size (NSF n_pi ∪ NIH PI bridge count)"
+          sources={[
+            {
+              id: 'nsf_awards',
+              subset: 'n_pi field per award for this institution; bucketed by team count for latest FY',
+            },
+            {
+              id: 'nih_exporter',
+              subset: 'PI bridge COUNT(DISTINCT pi_id) per project for this institution; bucketed for latest FY',
+            },
+          ]}
           methodology={{
             what: 'Of every federal dollar coming into this university, how much went to lone researchers vs. larger collaborative teams.',
             how: 'Each NSF or NIH grant is bucketed by its team size (1, 2-5, 6-10, 11-20, 21+ PIs). Team size comes from the NSF `n_pi` field and the NIH `PI_IDS` array (unnested). We sum the dollar amount of grants in each bucket for the latest fiscal year.',
@@ -207,7 +234,16 @@ export function Section6PIs({ profile }: Props) {
           eyebrow={distLatestFy ? `FY${distLatestFy} distribution` : 'PI $ distribution'}
           title="How federal $ spreads across PIs (deciles)"
           dek="Mean dollar amount per PI in each decile of the latest-year roster (1 = lowest-funded, 10 = highest-funded)."
-          source="agg_uni_pi_distribution"
+          sources={[
+            {
+              id: 'nsf_awards',
+              subset: 'NSF lead PI obligations bucketed into deciles per institution × FY',
+            },
+            {
+              id: 'nih_exporter',
+              subset: 'NIH PI total_cost bucketed into deciles per institution × FY',
+            },
+          ]}
           note={
             distRows.length > 0
               ? `Top decile carries ${formatDollars(distRows[distRows.length - 1]?.avg_amount ?? 0, {
