@@ -8,20 +8,31 @@ interface Props {
 }
 
 /**
- * Editorial section divider. Renders a full-width rule, a colored bullet +
- * eyebrow, then a section title and optional dek. Used to break a long-form
- * profile / national page into named sections (spec §4.3 pattern #2).
+ * Editorial section divider — accent rule on top, oversized eyebrow chip,
+ * confident title, optional italic dek. Used to break long-form profile /
+ * national pages into named sections.
  */
 export function SectionDivider({ eyebrow, title, dek, color = 'hsl(var(--accent))' }: Props) {
   return (
-    <div className="py-12">
-      <div className="h-px w-full" style={{ background: color }} />
-      <div className="mt-6 flex items-center gap-2">
-        <span aria-hidden className="inline-block h-2 w-2 rounded-full" style={{ background: color }} />
-        <span className="text-[11px] uppercase tracking-wider text-text-tertiary">{eyebrow}</span>
+    <div className="mt-16 mb-8 first:mt-0">
+      {/* Top accent rule — confident, single-color, tight. */}
+      <div className="flex items-center gap-3">
+        <span aria-hidden className="block h-[2px] w-10" style={{ background: color }} />
+        <span className="t-eyebrow-lg" style={{ color }}>
+          {eyebrow}
+        </span>
       </div>
-      <h2 className="mt-2 text-2xl font-bold text-text-primary">{title}</h2>
-      {dek && <p className="mt-1 text-sm italic text-text-secondary max-w-prose">{dek}</p>}
+      <h2
+        className="mt-4 font-sans font-bold tracking-tight text-text-primary"
+        style={{
+          fontSize: 'clamp(1.625rem, 1.5vw + 1rem, 2.25rem)',
+          lineHeight: 1.1,
+          letterSpacing: '-0.02em',
+        }}
+      >
+        {title}
+      </h2>
+      {dek && <p className="t-dek mt-2">{dek}</p>}
     </div>
   );
 }

@@ -202,9 +202,114 @@
     @apply font-mono text-num tabular-nums text-text-primary;
   }
 
+  /* ===== Refined editorial type scale (design refresh) =====
+   *
+   * Within the Calibri-only constraint (400 + 700 weights available), drama
+   * comes from size + tracking + color contrast, not from weight or face.
+   */
+
+  /* Oversized headline for hero moments — homepage, story leads. */
+  .t-display-xl {
+    @apply font-sans font-bold tabular-nums text-text-primary;
+    font-size: clamp(3rem, 5.5vw + 1rem, 5.5rem);
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  /* Hero numbers — KPI strip leads, marquee figures. */
+  .t-num-display {
+    @apply font-sans font-bold tabular-nums text-text-primary;
+    font-size: clamp(2.25rem, 3vw + 1rem, 3.25rem);
+    line-height: 1;
+    letter-spacing: -0.025em;
+  }
+
+  /* Confident KPI tile values — large but composed. */
+  .t-num-tile {
+    @apply font-sans font-bold tabular-nums text-text-primary;
+    font-size: 1.875rem;
+    line-height: 1.05;
+    letter-spacing: -0.015em;
+  }
+
+  /* Tracked eyebrow — uppercase chips above headers. */
+  .t-eyebrow {
+    @apply font-sans text-2xs uppercase text-text-tertiary;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+  }
+
+  /* Section divider eyebrow — larger, bolder. */
+  .t-eyebrow-lg {
+    @apply font-sans uppercase text-text-tertiary;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+  }
+
+  /* Editorial dek under a hero title. Italic for editorial feel. */
+  .t-dek {
+    @apply font-sans italic text-text-secondary;
+    font-size: 1.0625rem;
+    line-height: 1.55;
+    letter-spacing: -0.005em;
+    max-width: 38rem;
+  }
+
+  /* Pull quote / callout — for inline editorial moments. */
+  .t-quote {
+    @apply font-sans italic text-text-primary;
+    font-size: 1.5rem;
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+  }
+
+  /* Tiny metadata line under headers. */
+  .t-meta {
+    @apply font-sans text-text-tertiary tabular-nums;
+    font-size: 0.6875rem;
+    line-height: 1.3;
+  }
+
   /* ===== Rules + dividers ===== */
   .rule {
     @apply border-t border-rule;
+  }
+
+  /* Hairline rule — softer than the default border for editorial layouts. */
+  .hairline {
+    border-color: hsl(var(--rule) / 0.6);
+  }
+
+  /* Top accent rule — thin colored strip above headers/sections. */
+  .accent-rule {
+    position: relative;
+  }
+  .accent-rule::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 2.5rem;
+    height: 2px;
+    background: hsl(var(--accent));
+  }
+
+  /* ===== Surfaces ===== */
+
+  /* KPI tile — borderless, hairline top rule, hover-lift. */
+  .surface-tile {
+    @apply relative bg-transparent transition-all;
+    border-top: 1px solid hsl(var(--rule));
+    padding: 1.25rem 0 1rem;
+  }
+  .surface-tile:hover {
+    border-top-color: hsl(var(--accent));
+  }
+
+  /* Soft radial wash for hero backgrounds — subtle, not gimmicky. */
+  .accent-wash {
+    background: radial-gradient(ellipse at top right, hsl(var(--accent) / 0.06), transparent 50%);
   }
 }
 
@@ -214,6 +319,56 @@
   }
   .font-italic-serif {
     @apply font-serif italic;
+  }
+
+  /* ===== Motion primitives ===== */
+
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes draw-line {
+    from {
+      stroke-dashoffset: 1000;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /* Apply via data-state on a parent observed by useInView. */
+  .reveal {
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1), transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+  .reveal[data-state="visible"] {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Quick fade for inline elements (no transform). */
+  .animate-fade-in {
+    animation: fade-in 0.6s ease-out both;
+  }
+  .animate-fade-in-up {
+    animation: fade-in-up 0.6s cubic-bezier(0.25, 1, 0.5, 1) both;
   }
 }
 

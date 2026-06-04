@@ -313,27 +313,58 @@ export default function HomePage() {
   );
 
   return (
-    <div className="container-wide pt-12 pb-20 md:pt-20 md:pb-28 space-y-14 md:space-y-20">
+    <div className="container-wide pt-12 pb-20 md:pt-20 md:pb-28 space-y-16 md:space-y-24">
       {/* ─── Editorial hero ─── */}
-      <header className="space-y-7 max-w-3xl">
-        <p className="text-[11px] uppercase tracking-wider text-text-tertiary">
-          A data product by Research Data Platform
-        </p>
-        <h1 className="text-4xl md:text-6xl font-bold text-text-primary leading-[1.05] tracking-tight">
-          U.S. University Research Funding
-        </h1>
-        <p className="text-lg md:text-xl italic text-text-secondary max-w-2xl leading-relaxed">
-          Twenty years. Eight hundred institutions. Seven federal agencies. One data lake — queryable, exportable,
-          reproducible.
-        </p>
-        {/* Search box: prominent placement so visitors looking for a specific
-            uni see the input immediately, before the KPI strip. */}
-        <div className="pt-2">
-          <UniversitySearchBox className="w-full md:max-w-xl" />
+      <header className="accent-wash -mx-6 -mt-12 px-6 pb-12 pt-12 sm:-mx-8 sm:px-8 md:-mt-20 md:pt-20">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1.4fr_1fr] lg:items-end lg:gap-16">
+          <div className="space-y-6">
+            <p className="t-eyebrow text-accent">
+              <span
+                aria-hidden
+                className="mr-2 inline-block h-1.5 w-1.5 -translate-y-[2px] rounded-full bg-accent align-middle"
+              />
+              A data product by Research Data Platform
+            </p>
+            <h1 className="t-display-xl max-w-[14ch]">
+              U.S. University
+              <br />
+              Research Funding.
+            </h1>
+            <p className="t-dek">
+              Twenty years. Eight hundred institutions. Seven federal agencies. One data lake — queryable, exportable,
+              reproducible.
+            </p>
+            <div className="pt-3">
+              <UniversitySearchBox className="w-full md:max-w-xl" />
+            </div>
+          </div>
+
+          {/* Marquee figure — the headline FY24 total floating beside the title. */}
+          <div className="hidden lg:block">
+            <div className="border-l border-rule pl-8">
+              <p className="t-eyebrow text-text-tertiary">
+                {kpis ? `Latest reported FY${kpis.fy24}` : 'Latest reported FY'}
+              </p>
+              <p className="t-num-display mt-3">{kpis ? formatDollars(kpis.fy24_total) : '—'}</p>
+              <p className="mt-3 max-w-xs text-[13px] leading-snug text-text-secondary">
+                Total HERD-reported research and development spending across every U.S. doctorate-granting university —
+                federal, state, industry, and own funds combined.
+              </p>
+              {kpis && (
+                <p className="mt-3 text-[11px] uppercase tracking-wider text-text-tertiary tabular-nums">
+                  {formatDollars(kpis.fy24_federal)}
+                  <span className="ml-1.5 normal-case tracking-normal text-text-tertiary">
+                    from federal sources
+                    {fy24FederalPct !== null && <span className="ml-1.5">· {formatPercent(fy24FederalPct)} share</span>}
+                  </span>
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       </header>
 
-      {/* ─── KPI strip: 6 tiles, 3x2 on desktop / 2x3 on tablet / stacked mobile ─── */}
+      {/* ─── KPI strip: 6 tiles ─── */}
       <section aria-label="Headline figures">
         <KpiStrip tiles={tiles} cols={3} />
       </section>
@@ -547,21 +578,37 @@ export default function HomePage() {
       </section>
 
       {/* ─── CTAs ─── */}
-      <section className="flex flex-wrap gap-4">
-        <Link
-          href="/universities"
-          className="px-5 py-2.5 rounded bg-accent text-paper hover:bg-accent-strong transition-colors text-sm font-medium"
-        >
-          Browse all universities &rarr;
-        </Link>
-        <Link
-          href="/national"
-          className="px-5 py-2.5 rounded border border-accent text-accent hover:bg-accent hover:text-paper transition-colors text-sm font-medium"
-        >
-          Explore the national view &rarr;
-        </Link>
+      <section className="border-t border-rule pt-12">
+        <p className="t-eyebrow text-text-tertiary mb-5">Where to next</p>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <CtaCard href="/universities" eyebrow="Browse" title="All 1,014 universities" />
+          <CtaCard href="/national" eyebrow="Aggregate" title="National view" />
+          <CtaCard href="/topics" eyebrow="Taxonomy" title="30 research topics" />
+          <CtaCard href="/sbir" eyebrow="Small business" title="SBIR / STTR awards" />
+          <CtaCard href="/compare" eyebrow="Side-by-side" title="Compare institutions" />
+          <CtaCard href="/sources" eyebrow="Provenance" title="Federal raw sources" />
+        </div>
       </section>
     </div>
+  );
+}
+
+/* ───────────── CtaCard — refined CTA used in the homepage footer ─────────── */
+
+function CtaCard({ href, eyebrow, title }: { href: string; eyebrow: string; title: string }) {
+  return (
+    <Link
+      href={href}
+      className="group flex flex-col gap-1 border-t border-rule pt-4 pr-2 transition-colors hover:border-accent"
+    >
+      <p className="t-eyebrow text-text-tertiary transition-colors group-hover:text-accent">{eyebrow}</p>
+      <p className="text-[17px] font-semibold tracking-tight text-text-primary transition-colors group-hover:text-accent">
+        {title}{' '}
+        <span aria-hidden className="ml-0.5 inline-block transition-transform group-hover:translate-x-0.5">
+          →
+        </span>
+      </p>
+    </Link>
   );
 }
 

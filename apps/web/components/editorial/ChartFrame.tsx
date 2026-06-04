@@ -3,6 +3,7 @@
 import { type ReactNode, useId, useState } from 'react';
 
 import type { SourceCitation } from '@/lib/sources';
+import { useInView } from '@/lib/use-in-view';
 
 import { SourceLine } from './SourceLine';
 
@@ -27,10 +28,9 @@ interface Props {
   source?: string;
   /**
    * Structured source citations. Each entry names one upstream federal raw
-   * dataset (NCSES HERD, NIH ExPORTER, NSF Awards, etc.) and the specific
-   * subset used (table, column, year filter). Rendered as a bulleted block
-   * when multiple sources contribute, inline when a single source. A reader
-   * can Google any chunk of the citation and land on the publisher's archive.
+   * dataset and the specific subset used (table, column, year filter).
+   * Rendered as a bulleted block when multiple sources contribute, inline
+   * when a single source.
    */
   sources?: SourceCitation[];
   note?: string;
@@ -38,36 +38,46 @@ interface Props {
    * Plain-English description of what the chart shows + how it's computed.
    * Renders behind a (?) icon next to the title. When the icon is clicked,
    * a small inline panel reveals beneath the header.
-   *
-   * S3 layman-description feature.
    */
   methodology?: ChartMethodology;
   children: ReactNode;
 }
 
 /**
- * Editorial chart wrapper. Renders a Bloomberg / Economist-style header
- * (eyebrow, title, dek) above the chart and a single-line source / note
- * footer below.
+ * Editorial chart wrapper. The container is a `<figure>` with:
+ *   - a hairline top rule for structural rhythm,
+ *   - an uppercase tracked eyebrow,
+ *   - an oversized confident title (Calibri, tight tracking),
+ *   - an italic dek for editorial voice,
+ *   - the chart body, and
+ *   - a citation footer that links to the upstream federal raw archive.
  *
- * Spec section 4.3 pattern #1 — every chart is wrapped in this frame.
- *
- * Phase S3: optional `methodology` prop adds a (?) icon next to the title.
- * Clicking it reveals a plain-language "what this is / how computed / caveats"
- * panel for layperson readers.
+ * Sections fade in from below on first intersection. The animation is purely
+ * CSS-driven (a data-attribute flip on the wrapper) so React reconciliation
+ * stays cheap.
  */
 export function ChartFrame({ eyebrow, title, dek, source, sources, note, methodology, children }: Props) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
+  const { ref, inView } = useInView();
   const hasStructured = Array.isArray(sources) && sources.length > 0;
   const hasFooter = hasStructured || Boolean(source) || Boolean(note);
 
   return (
-    <figure className="space-y-3">
-      <header className="space-y-1">
-        {eyebrow && <p className="text-[11px] uppercase tracking-wider text-text-tertiary">{eyebrow}</p>}
+    <figure
+      ref={ref}
+      className="reveal group/figure border-t border-rule pt-5"
+      data-state={inView ? 'visible' : undefined}
+    >
+      <header className="space-y-2">
+        {eyebrow && <p className="t-eyebrow text-text-tertiary">{eyebrow}</p>}
         <div className="flex items-baseline gap-2 flex-wrap">
-          <h3 className="text-[17px] font-semibold text-text-primary">{title}</h3>
+          <h3
+            className="font-sans font-bold tracking-tight text-text-primary"
+            style={{ fontSize: '1.375rem', lineHeight: 1.15, letterSpacing: '-0.015em' }}
+          >
+            {title}
+          </h3>
           {methodology && (
             <button
               type="button"
@@ -75,18 +85,18 @@ export function ChartFrame({ eyebrow, title, dek, source, sources, note, methodo
               aria-expanded={open}
               aria-controls={panelId}
               aria-label="What this chart shows"
-              className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-rule text-[11px] font-medium text-text-tertiary hover:bg-mute-3 hover:text-text-secondary focus:outline-none focus:ring-2 focus:ring-accent transition-colors"
+              className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-rule text-[11px] font-medium text-text-tertiary transition-colors hover:border-accent hover:bg-accent/5 hover:text-accent focus:outline-none focus:ring-2 focus:ring-accent"
             >
               <span aria-hidden>?</span>
             </button>
           )}
         </div>
-        {dek && <p className="text-sm italic text-text-secondary max-w-prose">{dek}</p>}
+        {dek && <p className="t-dek max-w-prose">{dek}</p>}
         {methodology && open && (
           <section
             id={panelId}
             aria-label="Chart methodology"
-            className="mt-2 rounded border border-rule bg-mute-3 px-3 py-2 text-[12px] leading-relaxed text-text-secondary max-w-prose space-y-1.5"
+            className="animate-fade-in-up mt-3 rounded-sm border-l-2 border-accent bg-accent/[0.03] px-4 py-3 text-[12px] leading-relaxed text-text-secondary max-w-prose space-y-1.5"
           >
             <p>
               <span className="font-semibold text-text-primary">What it shows:</span> {methodology.what}
@@ -102,9 +112,9 @@ export function ChartFrame({ eyebrow, title, dek, source, sources, note, methodo
           </section>
         )}
       </header>
-      <div>{children}</div>
+      <div className="mt-5">{children}</div>
       {hasFooter && (
-        <figcaption className="border-t border-rule pt-2 text-[11px] leading-relaxed text-text-tertiary">
+        <figcaption className="mt-4 border-t border-rule/60 pt-3 text-[11px] leading-relaxed text-text-tertiary">
           {hasStructured ? (
             <SourceLine
               sources={sources as SourceCitation[]}
@@ -114,12 +124,12 @@ export function ChartFrame({ eyebrow, title, dek, source, sources, note, methodo
             <span>Source: {source}</span>
           ) : null}
           {note && (
-            <span className="block mt-1">
+            <span className="mt-1 block">
               <span className="font-medium text-text-secondary">Note:</span> {note}
             </span>
           )}
           <span className="mt-1 block text-text-tertiary">
-            Chart: Research Data Platform · Trace every number back to its federal raw archive at{' '}
+            Chart: Research Data Platform · Trace every number to its federal raw archive at{' '}
             <a href="/sources" className="underline-offset-2 hover:text-accent hover:underline">
               /sources
             </a>

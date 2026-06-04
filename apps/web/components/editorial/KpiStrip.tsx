@@ -1,6 +1,9 @@
+'use client';
+
 import type { ReactNode } from 'react';
 
 import type { SourceCitation } from '@/lib/sources';
+import { useInView } from '@/lib/use-in-view';
 
 import { SourceLine } from './SourceLine';
 
@@ -14,9 +17,7 @@ export interface KpiTile {
   hint?: ReactNode;
   /**
    * Upstream federal source(s) that produced this tile's value. Rendered as a
-   * compact footer with link to publisher homepage. Every value on the
-   * dashboard is traceable to its raw federal archive — this is the
-   * tile-level surface for that.
+   * compact footer with link to publisher homepage.
    */
   sources?: SourceCitation[];
 }
@@ -28,28 +29,35 @@ interface Props {
 }
 
 /**
- * Horizontal row of KPI tiles. Spec §4.3 pattern #3 — used as the hero
- * strip on profile / national pages and inside dense dashboards. Values are
- * formatted upstream so this component never decides number style.
+ * Borderless KPI strip: each tile is a hairline-topped cell with a confident
+ * tabular number, an uppercase eyebrow label, and an optional hint + source
+ * footer. The hairline shifts to accent on hover for a quiet lift.
  *
- * Each tile can declare its own upstream federal source(s) via the optional
- * `sources` prop. When provided, a compact "Source:" footer renders inside
- * the tile, linking to the publisher's homepage.
+ * Spec §4.3 pattern #3 — values are formatted upstream; this component
+ * never decides number style.
  */
 export function KpiStrip({ tiles, cols }: Props) {
   const c = cols ?? (Math.min(tiles.length, 4) as 2 | 3 | 4);
   const gridClass = c === 2 ? 'grid-cols-2' : c === 3 ? 'grid-cols-2 lg:grid-cols-3' : 'grid-cols-2 lg:grid-cols-4';
+  const { ref, inView } = useInView();
 
   return (
-    <div className={`grid ${gridClass} gap-4`}>
-      {tiles.map((t) => (
-        <div key={t.label} className="flex flex-col rounded border border-border bg-surface p-4">
-          <p className="text-[11px] uppercase tracking-wider text-text-tertiary">{t.label}</p>
-          <p className="mt-1 text-2xl font-semibold text-text-primary tnum">{t.value}</p>
-          {t.delta && <p className="mt-1 text-xs text-text-secondary tnum">{t.delta}</p>}
-          {t.hint && <div className="mt-2">{t.hint}</div>}
+    <div ref={ref} className={`grid ${gridClass} gap-x-6 gap-y-8 sm:gap-x-10`}>
+      {tiles.map((t, i) => (
+        <div
+          key={t.label}
+          className="reveal flex flex-col"
+          data-state={inView ? 'visible' : undefined}
+          style={inView ? { transitionDelay: `${i * 60}ms` } : undefined}
+        >
+          <div className="surface-tile group">
+            <p className="t-eyebrow mb-3 transition-colors group-hover:text-accent">{t.label}</p>
+            <p className="t-num-tile">{t.value}</p>
+            {t.delta && <p className="mt-1.5 text-[12px] text-text-secondary tabular-nums">{t.delta}</p>}
+            {t.hint && <div className="mt-2.5 text-[12px] leading-snug text-text-secondary">{t.hint}</div>}
+          </div>
           {t.sources && t.sources.length > 0 && (
-            <div className="mt-auto pt-2">
+            <div className="mt-3 pt-2">
               <SourceLine sources={t.sources} variant="compact" />
             </div>
           )}
