@@ -15,12 +15,13 @@ interface Props {
 export function SectionDivider({ eyebrow, title, dek, color = 'hsl(var(--accent))' }: Props) {
   return (
     <div className="mt-16 mb-8 first:mt-0">
-      {/* Top accent rule — confident, single-color, tight. */}
+      {/* Accent strip carries the color signal. Text stays muted so contrast is
+       * always WCAG-AA against the paper background (agency colors like
+       * goldenrod/plum/forest fail on text at 12px even when they pass on
+       * chart fills). */}
       <div className="flex items-center gap-3">
         <span aria-hidden className="block h-[2px] w-10" style={{ background: color }} />
-        <span className="t-eyebrow-lg" style={{ color }}>
-          {eyebrow}
-        </span>
+        <span className="t-eyebrow-lg">{eyebrow}</span>
       </div>
       <h2
         className="mt-4 font-sans font-bold tracking-tight text-text-primary"

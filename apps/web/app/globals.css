@@ -352,6 +352,15 @@
     }
   }
 
+  @keyframes shimmer {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
+
   /* Apply via data-state on a parent observed by useInView. */
   .reveal {
     opacity: 0;
