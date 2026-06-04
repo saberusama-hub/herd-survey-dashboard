@@ -1,3 +1,5 @@
+'use client';
+
 import { ResponsiveSvg } from '@/components/charts/ResponsiveSvg';
 import { ChartFrame } from '@/components/editorial/ChartFrame';
 import { KpiStrip, type KpiTile } from '@/components/editorial/KpiStrip';
