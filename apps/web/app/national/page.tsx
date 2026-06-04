@@ -1452,9 +1452,10 @@ function IcBars({
           const bh = y.bandwidth();
           return (
             <g key={b.ic_code}>
+              {/* Tooltip for the full IC name as a direct <g> child (SVG spec) */}
+              <title>{b.ic_full_name}</title>
               {/* Y-axis label rendered manually per row so every IC name shows */}
               <text x={-6} y={by + bh / 2} dy="0.35em" textAnchor="end" className="fill-text-primary text-[11px]">
-                <title>{b.ic_full_name}</title>
                 {labelFor(b.ic_full_name)}
               </text>
               <rect x={0} y={by} width={bw} height={bh} fill="hsl(var(--agency-nih))" rx={2} />
