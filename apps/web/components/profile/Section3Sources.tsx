@@ -6,6 +6,7 @@ import { ResponsiveSvg } from '@/components/charts/ResponsiveSvg';
 import { StackedBar } from '@/components/charts/StackedBar';
 import { ChartFrame } from '@/components/editorial/ChartFrame';
 import { SectionDivider } from '@/components/editorial/SectionDivider';
+import { SortableTh, useTableSort } from '@/components/editorial/SortableTable';
 import { formatDollars, formatPercent } from '@/lib/format';
 import type { UniversityProfile } from '@/lib/queries';
 
@@ -147,34 +148,65 @@ export function Section3Sources({ profile }: Props) {
       </ChartFrame>
 
       {/* Final-year breakdown table */}
-      {finalFy !== null && (
-        <div className="mt-6">
-          <p className="mb-2 text-[11px] uppercase tracking-wider text-text-tertiary">FY{finalFy} breakdown</p>
-          <table className="w-full text-sm tnum">
-            <thead className="text-text-tertiary">
-              <tr className="border-b border-rule">
-                <th className="py-1.5 text-left font-medium">Source</th>
-                <th className="py-1.5 text-right font-medium">Amount</th>
-                <th className="py-1.5 text-right font-medium">Share</th>
-              </tr>
-            </thead>
-            <tbody>
-              {finalBreakdown.map((b) => (
-                <tr key={b.key} className="border-b border-rule/60">
-                  <td className="py-1.5 text-text-primary">
-                    <span className="inline-flex items-center gap-2">
-                      <span aria-hidden className="h-2.5 w-2.5 rounded-sm" style={{ background: b.color }} />
-                      {b.label}
-                    </span>
-                  </td>
-                  <td className="py-1.5 text-right text-text-secondary">{formatDollars(b.amount)}</td>
-                  <td className="py-1.5 text-right text-text-secondary">{formatPercent(b.share)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      {finalFy !== null && <FinalBreakdownTable finalFy={finalFy} rows={finalBreakdown} />}
     </section>
+  );
+}
+
+interface FinalBreakdownRow {
+  key: string;
+  label: string;
+  amount: number;
+  share: number;
+  color: string;
+}
+
+function FinalBreakdownTable({ finalFy, rows }: { finalFy: number; rows: FinalBreakdownRow[] }) {
+  const {
+    rows: sorted,
+    sort,
+    requestSort,
+  } = useTableSort(rows, {
+    initial: { key: 'amount', dir: 'desc' },
+    accessors: {
+      label: (r) => r.label.toLowerCase(),
+      amount: (r) => r.amount,
+      share: (r) => r.share,
+    },
+    defaultDir: { label: 'asc' },
+  });
+  return (
+    <div className="mt-6">
+      <p className="mb-2 text-[11px] uppercase tracking-wider text-text-tertiary">FY{finalFy} breakdown</p>
+      <table className="w-full text-sm tnum">
+        <thead className="text-text-tertiary">
+          <tr className="border-b border-rule">
+            <SortableTh sortKey="label" sort={sort} onSort={requestSort} className="py-1.5">
+              Source
+            </SortableTh>
+            <SortableTh sortKey="amount" sort={sort} onSort={requestSort} align="right" className="py-1.5">
+              Amount
+            </SortableTh>
+            <SortableTh sortKey="share" sort={sort} onSort={requestSort} align="right" className="py-1.5">
+              Share
+            </SortableTh>
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map((b) => (
+            <tr key={b.key} className="border-b border-rule/60">
+              <td className="py-1.5 text-text-primary">
+                <span className="inline-flex items-center gap-2">
+                  <span aria-hidden className="h-2.5 w-2.5 rounded-sm" style={{ background: b.color }} />
+                  {b.label}
+                </span>
+              </td>
+              <td className="py-1.5 text-right text-text-secondary">{formatDollars(b.amount)}</td>
+              <td className="py-1.5 text-right text-text-secondary">{formatPercent(b.share)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

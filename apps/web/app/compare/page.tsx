@@ -23,6 +23,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useDuckDB } from '@/app/providers';
 import { BarChart } from '@/components/charts/BarChart';
 import { ChartFrame } from '@/components/editorial/ChartFrame';
+import { SortableTh, useTableSort } from '@/components/editorial/SortableTable';
 import { SourceLine } from '@/components/editorial/SourceLine';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/Card';
@@ -1080,60 +1081,113 @@ function CompareTable({
             <Download className="h-3.5 w-3.5" /> Download CSV
           </a>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="border-b border-rule">
-              <tr>
-                <th scope="col" className="py-2 pr-3 text-left text-[11px] uppercase tracking-wider text-text-tertiary">
-                  Fiscal year
-                </th>
-                {unis.map((u) => (
-                  <th
-                    key={u.sk}
-                    scope="col"
-                    className="py-2 px-3 text-right text-[11px] uppercase tracking-wider text-text-tertiary"
-                  >
-                    <span className="block truncate" title={u.profile.name}>
-                      {u.profile.name}
-                    </span>
-                    {u.profile.state && (
-                      <span className="block text-[10px] font-normal normal-case text-text-tertiary tnum">
-                        {u.profile.state}
-                      </span>
-                    )}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-rule">
-              {years.map((y) => (
-                <tr key={y}>
-                  <td className="py-2 pr-3 tnum text-text-secondary">{formatFy(y)}</td>
-                  {unis.map((u) => {
-                    const v = lookup.get(u.sk)?.get(y);
-                    const masked = metric.maskFy05 && PI_MASK_FYS.has(y);
-                    return (
-                      <td key={u.sk} className="py-2 px-3 text-right tnum">
-                        {masked ? (
-                          <span
-                            className="text-text-tertiary italic"
-                            title="FY2005 masked: dim_institution entity-resolution discontinuity"
-                          >
-                            masked
-                          </span>
-                        ) : (
-                          formatMetricValue(v === undefined || v === null ? null : v, metric.format)
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <CompareGrid years={years} unis={unis} lookup={lookup} metric={metric} />
       </CardContent>
     </Card>
+  );
+}
+
+function CompareGrid({
+  years,
+  unis,
+  lookup,
+  metric,
+}: {
+  years: number[];
+  unis: LoadedUni[];
+  lookup: Map<string, Map<number, number | null>>;
+  metric: MetricDef;
+}) {
+  // Flatten the (year × uni) grid into wide rows so useTableSort can compare
+  // by any single column (FY or any university's value for that FY).
+  const rows = years.map((y) => {
+    const row: Record<string, number | null> = { fiscal_year: y };
+    for (const u of unis) {
+      const v = lookup.get(u.sk)?.get(y);
+      row[`uni_${u.sk}`] = v === undefined || v === null ? null : v;
+    }
+    return row;
+  });
+  const accessors: Record<string, (r: (typeof rows)[number]) => number | null> = {
+    fiscal_year: (r) => r.fiscal_year,
+  };
+  const defaultDir: Record<string, 'asc' | 'desc'> = { fiscal_year: 'desc' };
+  for (const u of unis) {
+    accessors[`uni_${u.sk}`] = (r) => r[`uni_${u.sk}`];
+    defaultDir[`uni_${u.sk}`] = 'desc';
+  }
+  const {
+    rows: sorted,
+    sort,
+    requestSort,
+  } = useTableSort(rows, {
+    initial: { key: 'fiscal_year', dir: 'desc' },
+    accessors,
+    defaultDir,
+  });
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead className="border-b border-rule">
+          <tr>
+            <SortableTh
+              sortKey="fiscal_year"
+              sort={sort}
+              onSort={requestSort}
+              className="py-2 pr-3 text-[11px] uppercase tracking-wider"
+            >
+              Fiscal year
+            </SortableTh>
+            {unis.map((u) => (
+              <SortableTh
+                key={u.sk}
+                sortKey={`uni_${u.sk}`}
+                sort={sort}
+                onSort={requestSort}
+                align="right"
+                className="py-2 px-3 text-[11px] uppercase tracking-wider"
+                title={u.profile.name}
+              >
+                <span className="block truncate normal-case font-medium">{u.profile.name}</span>
+                {u.profile.state && (
+                  <span className="block text-[10px] font-normal normal-case text-text-tertiary tnum">
+                    {u.profile.state}
+                  </span>
+                )}
+              </SortableTh>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-rule">
+          {sorted.map((r) => {
+            const y = r.fiscal_year as number;
+            const masked = metric.maskFy05 && PI_MASK_FYS.has(y);
+            return (
+              <tr key={y}>
+                <td className="py-2 pr-3 tnum text-text-secondary">{formatFy(y)}</td>
+                {unis.map((u) => {
+                  const v = r[`uni_${u.sk}`];
+                  return (
+                    <td key={u.sk} className="py-2 px-3 text-right tnum">
+                      {masked ? (
+                        <span
+                          className="text-text-tertiary italic"
+                          title="FY2005 masked: dim_institution entity-resolution discontinuity"
+                        >
+                          masked
+                        </span>
+                      ) : (
+                        formatMetricValue(v === undefined || v === null ? null : v, metric.format)
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

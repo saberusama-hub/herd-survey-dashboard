@@ -6,6 +6,7 @@ import { GroupedBar } from '@/components/charts/GroupedBar';
 import { ResponsiveSvg } from '@/components/charts/ResponsiveSvg';
 import { ChartFrame } from '@/components/editorial/ChartFrame';
 import { SectionDivider } from '@/components/editorial/SectionDivider';
+import { SortableTh, useTableSort } from '@/components/editorial/SortableTable';
 import { formatDollars, formatPercent } from '@/lib/format';
 import type { UniversityProfile } from '@/lib/queries';
 
@@ -162,36 +163,67 @@ export function Section5Reconciliation({ profile }: Props) {
       </p>
 
       {/* Compact year-by-year coverage table */}
-      <div className="mt-6 overflow-x-auto">
-        <table className="w-full text-sm tnum">
-          <thead className="text-text-tertiary">
-            <tr className="border-b border-rule">
-              <th className="py-1.5 text-left font-medium">FY</th>
-              <th className="py-1.5 text-right font-medium">HERD federal</th>
-              <th className="py-1.5 text-right font-medium">Bottom-up sum</th>
-              <th className="py-1.5 text-right font-medium">Coverage</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows
-              .slice()
-              .reverse()
-              .slice(0, 6)
-              .map((r) => {
-                const cov = r.herd > 0 ? r.bottom_up / r.herd : null;
-                return (
-                  <tr key={r.fiscal_year} className="border-b border-rule/60">
-                    <td className="py-1.5 text-text-primary">FY{r.fiscal_year}</td>
-                    <td className="py-1.5 text-right text-text-secondary">{formatDollars(r.herd)}</td>
-                    <td className="py-1.5 text-right text-text-secondary">{formatDollars(r.bottom_up)}</td>
-                    <td className="py-1.5 text-right text-text-secondary">{formatPercent(cov)}</td>
-                  </tr>
-                );
-              })}
-          </tbody>
-        </table>
-        <p className="mt-2 text-[11px] text-text-tertiary">Most recent six years.</p>
-      </div>
+      <CoverageTable rows={rows} />
     </section>
+  );
+}
+
+function CoverageTable({ rows }: { rows: Array<{ fiscal_year: number; herd: number; bottom_up: number }> }) {
+  const enriched = rows
+    .slice()
+    .reverse()
+    .slice(0, 6)
+    .map((r) => ({
+      fiscal_year: r.fiscal_year,
+      herd: r.herd,
+      bottom_up: r.bottom_up,
+      coverage: r.herd > 0 ? r.bottom_up / r.herd : null,
+    }));
+  const {
+    rows: sorted,
+    sort,
+    requestSort,
+  } = useTableSort(enriched, {
+    initial: { key: 'fiscal_year', dir: 'desc' },
+    accessors: {
+      fiscal_year: (r) => r.fiscal_year,
+      herd: (r) => r.herd,
+      bottom_up: (r) => r.bottom_up,
+      coverage: (r) => r.coverage,
+    },
+    defaultDir: { fiscal_year: 'desc' },
+  });
+  return (
+    <div className="mt-6 overflow-x-auto">
+      <table className="w-full text-sm tnum">
+        <thead className="text-text-tertiary">
+          <tr className="border-b border-rule">
+            <SortableTh sortKey="fiscal_year" sort={sort} onSort={requestSort} className="py-1.5">
+              FY
+            </SortableTh>
+            <SortableTh sortKey="herd" sort={sort} onSort={requestSort} align="right" className="py-1.5">
+              HERD federal
+            </SortableTh>
+            <SortableTh sortKey="bottom_up" sort={sort} onSort={requestSort} align="right" className="py-1.5">
+              Bottom-up sum
+            </SortableTh>
+            <SortableTh sortKey="coverage" sort={sort} onSort={requestSort} align="right" className="py-1.5">
+              Coverage
+            </SortableTh>
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map((r) => (
+            <tr key={r.fiscal_year} className="border-b border-rule/60">
+              <td className="py-1.5 text-text-primary">FY{r.fiscal_year}</td>
+              <td className="py-1.5 text-right text-text-secondary">{formatDollars(r.herd)}</td>
+              <td className="py-1.5 text-right text-text-secondary">{formatDollars(r.bottom_up)}</td>
+              <td className="py-1.5 text-right text-text-secondary">{formatPercent(r.coverage)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="mt-2 text-[11px] text-text-tertiary">Most recent six years.</p>
+    </div>
   );
 }

@@ -7,6 +7,7 @@ import { useDuckDB } from '@/app/providers';
 import { LineChart } from '@/components/charts/LineChart';
 import { ChartFrame } from '@/components/editorial/ChartFrame';
 import { KpiStrip } from '@/components/editorial/KpiStrip';
+import { SortableTh, useTableSort } from '@/components/editorial/SortableTable';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { formatCount, formatPercent } from '@/lib/format';
 import {
@@ -168,33 +169,86 @@ function SummaryTable({
   onSelect: (t: string) => void;
   year: number;
 }) {
+  const {
+    rows: sorted,
+    sort,
+    requestSort,
+  } = useTableSort(rows, {
+    initial: { key: 'fy24_amount_m', dir: 'desc' },
+    accessors: {
+      topic: (r) => r.topic.toLowerCase(),
+      fy24_amount_m: (r) => r.fy24_amount_m,
+      fy24_share: (r) => r.fy24_share,
+      fy24_grant_count: (r) => r.fy24_grant_count,
+      fy24_count_share: (r) => r.fy24_count_share,
+      cagr_5yr_pct: (r) => r.cagr_5yr_pct,
+      top_uni_name: (r) => (r.top_uni_name ?? '').toLowerCase(),
+    },
+    defaultDir: { topic: 'asc', top_uni_name: 'asc' },
+  });
   if (rows.length === 0) return <p className="text-sm text-text-tertiary">Loading…</p>;
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-rule text-text-tertiary text-left">
-            <th className="py-2 pr-4 font-medium">Topic</th>
-            <th className="py-2 px-3 font-medium text-right whitespace-nowrap">FY{year} $</th>
-            <th
-              className="py-2 px-3 font-medium text-right whitespace-nowrap"
+            <SortableTh sortKey="topic" sort={sort} onSort={requestSort} className="py-2 pr-4">
+              Topic
+            </SortableTh>
+            <SortableTh
+              sortKey="fy24_amount_m"
+              sort={sort}
+              onSort={requestSort}
+              align="right"
+              className="py-2 px-3 whitespace-nowrap"
+            >
+              FY{year} $
+            </SortableTh>
+            <SortableTh
+              sortKey="fy24_share"
+              sort={sort}
+              onSort={requestSort}
+              align="right"
+              className="py-2 px-3 whitespace-nowrap"
               title="Topic $ ÷ total federal R&D $ for the year (per-topic ≤100%; sum across topics can exceed 100% because tags overlap)"
             >
               $ share
-            </th>
-            <th className="py-2 px-3 font-medium text-right whitespace-nowrap">Grants</th>
-            <th
-              className="py-2 px-3 font-medium text-right whitespace-nowrap"
+            </SortableTh>
+            <SortableTh
+              sortKey="fy24_grant_count"
+              sort={sort}
+              onSort={requestSort}
+              align="right"
+              className="py-2 px-3 whitespace-nowrap"
+            >
+              Grants
+            </SortableTh>
+            <SortableTh
+              sortKey="fy24_count_share"
+              sort={sort}
+              onSort={requestSort}
+              align="right"
+              className="py-2 px-3 whitespace-nowrap"
               title="Topic grant count ÷ sum of grants across all topic tags (per-topic ≤100%; sum across topics can exceed 100% because a grant can match multiple topics)"
             >
               Grants share
-            </th>
-            <th className="py-2 px-3 font-medium text-right whitespace-nowrap">5y CAGR</th>
-            <th className="py-2 pl-3 font-medium">Top university</th>
+            </SortableTh>
+            <SortableTh
+              sortKey="cagr_5yr_pct"
+              sort={sort}
+              onSort={requestSort}
+              align="right"
+              className="py-2 px-3 whitespace-nowrap"
+            >
+              5y CAGR
+            </SortableTh>
+            <SortableTh sortKey="top_uni_name" sort={sort} onSort={requestSort} className="py-2 pl-3">
+              Top university
+            </SortableTh>
           </tr>
         </thead>
         <tbody>
-          {rows.map((r) => {
+          {sorted.map((r) => {
             const isSelected = r.topic === selected;
             const cagrStr =
               r.cagr_5yr_pct == null ? '—' : `${r.cagr_5yr_pct > 0 ? '+' : ''}${r.cagr_5yr_pct.toFixed(1)}%`;
@@ -445,19 +499,53 @@ function TopicPicker({
 }
 
 function TopUnisTable({ rows }: { rows: TopicTopUni[] }) {
+  const {
+    rows: sorted,
+    sort,
+    requestSort,
+  } = useTableSort(rows, {
+    initial: { key: 'topic_rank_national', dir: 'asc' },
+    accessors: {
+      topic_rank_national: (r) => r.topic_rank_national,
+      canonical_name: (r) => r.canonical_name.toLowerCase(),
+      uni_topic_amount_m: (r) => r.uni_topic_amount_m,
+      specialization_score: (r) => r.specialization_score,
+    },
+    defaultDir: { topic_rank_national: 'asc', canonical_name: 'asc' },
+  });
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-rule text-text-tertiary text-left">
-            <th className="py-2 pr-3 font-medium">#</th>
-            <th className="py-2 pr-3 font-medium">University</th>
-            <th className="py-2 pr-3 font-medium text-right">$M</th>
-            <th className="py-2 pl-3 font-medium text-right whitespace-nowrap">Spec score</th>
+            <SortableTh sortKey="topic_rank_national" sort={sort} onSort={requestSort} className="py-2 pr-3">
+              #
+            </SortableTh>
+            <SortableTh sortKey="canonical_name" sort={sort} onSort={requestSort} className="py-2 pr-3">
+              University
+            </SortableTh>
+            <SortableTh
+              sortKey="uni_topic_amount_m"
+              sort={sort}
+              onSort={requestSort}
+              align="right"
+              className="py-2 pr-3"
+            >
+              $M
+            </SortableTh>
+            <SortableTh
+              sortKey="specialization_score"
+              sort={sort}
+              onSort={requestSort}
+              align="right"
+              className="py-2 pl-3 whitespace-nowrap"
+            >
+              Spec score
+            </SortableTh>
           </tr>
         </thead>
         <tbody>
-          {rows.map((r) => (
+          {sorted.map((r) => (
             <tr key={r.institution_sk} className="border-b border-rule/60 hover:bg-mute-3/30">
               <td className="py-1.5 pr-3 tnum text-text-tertiary">{r.topic_rank_national}</td>
               <td className="py-1.5 pr-3 text-text-primary">
@@ -477,19 +565,53 @@ function TopUnisTable({ rows }: { rows: TopicTopUni[] }) {
 }
 
 function TopStatesTable({ rows }: { rows: TopicTopState[] }) {
+  const {
+    rows: sorted,
+    sort,
+    requestSort,
+  } = useTableSort(rows, {
+    initial: { key: 'state_topic_amount_m', dir: 'desc' },
+    accessors: {
+      state_code: (r) => r.state_code,
+      state_topic_amount_m: (r) => r.state_topic_amount_m,
+      state_topic_share: (r) => r.state_topic_share,
+      top_uni_in_state: (r) => (r.top_uni_in_state ?? '').toLowerCase(),
+    },
+    defaultDir: { state_code: 'asc', top_uni_in_state: 'asc' },
+  });
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-rule text-text-tertiary text-left">
-            <th className="py-2 pr-3 font-medium">State</th>
-            <th className="py-2 pr-3 font-medium text-right">$M</th>
-            <th className="py-2 pr-3 font-medium text-right whitespace-nowrap">National share</th>
-            <th className="py-2 pl-3 font-medium">Top university</th>
+            <SortableTh sortKey="state_code" sort={sort} onSort={requestSort} className="py-2 pr-3">
+              State
+            </SortableTh>
+            <SortableTh
+              sortKey="state_topic_amount_m"
+              sort={sort}
+              onSort={requestSort}
+              align="right"
+              className="py-2 pr-3"
+            >
+              $M
+            </SortableTh>
+            <SortableTh
+              sortKey="state_topic_share"
+              sort={sort}
+              onSort={requestSort}
+              align="right"
+              className="py-2 pr-3 whitespace-nowrap"
+            >
+              National share
+            </SortableTh>
+            <SortableTh sortKey="top_uni_in_state" sort={sort} onSort={requestSort} className="py-2 pl-3">
+              Top university
+            </SortableTh>
           </tr>
         </thead>
         <tbody>
-          {rows.map((r) => (
+          {sorted.map((r) => (
             <tr key={r.state_code} className="border-b border-rule/60 hover:bg-mute-3/30">
               <td className="py-1.5 pr-3 text-text-primary tnum">{r.state_code}</td>
               <td className="py-1.5 pr-3 text-right tnum text-text-secondary">${r.state_topic_amount_m.toFixed(0)}M</td>

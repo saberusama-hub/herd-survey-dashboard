@@ -6,6 +6,7 @@ import { useDuckDB } from '@/app/providers';
 import { USStateMap } from '@/components/charts/USStateMap';
 import { ChartFrame } from '@/components/editorial/ChartFrame';
 import { KpiStrip } from '@/components/editorial/KpiStrip';
+import { SortableTh, useTableSort } from '@/components/editorial/SortableTable';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { formatCount, formatPercent } from '@/lib/format';
 import {
@@ -282,42 +283,81 @@ export default function SbirPage() {
   );
 }
 
+interface YearStackRow {
+  fy: number;
+  sbir1: number;
+  sbir2: number;
+  sttr1: number;
+  sttr2: number;
+  total: number;
+}
+
 function YearStackTable({ rows }: { rows: SbirYearStack[] }) {
-  if (rows.length === 0) return <p className="text-sm text-text-tertiary">Loading…</p>;
-  const years = Array.from(new Set(rows.map((r) => r.fiscal_year))).sort((a, b) => b - a);
-  const buckets = ['SBIR Phase I', 'SBIR Phase II', 'STTR Phase I', 'STTR Phase II'];
+  const buckets = ['SBIR Phase I', 'SBIR Phase II', 'STTR Phase I', 'STTR Phase II'] as const;
+  const years = Array.from(new Set(rows.map((r) => r.fiscal_year)));
   const map = new Map<string, number>();
   for (const r of rows) map.set(`${r.fiscal_year}|${r.program} ${r.phase}`, r.amount_real_m);
+  const flatRows: YearStackRow[] = years.map((fy) => {
+    const sbir1 = map.get(`${fy}|SBIR Phase I`) ?? 0;
+    const sbir2 = map.get(`${fy}|SBIR Phase II`) ?? 0;
+    const sttr1 = map.get(`${fy}|STTR Phase I`) ?? 0;
+    const sttr2 = map.get(`${fy}|STTR Phase II`) ?? 0;
+    return { fy, sbir1, sbir2, sttr1, sttr2, total: sbir1 + sbir2 + sttr1 + sttr2 };
+  });
+  const {
+    rows: sorted,
+    sort,
+    requestSort,
+  } = useTableSort(flatRows, {
+    initial: { key: 'fy', dir: 'desc' },
+    accessors: {
+      fy: (r) => r.fy,
+      sbir1: (r) => r.sbir1,
+      sbir2: (r) => r.sbir2,
+      sttr1: (r) => r.sttr1,
+      sttr2: (r) => r.sttr2,
+      total: (r) => r.total,
+    },
+    defaultDir: { fy: 'desc' },
+  });
+  if (rows.length === 0) return <p className="text-sm text-text-tertiary">Loading…</p>;
+  const bucketKeys = ['sbir1', 'sbir2', 'sttr1', 'sttr2'] as const;
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-rule text-text-tertiary text-left">
-            <th className="py-2 pr-4 font-medium">FY</th>
-            {buckets.map((b) => (
-              <th key={b} className="py-2 px-3 font-medium text-right whitespace-nowrap">
-                {b}
-              </th>
+            <SortableTh sortKey="fy" sort={sort} onSort={requestSort} className="py-2 pr-4">
+              FY
+            </SortableTh>
+            {buckets.map((label, i) => (
+              <SortableTh
+                key={label}
+                sortKey={bucketKeys[i]}
+                sort={sort}
+                onSort={requestSort}
+                align="right"
+                className="py-2 px-3 whitespace-nowrap"
+              >
+                {label}
+              </SortableTh>
             ))}
-            <th className="py-2 pl-3 font-medium text-right">Total</th>
+            <SortableTh sortKey="total" sort={sort} onSort={requestSort} align="right" className="py-2 pl-3">
+              Total
+            </SortableTh>
           </tr>
         </thead>
         <tbody>
-          {years.map((y) => {
-            const vals = buckets.map((b) => map.get(`${y}|${b}`) ?? 0);
-            const total = vals.reduce((a, b) => a + b, 0);
-            return (
-              <tr key={y} className="border-b border-rule/60 hover:bg-mute-3/30">
-                <td className="py-1.5 pr-4 tnum text-text-primary">FY{y}</td>
-                {buckets.map((b, i) => (
-                  <td key={`${y}-${b}`} className="py-1.5 px-3 text-right tnum text-text-secondary">
-                    ${vals[i].toFixed(0)}M
-                  </td>
-                ))}
-                <td className="py-1.5 pl-3 text-right tnum font-semibold text-text-primary">${total.toFixed(0)}M</td>
-              </tr>
-            );
-          })}
+          {sorted.map((r) => (
+            <tr key={r.fy} className="border-b border-rule/60 hover:bg-mute-3/30">
+              <td className="py-1.5 pr-4 tnum text-text-primary">FY{r.fy}</td>
+              <td className="py-1.5 px-3 text-right tnum text-text-secondary">${r.sbir1.toFixed(0)}M</td>
+              <td className="py-1.5 px-3 text-right tnum text-text-secondary">${r.sbir2.toFixed(0)}M</td>
+              <td className="py-1.5 px-3 text-right tnum text-text-secondary">${r.sttr1.toFixed(0)}M</td>
+              <td className="py-1.5 px-3 text-right tnum text-text-secondary">${r.sttr2.toFixed(0)}M</td>
+              <td className="py-1.5 pl-3 text-right tnum font-semibold text-text-primary">${r.total.toFixed(0)}M</td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
@@ -325,31 +365,72 @@ function YearStackTable({ rows }: { rows: SbirYearStack[] }) {
 }
 
 function AgencyTable({ rows }: { rows: SbirAgency[] }) {
+  const {
+    rows: sorted,
+    sort,
+    requestSort,
+  } = useTableSort(rows, {
+    initial: { key: 'amount_real_b', dir: 'desc' },
+    accessors: {
+      agency_name: (r) => r.agency_name.toLowerCase(),
+      n_awards: (r) => r.n_awards,
+      share_n_pct: (r) => r.share_n_pct,
+      amount_real_b: (r) => r.amount_real_b,
+      share_pct: (r) => r.share_pct,
+    },
+    defaultDir: { agency_name: 'asc' },
+  });
   if (rows.length === 0) return <p className="text-sm text-text-tertiary">Loading…</p>;
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-rule text-text-tertiary text-left">
-            <th className="py-2 pr-4 font-medium">Agency</th>
-            <th className="py-2 px-3 font-medium text-right whitespace-nowrap">Awards</th>
-            <th
-              className="py-2 px-3 font-medium text-right whitespace-nowrap"
+            <SortableTh sortKey="agency_name" sort={sort} onSort={requestSort} className="py-2 pr-4">
+              Agency
+            </SortableTh>
+            <SortableTh
+              sortKey="n_awards"
+              sort={sort}
+              onSort={requestSort}
+              align="right"
+              className="py-2 px-3 whitespace-nowrap"
+            >
+              Awards
+            </SortableTh>
+            <SortableTh
+              sortKey="share_n_pct"
+              sort={sort}
+              onSort={requestSort}
+              align="right"
+              className="py-2 px-3 whitespace-nowrap"
               title="Agency award count ÷ program-wide award count (FY2020–24). Sums to 100% across agencies."
             >
               Awards share
-            </th>
-            <th className="py-2 px-3 font-medium text-right whitespace-nowrap">Total real $</th>
-            <th
-              className="py-2 pl-3 font-medium text-right whitespace-nowrap"
+            </SortableTh>
+            <SortableTh
+              sortKey="amount_real_b"
+              sort={sort}
+              onSort={requestSort}
+              align="right"
+              className="py-2 px-3 whitespace-nowrap"
+            >
+              Total real $
+            </SortableTh>
+            <SortableTh
+              sortKey="share_pct"
+              sort={sort}
+              onSort={requestSort}
+              align="right"
+              className="py-2 pl-3 whitespace-nowrap"
               title="Agency $ ÷ program-wide $ (FY2020–24). Sums to 100% across agencies."
             >
               $ share
-            </th>
+            </SortableTh>
           </tr>
         </thead>
         <tbody>
-          {rows.map((r) => (
+          {sorted.map((r) => (
             <tr key={r.agency_name} className="border-b border-rule/60 hover:bg-mute-3/30">
               <td className="py-1.5 pr-4 text-text-primary">{r.agency_name}</td>
               <td className="py-1.5 px-3 text-right tnum text-text-secondary">{formatCount(r.n_awards)}</td>
@@ -369,20 +450,54 @@ function AgencyTable({ rows }: { rows: SbirAgency[] }) {
 }
 
 function FirmTable({ rows }: { rows: SbirFirm[] }) {
+  const {
+    rows: sorted,
+    sort,
+    requestSort,
+  } = useTableSort(rows, {
+    initial: { key: 'amount_real_m', dir: 'desc' },
+    accessors: {
+      firm_name: (r) => r.firm_name.toLowerCase(),
+      firm_state: (r) => r.firm_state ?? '',
+      n_awards: (r) => r.n_awards,
+      amount_real_m: (r) => r.amount_real_m,
+    },
+    defaultDir: { firm_name: 'asc', firm_state: 'asc' },
+  });
   if (rows.length === 0) return <p className="text-sm text-text-tertiary">Loading…</p>;
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-rule text-text-tertiary text-left">
-            <th className="py-2 pr-4 font-medium">Firm</th>
-            <th className="py-2 px-3 font-medium">State</th>
-            <th className="py-2 px-3 font-medium text-right whitespace-nowrap">Awards</th>
-            <th className="py-2 pl-3 font-medium text-right whitespace-nowrap">Real $</th>
+            <SortableTh sortKey="firm_name" sort={sort} onSort={requestSort} className="py-2 pr-4">
+              Firm
+            </SortableTh>
+            <SortableTh sortKey="firm_state" sort={sort} onSort={requestSort} className="py-2 px-3">
+              State
+            </SortableTh>
+            <SortableTh
+              sortKey="n_awards"
+              sort={sort}
+              onSort={requestSort}
+              align="right"
+              className="py-2 px-3 whitespace-nowrap"
+            >
+              Awards
+            </SortableTh>
+            <SortableTh
+              sortKey="amount_real_m"
+              sort={sort}
+              onSort={requestSort}
+              align="right"
+              className="py-2 pl-3 whitespace-nowrap"
+            >
+              Real $
+            </SortableTh>
           </tr>
         </thead>
         <tbody>
-          {rows.map((r, i) => (
+          {sorted.map((r, i) => (
             <tr key={`${r.firm_name}|${i}`} className="border-b border-rule/60 hover:bg-mute-3/30">
               <td className="py-1.5 pr-4 text-text-primary">{r.firm_name}</td>
               <td className="py-1.5 px-3 text-text-secondary">{r.firm_state}</td>
@@ -397,19 +512,50 @@ function FirmTable({ rows }: { rows: SbirFirm[] }) {
 }
 
 function RiUniTable({ rows }: { rows: SbirRiUni[] }) {
+  const {
+    rows: sorted,
+    sort,
+    requestSort,
+  } = useTableSort(rows, {
+    initial: { key: 'amount_real_m', dir: 'desc' },
+    accessors: {
+      ri_canonical_name: (r) => r.ri_canonical_name.toLowerCase(),
+      n_awards: (r) => r.n_awards,
+      amount_real_m: (r) => r.amount_real_m,
+    },
+    defaultDir: { ri_canonical_name: 'asc' },
+  });
   if (rows.length === 0) return <p className="text-sm text-text-tertiary">Loading…</p>;
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-rule text-text-tertiary text-left">
-            <th className="py-2 pr-4 font-medium">University RI</th>
-            <th className="py-2 px-3 font-medium text-right whitespace-nowrap">Awards</th>
-            <th className="py-2 pl-3 font-medium text-right whitespace-nowrap">Real $</th>
+            <SortableTh sortKey="ri_canonical_name" sort={sort} onSort={requestSort} className="py-2 pr-4">
+              University RI
+            </SortableTh>
+            <SortableTh
+              sortKey="n_awards"
+              sort={sort}
+              onSort={requestSort}
+              align="right"
+              className="py-2 px-3 whitespace-nowrap"
+            >
+              Awards
+            </SortableTh>
+            <SortableTh
+              sortKey="amount_real_m"
+              sort={sort}
+              onSort={requestSort}
+              align="right"
+              className="py-2 pl-3 whitespace-nowrap"
+            >
+              Real $
+            </SortableTh>
           </tr>
         </thead>
         <tbody>
-          {rows.map((r, i) => (
+          {sorted.map((r, i) => (
             <tr key={`${r.ri_canonical_name}|${i}`} className="border-b border-rule/60 hover:bg-mute-3/30">
               <td className="py-1.5 pr-4 text-text-primary">{r.ri_canonical_name}</td>
               <td className="py-1.5 px-3 text-right tnum text-text-secondary">{formatCount(r.n_awards)}</td>
@@ -423,19 +569,50 @@ function RiUniTable({ rows }: { rows: SbirRiUni[] }) {
 }
 
 function StateTable({ rows }: { rows: SbirState[] }) {
+  const {
+    rows: sorted,
+    sort,
+    requestSort,
+  } = useTableSort(rows, {
+    initial: { key: 'amount_real_m', dir: 'desc' },
+    accessors: {
+      firm_state: (r) => r.firm_state,
+      n_awards: (r) => r.n_awards,
+      amount_real_m: (r) => r.amount_real_m,
+    },
+    defaultDir: { firm_state: 'asc' },
+  });
   if (rows.length === 0) return null;
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-rule text-text-tertiary text-left">
-            <th className="py-2 pr-4 font-medium">State</th>
-            <th className="py-2 px-3 font-medium text-right whitespace-nowrap">Awards</th>
-            <th className="py-2 pl-3 font-medium text-right whitespace-nowrap">Real $</th>
+            <SortableTh sortKey="firm_state" sort={sort} onSort={requestSort} className="py-2 pr-4">
+              State
+            </SortableTh>
+            <SortableTh
+              sortKey="n_awards"
+              sort={sort}
+              onSort={requestSort}
+              align="right"
+              className="py-2 px-3 whitespace-nowrap"
+            >
+              Awards
+            </SortableTh>
+            <SortableTh
+              sortKey="amount_real_m"
+              sort={sort}
+              onSort={requestSort}
+              align="right"
+              className="py-2 pl-3 whitespace-nowrap"
+            >
+              Real $
+            </SortableTh>
           </tr>
         </thead>
         <tbody>
-          {rows.map((r) => (
+          {sorted.map((r) => (
             <tr key={r.firm_state} className="border-b border-rule/60 hover:bg-mute-3/30">
               <td className="py-1.5 pr-4 text-text-primary">{r.firm_state}</td>
               <td className="py-1.5 px-3 text-right tnum text-text-secondary">{formatCount(r.n_awards)}</td>
