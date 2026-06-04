@@ -159,13 +159,14 @@ export default function SbirPage() {
           {
             id: 'sbir_sttr',
             subset:
-              'Filter fiscal_year BETWEEN 2020 AND 2024, group by agency_name; share = agency $ ÷ 5-yr program total',
+              'Filter fiscal_year BETWEEN 2020 AND 2024, group by agency_name; two shares reported — share of award count and share of award $ (both ≤100%)',
           },
         ]}
         methodology={{
-          what: 'Total real award dollars by federal agency over the most recent 5-year window, with share of program total.',
-          how: 'sheet_06_sbir_sttr filtered to fiscal_year BETWEEN 2020 AND 2024, grouped by agency_name. Share computed against the 5-year program total.',
-          caveats: 'DOD typically takes ~50% of the program; HHS (NIH-heavy) ~30%.',
+          what: 'Total real award dollars by federal agency over the most recent 5-year window, with shares of program total — one by number of awards, one by award $.',
+          how: 'sheet_06_sbir_sttr filtered to fiscal_year BETWEEN 2020 AND 2024, grouped by agency_name. Awards share = agency award count ÷ total awards; $ share = agency $ ÷ total $. Each ≤100%; together each column sums to 100%.',
+          caveats:
+            'DOD typically takes ~50% of the program $ but a smaller share of award count; HHS (NIH-heavy) ~30%.',
         }}
       >
         <AgencyTable rows={agencies} />
@@ -332,8 +333,19 @@ function AgencyTable({ rows }: { rows: SbirAgency[] }) {
           <tr className="border-b border-rule text-text-tertiary text-left">
             <th className="py-2 pr-4 font-medium">Agency</th>
             <th className="py-2 px-3 font-medium text-right whitespace-nowrap">Awards</th>
+            <th
+              className="py-2 px-3 font-medium text-right whitespace-nowrap"
+              title="Agency award count ÷ program-wide award count (FY2020–24). Sums to 100% across agencies."
+            >
+              Awards share
+            </th>
             <th className="py-2 px-3 font-medium text-right whitespace-nowrap">Total real $</th>
-            <th className="py-2 pl-3 font-medium text-right whitespace-nowrap">Share</th>
+            <th
+              className="py-2 pl-3 font-medium text-right whitespace-nowrap"
+              title="Agency $ ÷ program-wide $ (FY2020–24). Sums to 100% across agencies."
+            >
+              $ share
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -341,8 +353,13 @@ function AgencyTable({ rows }: { rows: SbirAgency[] }) {
             <tr key={r.agency_name} className="border-b border-rule/60 hover:bg-mute-3/30">
               <td className="py-1.5 pr-4 text-text-primary">{r.agency_name}</td>
               <td className="py-1.5 px-3 text-right tnum text-text-secondary">{formatCount(r.n_awards)}</td>
+              <td className="py-1.5 px-3 text-right tnum text-text-secondary">
+                {formatPercent(r.share_n_pct, { source: 'percent' })}
+              </td>
               <td className="py-1.5 px-3 text-right tnum text-text-primary">${r.amount_real_b.toFixed(2)}B</td>
-              <td className="py-1.5 pl-3 text-right tnum text-text-secondary">{formatPercent(r.share_pct)}</td>
+              <td className="py-1.5 pl-3 text-right tnum text-text-secondary">
+                {formatPercent(r.share_pct, { source: 'percent' })}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -445,7 +462,7 @@ function DemoCard({
   return (
     <div className="rounded border border-rule bg-surface p-4 space-y-2">
       <p className="text-[11px] uppercase tracking-wider text-text-tertiary">{label}</p>
-      <p className="t-num text-text-primary text-2xl">{formatPercent(pct)}</p>
+      <p className="t-num text-text-primary text-2xl">{formatPercent(pct, { source: 'percent' })}</p>
       <p className="text-xs text-text-secondary tnum">
         {formatCount(count)} of {formatCount(total)} awards
       </p>

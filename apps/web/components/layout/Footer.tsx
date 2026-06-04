@@ -16,8 +16,8 @@ export function Footer() {
           <Link href="/methodology" className="block text-text-secondary hover:text-text-primary">
             Methodology
           </Link>
-          <Link href="/downloads" className="block text-text-secondary hover:text-text-primary">
-            Downloads
+          <Link href="/sources" className="block text-text-secondary hover:text-text-primary">
+            Sources
           </Link>
         </div>
         <div className="space-y-2">

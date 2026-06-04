@@ -69,12 +69,7 @@ export default function SourcesPage() {
         </ol>
         <p className="italic">
           Internal pipeline: federal raw archive → ETL → 41 parquet files in <code>apps/web/public/data/</code> → the
-          master workbook on the{' '}
-          <a className="text-accent underline underline-offset-2" href="/downloads">
-            downloads page
-          </a>{' '}
-          → the dashboard. Citations on this site always point to step 1 (the federal raw archive), not the parquets or
-          the workbook.
+          dashboard. Citations on this site always point to step 1 (the federal raw archive), not the parquets.
         </p>
       </section>
 

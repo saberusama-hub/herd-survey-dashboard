@@ -16,7 +16,6 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/sbir', label: 'SBIR / STTR' },
   { href: '/methodology', label: 'Methodology' },
   { href: '/sources', label: 'Sources' },
-  { href: '/downloads', label: 'Downloads' },
 ];
 
 export function MegaNav() {

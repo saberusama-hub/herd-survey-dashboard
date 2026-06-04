@@ -79,52 +79,6 @@ export default function MethodologyPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="h-section">Documented caveats</h2>
-        <Card>
-          <CardContent className="space-y-4 text-sm">
-            <Caveat title="USAS coverage pre-FY2008 is sparse">
-              USAspending.gov starts comprehensive reporting in FY2008. Pre-2008 USAS values may understate actual
-              contract/assistance flows.
-            </Caveat>
-            <Caveat title="NSF pi_sk null rate ~62.6%">
-              Phase D fact_nsf_award builder couldn't populate PI surrogate keys from nsf_id for 62% of NSF records.
-              Cross-agency PI count (Sheet 8) underreports as a result.
-            </Caveat>
-            <Caveat title="Sheet 6 has 38 fully-duplicate rows">
-              Pre-existing in fact_sbir.parquet from SBIR.gov source data. Same firm+program+phase+FY+amount appearing
-              twice. These are SBIR.gov re-listings or duplicate registrations.
-            </Caveat>
-            <Caveat title="Sheet 7 tiny anchors flagged">
-              89 institutions with cumulative HERD federal R&amp;D under $1M are flagged as is_tiny_anchor. Their
-              bottom-up vs HERD deltas are not meaningful.
-            </Caveat>
-            <Caveat title="Sheet 10 source-table-family inconsistency">
-              Federal Funds tab003 (agency totals) ≠ Σ agency_x_performer (performer breakdown) for several FYs. Sheet
-              10 absorbs this in synthetic_remainder rows.
-            </Caveat>
-            <Caveat title="HERD vs FF gap is negative post-FY2018">
-              HERD-reported federal R&amp;D exceeds Federal Funds explicit obligations after 2018. This is documented in
-              Sheet 11 (federal_university_bridge).
-            </Caveat>
-            <Caveat title="Federal-by-agency now sourced from HERD raw (S5.5 v3)">
-              Section 4 (Federal funding by agency) used to flow through sheet_02 with an SK bridge. As of S5.5 v3 it
-              reads <code>fact_herd_expenditures</code> directly (Q09K for FY2010–24 and Q02b for FY2005–09), re-keyed
-              by HERD&apos;s own <code>institution_sk</code>. The bridge is retired — raw HERD already lives on the
-              canonical sheet_01 SK universe, so 100% of HERD-tracked universities resolve correctly with no fanout or
-              under-reporting.
-            </Caveat>
-            <Caveat title="Sum(R&D by field) ≠ Total R&D (~13% of inst×fy pairs)">
-              HERD Q01 (total) and Q07 (field-level) are reported on separate forms, with different rounding conventions
-              and occasional respondent disagreement on field assignment. On 12.9% of institution × fiscal-year pairs,
-              the field-mix sum differs from total R&amp;D by more than 1% (mean bias +5.8%, the field-mix sum is
-              slightly higher). Charts that sum field-mix may differ from the total R&amp;D timeline by a small margin —
-              we do not normalize to force agreement because that would obscure respondent behavior.
-            </Caveat>
-          </CardContent>
-        </Card>
-      </section>
-
-      <section className="space-y-4">
         <h2 className="h-section">Three data landmines</h2>
         <p className="text-text-secondary">
           Three structural quirks in the source data shape what this dashboard can — and cannot — say. They are surfaced

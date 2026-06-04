@@ -93,12 +93,6 @@ export function ProfileBody({ sk, fallbackName, state }: Props) {
         </p>
         <div className="flex flex-wrap gap-3">
           <a
-            href="/downloads"
-            className="inline-flex items-center rounded border border-rule px-3 py-1.5 text-sm hover:bg-mute-3/40"
-          >
-            Download CSV
-          </a>
-          <a
             href={`/compare?ids=${encodeURIComponent(profile.institution_sk)}`}
             className="inline-flex items-center rounded border border-rule px-3 py-1.5 text-sm hover:bg-mute-3/40"
           >

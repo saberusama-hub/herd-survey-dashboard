@@ -121,11 +121,11 @@ export default function TopicsPage() {
         sources={[
           {
             id: 'nsf_awards',
-            subset: `Award title + abstract regex-tagged with 30-topic taxonomy; $ summed per topic for FY${summaryYear}`,
+            subset: `Award title + abstract regex-tagged with 30-topic taxonomy; $ + grant count summed per topic for FY${summaryYear}`,
           },
           {
             id: 'nih_exporter',
-            subset: `Project title + project_terms regex-tagged with 30-topic taxonomy; $ summed per topic for FY${summaryYear}`,
+            subset: `Project title + project_terms regex-tagged with 30-topic taxonomy; $ + grant count summed per topic for FY${summaryYear}`,
           },
           {
             id: 'ncses_herd',
@@ -133,10 +133,10 @@ export default function TopicsPage() {
           },
         ]}
         methodology={{
-          what: `Total federal R&D dollars tagged with each topic in FY${summaryYear}, with share-of-total (sum > 100% because topics overlap) and 5-year trailing CAGR.`,
-          how: 'agg_national_topic joined with agg_uni_specialization for the top university per topic. Tags applied via hand-curated case-insensitive regex on NIH project title+abstract and NSF award title+description. Year and CAGR window driven by the dropdown above the table.',
+          what: `Total federal R&D dollars tagged with each topic in FY${summaryYear}, with two share columns ($-share and grant-count share, each ≤100% per topic) and 5-year trailing CAGR.`,
+          how: '$-share = topic $ ÷ total federal R&D $ for the year. Grant-share = topic grants ÷ sum of grants across all topic tags. agg_national_topic joined with agg_uni_specialization for the top university per topic. Tags applied via hand-curated case-insensitive regex on NIH project title+abstract and NSF award title+description.',
           caveats:
-            'A grant can carry multiple tags (e.g. a cancer-immunology grant is in both). Shares therefore sum >100% — they represent the topic’s coverage of the federal R&D portfolio, not a partition. See /methodology#topics for the full regex set.',
+            'A grant can carry multiple tags (e.g. a cancer-immunology grant is in both). Each per-topic share is ≤100%, but shares can sum to >100% across topics because tags are not mutually exclusive. See /methodology#topics for the full regex set.',
         }}
       >
         <YearPicker
@@ -176,8 +176,19 @@ function SummaryTable({
           <tr className="border-b border-rule text-text-tertiary text-left">
             <th className="py-2 pr-4 font-medium">Topic</th>
             <th className="py-2 px-3 font-medium text-right whitespace-nowrap">FY{year} $</th>
-            <th className="py-2 px-3 font-medium text-right whitespace-nowrap">Share</th>
+            <th
+              className="py-2 px-3 font-medium text-right whitespace-nowrap"
+              title="Topic $ ÷ total federal R&D $ for the year (per-topic ≤100%; sum across topics can exceed 100% because tags overlap)"
+            >
+              $ share
+            </th>
             <th className="py-2 px-3 font-medium text-right whitespace-nowrap">Grants</th>
+            <th
+              className="py-2 px-3 font-medium text-right whitespace-nowrap"
+              title="Topic grant count ÷ sum of grants across all topic tags (per-topic ≤100%; sum across topics can exceed 100% because a grant can match multiple topics)"
+            >
+              Grants share
+            </th>
             <th className="py-2 px-3 font-medium text-right whitespace-nowrap">5y CAGR</th>
             <th className="py-2 pl-3 font-medium">Top university</th>
           </tr>
@@ -212,8 +223,13 @@ function SummaryTable({
                 <td className="py-1.5 px-3 text-right tnum text-text-primary">
                   ${(r.fy24_amount_m / 1000).toFixed(2)}B
                 </td>
-                <td className="py-1.5 px-3 text-right tnum text-text-secondary">{formatPercent(r.fy24_share)}</td>
+                <td className="py-1.5 px-3 text-right tnum text-text-secondary">
+                  {formatPercent(r.fy24_share, { source: 'percent' })}
+                </td>
                 <td className="py-1.5 px-3 text-right tnum text-text-secondary">{formatCount(r.fy24_grant_count)}</td>
+                <td className="py-1.5 px-3 text-right tnum text-text-secondary">
+                  {formatPercent(r.fy24_count_share, { source: 'percent' })}
+                </td>
                 <td className={`py-1.5 px-3 text-right tnum ${cagrColor}`}>{cagrStr}</td>
                 <td className="py-1.5 pl-3 text-text-secondary text-xs">{r.top_uni_name ?? '—'}</td>
               </tr>
@@ -477,7 +493,9 @@ function TopStatesTable({ rows }: { rows: TopicTopState[] }) {
             <tr key={r.state_code} className="border-b border-rule/60 hover:bg-mute-3/30">
               <td className="py-1.5 pr-3 text-text-primary tnum">{r.state_code}</td>
               <td className="py-1.5 pr-3 text-right tnum text-text-secondary">${r.state_topic_amount_m.toFixed(0)}M</td>
-              <td className="py-1.5 pr-3 text-right tnum text-text-secondary">{formatPercent(r.state_topic_share)}</td>
+              <td className="py-1.5 pr-3 text-right tnum text-text-secondary">
+                {formatPercent(r.state_topic_share, { source: 'percent' })}
+              </td>
               <td className="py-1.5 pl-3 text-text-secondary text-xs">{r.top_uni_in_state ?? '—'}</td>
             </tr>
           ))}

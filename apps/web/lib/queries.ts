@@ -1420,6 +1420,7 @@ export interface SbirAgency extends Row {
   n_awards: number;
   amount_real_b: number;
   share_pct: number;
+  share_n_pct: number;
 }
 
 export async function getSbirAgencies(fyMin = 2020, fyMax = 2024): Promise<SbirAgency[]> {
@@ -1430,12 +1431,13 @@ export async function getSbirAgencies(fyMin = 2020, fyMax = 2024): Promise<SbirA
       WHERE fiscal_year BETWEEN ${fyMin} AND ${fyMax}
       GROUP BY agency_name
     ),
-    total AS (SELECT SUM(amount) AS t FROM base)
+    total AS (SELECT SUM(amount) AS t_amount, SUM(n_awards) AS t_n FROM base)
     SELECT
       agency_name,
       n_awards::DOUBLE AS n_awards,
       amount / 1e9 AS amount_real_b,
-      amount / (SELECT t FROM total) * 100 AS share_pct
+      amount / (SELECT t_amount FROM total) * 100 AS share_pct,
+      n_awards * 100.0 / (SELECT t_n FROM total) AS share_n_pct
     FROM base
     ORDER BY amount DESC
   `);
@@ -1548,6 +1550,7 @@ export interface TopicSummary extends Row {
   fiscal_year: number;
   fy24_amount_m: number;
   fy24_share: number;
+  fy24_count_share: number;
   fy24_grant_count: number;
   cagr_5yr_pct: number | null;
   top_uni_name: string | null;
@@ -1568,6 +1571,7 @@ export async function getTopicSummaries(year = 2024): Promise<TopicSummary[]> {
       FROM agg_national_topic
       WHERE fiscal_year = ${year}
     ),
+    grant_total AS (SELECT SUM(gc_now) AS t_gc FROM base),
     prior AS (
       SELECT topic, tagged_amount AS amount_prior
       FROM agg_national_topic
@@ -1587,6 +1591,7 @@ export async function getTopicSummaries(year = 2024): Promise<TopicSummary[]> {
       ${year}::INTEGER AS fiscal_year,
       base.amount_now / 1e6 AS fy24_amount_m,
       base.share_now * 100 AS fy24_share,
+      base.gc_now * 100.0 / NULLIF((SELECT t_gc FROM grant_total), 0) AS fy24_count_share,
       base.gc_now::DOUBLE AS fy24_grant_count,
       CASE WHEN prior.amount_prior > 0
         THEN (POW(base.amount_now / prior.amount_prior, 1.0 / 5.0) - 1) * 100
