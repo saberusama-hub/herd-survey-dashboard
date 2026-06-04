@@ -177,12 +177,14 @@ export default function NationalPage() {
   // §5 trends explorer: which national metric to plot
   const [trendMetric, setTrendMetric] = useState<TrendMetricKey>('total_rd_nominal');
 
-  // Page-wide year selector. Every panel except the multi-year timelines
-  // (Overview stack, Agency lines, Concentration lines, Trends explorer,
-  // Disciplines stack, NIH IC 20-year share, Topic share 20-year, Team size
-  // 20-year, Climbers/fallers) re-ranks at this year.
-  const [selectedFy, setSelectedFy] = useState<number>(FY_MAX);
-  const yearSelectId = useId();
+  // Per-chart year selectors. Each snapshot panel re-ranks independently so
+  // the user can compare two different years side-by-side without leaving
+  // the page. 20-year timelines are unaffected.
+  const [geographyFy, setGeographyFy] = useState<number>(FY_MAX);
+  const [nihIcFy, setNihIcFy] = useState<number>(FY_MAX);
+  const [topicsFy, setTopicsFy] = useState<number>(FY_MAX);
+  const [teamSizeFy, setTeamSizeFy] = useState<number>(FY_MAX);
+  const [piDistFy, setPiDistFy] = useState<number>(FY_MAX);
 
   // Evergreen multi-FY queries — fetched once. The same payload powers both
   // the always-on timelines and the per-year rankings (just filter by FY).
@@ -228,30 +230,38 @@ export default function NationalPage() {
     };
   }, [ready]);
 
-  // FY-locked queries — refetched when selectedFy changes. These three views
-  // are tied to one specific FY at the SQL level.
+  // FY-locked refetches — one per panel.
   useEffect(() => {
     if (!ready) return;
     let cancelled = false;
-    Promise.all([
-      getNationalStateRollup(selectedFy),
-      getNationalTopicLeaders(5, selectedFy),
-      getStateTopicLeaders(10, selectedFy),
-    ])
-      .then(([s, tl, st]) => {
-        if (cancelled) return;
-        setStateRollup(s);
-        setTopicLeaders(tl);
-        setStateTopics(st);
+    getNationalStateRollup(geographyFy)
+      .then((s) => {
+        if (!cancelled) setStateRollup(s);
       })
       .catch((e: Error) => {
-        if (cancelled) return;
-        setError(e.message);
+        if (!cancelled) setError(e.message);
       });
     return () => {
       cancelled = true;
     };
-  }, [ready, selectedFy]);
+  }, [ready, geographyFy]);
+
+  useEffect(() => {
+    if (!ready) return;
+    let cancelled = false;
+    Promise.all([getNationalTopicLeaders(5, topicsFy), getStateTopicLeaders(10, topicsFy)])
+      .then(([tl, st]) => {
+        if (cancelled) return;
+        setTopicLeaders(tl);
+        setStateTopics(st);
+      })
+      .catch((e: Error) => {
+        if (!cancelled) setError(e.message);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, topicsFy]);
 
   /* ─── Overview pivot: rows of {fiscal_year, federal, state, ...} ─── */
   const overviewWide = useMemo(() => {
@@ -308,10 +318,9 @@ export default function NationalPage() {
     }));
   }, [agencies]);
 
-  /* ─── Agency leader in the selected FY ─── */
+  /* ─── Agency leader in the most recent FY (cosmetic note on the 20yr chart) ─── */
   const agencyLeader = useMemo(() => {
-    const target = agencyWide.find((r) => Number(r.fiscal_year) === selectedFy);
-    const row = target ?? agencyWide[agencyWide.length - 1];
+    const row = agencyWide[agencyWide.length - 1];
     if (!row) return null;
     let topKey: AgencyKey = 'NIH';
     let topAmt = 0;
@@ -323,7 +332,7 @@ export default function NationalPage() {
       }
     }
     return { fy: Number(row.fiscal_year), key: topKey, amount: topAmt };
-  }, [agencyWide, selectedFy]);
+  }, [agencyWide]);
 
   /* ─── Concentration pivot — share is 0..1, render as 0..100% ─── */
   const concentrationWide = useMemo(() => {
@@ -377,7 +386,7 @@ export default function NationalPage() {
 
   const stateSummary = useMemo(() => {
     if (stateRollup.length === 0) return null;
-    // Rows come back already filtered to selectedFy from the query, but if a
+    // Rows come back already filtered to geographyFy from the query, but if a
     // mixed payload ever lands here we still need a year to display.
     const fy = Number(stateRollup[0].fiscal_year);
     const sorted = [...stateRollup].sort((a, b) => Number(b.total_rd_nominal) - Number(a.total_rd_nominal));
@@ -431,30 +440,29 @@ export default function NationalPage() {
 
   const stemSummary = useMemo(() => {
     if (stemStackWide.length === 0) return null;
-    const target = stemStackWide.find((r) => r.fiscal_year === selectedFy);
-    const row = target ?? stemStackWide[stemStackWide.length - 1];
+    const row = stemStackWide[stemStackWide.length - 1];
     const total = row.stem + row.non_stem;
     return {
       fy: Number(row.fiscal_year),
       stemShare: total > 0 ? row.stem / total : null,
     };
-  }, [stemStackWide, selectedFy]);
+  }, [stemStackWide]);
 
-  /* ─── §7 PI distribution: decile averages for the selected FY ─── */
+  /* ─── §7 PI distribution: decile averages at piDistFy ─── */
   const piDistLatest = useMemo(() => {
     if (piDist.length === 0) return { fy: null as number | null, rows: [] as { decile: number; avg_amount: number }[] };
-    const have = piDist.some((r) => r.fiscal_year === selectedFy);
+    const have = piDist.some((r) => r.fiscal_year === piDistFy);
     const fy = have
-      ? selectedFy
+      ? piDistFy
       : piDist.reduce((m, r) => (r.fiscal_year > m ? r.fiscal_year : m), piDist[0].fiscal_year);
     const rows = piDist
       .filter((r) => r.fiscal_year === fy)
       .sort((a, b) => a.decile - b.decile)
       .map((r) => ({ decile: r.decile, avg_amount: Number(r.avg_amount) || 0 }));
     return { fy, rows };
-  }, [piDist, selectedFy]);
+  }, [piDist, piDistFy]);
 
-  /* ─── §8 Topics: ranking at selected FY + 20-year share for the top 10 ─── */
+  /* ─── §8 Topics: ranking at topicsFy + 20-year share for the top 10 ─── */
   const topicsView = useMemo(() => {
     if (topics.length === 0) {
       return {
@@ -464,9 +472,9 @@ export default function NationalPage() {
         shareTrend: [] as Array<Record<string, number>>,
       };
     }
-    const have = topics.some((r) => r.fiscal_year === selectedFy);
+    const have = topics.some((r) => r.fiscal_year === topicsFy);
     const latestFy = have
-      ? selectedFy
+      ? topicsFy
       : topics.reduce((m, r) => (r.fiscal_year > m ? r.fiscal_year : m), topics[0].fiscal_year);
     const latest = topics.filter((r) => r.fiscal_year === latestFy);
     const ranked = latest
@@ -495,7 +503,7 @@ export default function NationalPage() {
         return row;
       });
     return { latestFy, ranked, top10, shareTrend };
-  }, [topics, selectedFy]);
+  }, [topics, topicsFy]);
 
   /* ─── §9 Team size: pivot to wide per-FY with 5 bucket columns ─── */
   const teamSizeView = useMemo(() => {
@@ -506,9 +514,9 @@ export default function NationalPage() {
         trend: [] as Array<Record<string, number>>,
       };
     }
-    const have = teamSize.some((r) => r.fiscal_year === selectedFy);
+    const have = teamSize.some((r) => r.fiscal_year === teamSizeFy);
     const latestFy = have
-      ? selectedFy
+      ? teamSizeFy
       : teamSize.reduce((m, r) => (r.fiscal_year > m ? r.fiscal_year : m), teamSize[0].fiscal_year);
     const latest = teamSize.filter((r) => r.fiscal_year === latestFy);
     const latestRows = TEAM_BUCKET_ORDER.map((b) => {
@@ -535,7 +543,7 @@ export default function NationalPage() {
         return row;
       });
     return { latestFy, latestRows, trend };
-  }, [teamSize, selectedFy]);
+  }, [teamSize, teamSizeFy]);
 
   /* ─── §S5.1 NIH IC view: 27-IC ranking at selected FY + top-5 20yr trends ─── */
   const nihIcView = useMemo(() => {
@@ -547,9 +555,9 @@ export default function NationalPage() {
         trend: [] as Array<Record<string, number>>,
       };
     }
-    const have = nihIcs.some((r) => r.fiscal_year === selectedFy);
+    const have = nihIcs.some((r) => r.fiscal_year === nihIcFy);
     const latestFy = have
-      ? selectedFy
+      ? nihIcFy
       : nihIcs.reduce((m, r) => (r.fiscal_year > m ? r.fiscal_year : m), nihIcs[0].fiscal_year);
     const ranked = nihIcs
       .filter((r) => r.fiscal_year === latestFy)
@@ -580,7 +588,7 @@ export default function NationalPage() {
         return row;
       });
     return { latestFy, ranked, top5, trend };
-  }, [nihIcs, selectedFy]);
+  }, [nihIcs, nihIcFy]);
 
   /* ─── §S5.2 Topic leaders: group {topic: [leader rows]} ─── */
   const topicLeadersByTopic = useMemo(() => {
@@ -615,30 +623,8 @@ export default function NationalPage() {
       <PageHeader
         eyebrow="National view"
         title="U.S. university research funding"
-        description="Cross-cutting trends across all ~800 institutions in the HERD universe, FY2005 – FY2024. Use the year selector to re-rank every snapshot panel — 20-year trend charts stay full-window."
+        description="Cross-cutting trends across all ~800 institutions in the HERD universe, FY2005 – FY2024. Snapshot panels (Geography, NIH IC ranking, Topics ranking, State specialization, Team size mix, PI distribution) have their own year selector — pick any FY2005–FY2024 to re-rank that panel."
       />
-
-      <div className="flex flex-col gap-2 rounded-md border border-rule bg-surface-elevated px-4 py-3 sm:flex-row sm:items-center sm:gap-4">
-        <label htmlFor={yearSelectId} className="text-[11px] uppercase tracking-wider text-text-tertiary">
-          Snapshot year
-        </label>
-        <select
-          id={yearSelectId}
-          value={selectedFy}
-          onChange={(e) => setSelectedFy(Number(e.target.value))}
-          className="h-7 w-24 rounded border border-rule bg-surface px-2 text-sm tnum focus:outline-none focus:ring-2 focus:ring-ring"
-        >
-          {ALL_YEARS.map((y) => (
-            <option key={y} value={y}>
-              FY{y}
-            </option>
-          ))}
-        </select>
-        <span className="text-[11px] italic text-text-tertiary">
-          Drives the Geography map, NIH IC ranking, Topics ranking, State specialization, Team size mix, and PI
-          distribution panels. 20-year line / stack charts always show the full FY{FY_MIN}–FY{FY_MAX} window.
-        </span>
-      </div>
 
       {/* Anchored section nav */}
       <nav
@@ -762,12 +748,12 @@ export default function NationalPage() {
         />
         <ChartFrame
           eyebrow={nihIcView.latestFy ? `FY${nihIcView.latestFy} ranking` : 'NIH ICs'}
-          title={`National NIH funding by Institute / Center, FY${nihIcView.latestFy ?? selectedFy}`}
-          dek={`Sorted by total NIH funding in FY${nihIcView.latestFy ?? selectedFy}. % is share of national NIH total that year (sums to 100%).`}
+          title={`National NIH funding by Institute / Center, FY${nihIcView.latestFy ?? nihIcFy}`}
+          dek={`Sorted by total NIH funding in FY${nihIcView.latestFy ?? nihIcFy}. % is share of national NIH total that year (sums to 100%).`}
           sources={[
             {
               id: 'nih_exporter',
-              subset: `Project total_cost grouped by ADMIN_IC (27 NIH Institutes/Centers + legacy codes), summed across all U.S. universities for FY${nihIcView.latestFy ?? selectedFy}`,
+              subset: `Project total_cost grouped by ADMIN_IC (27 NIH Institutes/Centers + legacy codes), summed across all U.S. universities for FY${nihIcView.latestFy ?? nihIcFy}`,
             },
           ]}
           methodology={{
@@ -777,7 +763,8 @@ export default function NationalPage() {
               'admin_ic_code represents the IC that manages the project. For multi-IC awards, contributing ICs may not be reflected. Total_cost includes both direct + indirect.',
           }}
         >
-          <ResponsiveSvg height={Math.max(420, nihIcView.ranked.length * 20 + 40)}>
+          <PanelYearPicker value={nihIcFy} onChange={setNihIcFy} />
+          <ResponsiveSvg height={Math.max(480, nihIcView.ranked.length * 22 + 40)}>
             {(w, h) => <IcBars width={w} height={h} bars={nihIcView.ranked} />}
           </ResponsiveSvg>
         </ChartFrame>
@@ -876,12 +863,12 @@ export default function NationalPage() {
         />
         <ChartFrame
           eyebrow={stateSummary ? `FY${stateSummary.fy} totals` : 'State totals'}
-          title={`HERD R&D by state, FY${stateSummary?.fy ?? selectedFy}`}
+          title={`HERD R&D by state, FY${stateSummary?.fy ?? geographyFy}`}
           dek="Choropleth for the selected fiscal year. Hover a state for its total; the leaderboard at right shows the top 5."
           sources={[
             {
               id: 'ncses_herd',
-              subset: `Q01 (Total R&D) per institution × FY, summed by headquarters state, FY${selectedFy}`,
+              subset: `Q01 (Total R&D) per institution × FY, summed by headquarters state, FY${geographyFy}`,
             },
             { id: 'ipeds', subset: 'HD directory: STABBR (state) attached to each institution_sk' },
           ]}
@@ -897,6 +884,7 @@ export default function NationalPage() {
               'Counts a university’s spending in its headquarters state, even if research is performed at branch campuses elsewhere.',
           }}
         >
+          <PanelYearPicker value={geographyFy} onChange={setGeographyFy} />
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
             <div className="min-h-[360px]">
               <USStateMap values={stateValues} height={400} />
@@ -1068,16 +1056,16 @@ export default function NationalPage() {
         />
         <ChartFrame
           eyebrow={topicsView.latestFy ? `FY${topicsView.latestFy} ranking` : 'Research topics'}
-          title={`All 30 research topics by federal $, FY${topicsView.latestFy ?? selectedFy}`}
-          dek={`Total tagged dollars per topic in FY${topicsView.latestFy ?? selectedFy}. Ranking is by dollar amount; share is of total federal $ that FY (sum can exceed 100% — topics overlap).`}
+          title={`All 30 research topics by federal $, FY${topicsView.latestFy ?? topicsFy}`}
+          dek={`Total tagged dollars per topic in FY${topicsView.latestFy ?? topicsFy}. Ranking is by dollar amount; share is of total federal $ that FY (sum can exceed 100% — topics overlap).`}
           sources={[
             {
               id: 'nsf_awards',
-              subset: `Award title + abstract text regex-matched against the 30-topic taxonomy; $ summed per topic for FY${topicsView.latestFy ?? selectedFy}`,
+              subset: `Award title + abstract text regex-matched against the 30-topic taxonomy; $ summed per topic for FY${topicsView.latestFy ?? topicsFy}`,
             },
             {
               id: 'nih_exporter',
-              subset: `Project title + structured terms regex-matched against the 30-topic taxonomy; $ summed per topic for FY${topicsView.latestFy ?? selectedFy}`,
+              subset: `Project title + structured terms regex-matched against the 30-topic taxonomy; $ summed per topic for FY${topicsView.latestFy ?? topicsFy}`,
             },
           ]}
           note="Topics use word-boundary regex on title + abstract / project terms. See /methodology for the exact pattern list."
@@ -1088,6 +1076,7 @@ export default function NationalPage() {
               'Topics are NOT mutually exclusive — one grant can match multiple topics (e.g., "Cancer" and "AI/ML"). Patterns were tightened in May 2026 to reduce false positives. Shares can sum above 100% by design.',
           }}
         >
+          <PanelYearPicker value={topicsFy} onChange={setTopicsFy} />
           <ResponsiveSvg height={Math.max(420, topicsView.ranked.length * 22 + 40)}>
             {(w, h) => <TopicBars width={w} height={h} bars={topicsView.ranked} />}
           </ResponsiveSvg>
@@ -1143,16 +1132,16 @@ export default function NationalPage() {
         {topicLeaders.length > 0 && topicsView.top10.length > 0 && (
           <ChartFrame
             eyebrow="Top universities per topic"
-            title={`The top 5 universities funded for each top-10 topic, FY${topicsView.latestFy ?? selectedFy}`}
-            dek={`For each of the 10 most-funded topics, the universities that received the largest tagged federal $ in FY${topicsView.latestFy ?? selectedFy}.`}
+            title={`The top 5 universities funded for each top-10 topic, FY${topicsView.latestFy ?? topicsFy}`}
+            dek={`For each of the 10 most-funded topics, the universities that received the largest tagged federal $ in FY${topicsView.latestFy ?? topicsFy}.`}
             sources={[
               {
                 id: 'nsf_awards',
-                subset: `Tagged award $ per institution × topic, ranked within topic for FY${selectedFy}`,
+                subset: `Tagged award $ per institution × topic, ranked within topic for FY${topicsFy}`,
               },
               {
                 id: 'nih_exporter',
-                subset: `Tagged project $ per institution × topic, ranked within topic for FY${selectedFy}`,
+                subset: `Tagged project $ per institution × topic, ranked within topic for FY${topicsFy}`,
               },
               {
                 id: 'ncses_herd',
@@ -1209,9 +1198,9 @@ export default function NationalPage() {
           color="hsl(var(--agency-nasa))"
         />
         <ChartFrame
-          eyebrow={nihIcView.latestFy ? `FY${nihIcView.latestFy} state ranking` : 'State topic leaders'}
-          title={`Top 5 states per research topic, FY${nihIcView.latestFy ?? selectedFy}`}
-          dek={`Each panel shows one topic; bars are the top 5 states by tagged federal $ in FY${nihIcView.latestFy ?? selectedFy}, with each state's share of the national topic total.`}
+          eyebrow={topicsView.latestFy ? `FY${topicsView.latestFy} state ranking` : 'State topic leaders'}
+          title={`Top 5 states per research topic, FY${topicsView.latestFy ?? topicsFy}`}
+          dek={`Each panel shows one topic; bars are the top 5 states by tagged federal $ in FY${topicsView.latestFy ?? topicsFy}, with each state's share of the national topic total.`}
           sources={[
             {
               id: 'nsf_awards',
@@ -1279,16 +1268,16 @@ export default function NationalPage() {
         />
         <ChartFrame
           eyebrow={teamSizeView.latestFy ? `FY${teamSizeView.latestFy} mix` : 'Team size'}
-          title={`Federal $ by PI team size, FY${teamSizeView.latestFy ?? selectedFy}`}
+          title={`Federal $ by PI team size, FY${teamSizeView.latestFy ?? teamSizeFy}`}
           dek="Each bar is one team-size bucket of NSF + NIH grants. Width is the bucket's total federal funding for the selected year."
           sources={[
             {
               id: 'nsf_awards',
-              subset: `Lead PI + n_pi field per award; bucketed by team count for FY${selectedFy}`,
+              subset: `Lead PI + n_pi field per award; bucketed by team count for FY${teamSizeFy}`,
             },
             {
               id: 'nih_exporter',
-              subset: `PI bridge file COUNT(DISTINCT pi_id) per project; bucketed by team count for FY${selectedFy}`,
+              subset: `PI bridge file COUNT(DISTINCT pi_id) per project; bucketed by team count for FY${teamSizeFy}`,
             },
           ]}
           note={
@@ -1303,6 +1292,7 @@ export default function NationalPage() {
               'NSF does not publish the full co-PI roster, so grants are placed in their reported team-size bucket but co-PIs are not counted individually — slightly conservative on the larger buckets.',
           }}
         >
+          <PanelYearPicker value={teamSizeFy} onChange={setTeamSizeFy} />
           <ResponsiveSvg height={280}>
             {(w, h) => <TeamSizeBars width={w} height={h} bars={teamSizeView.latestRows} />}
           </ResponsiveSvg>
@@ -1360,14 +1350,14 @@ export default function NationalPage() {
         />
         <ChartFrame
           eyebrow={piDistLatest.fy ? `FY${piDistLatest.fy} distribution` : 'PI $ distribution'}
-          title={`How federal $ spreads across PIs nationally, FY${piDistLatest.fy ?? selectedFy}`}
-          dek={`Average dollar amount per PI in each decile of the FY${piDistLatest.fy ?? selectedFy} roster, averaged across institutions (decile-of-deciles).`}
+          title={`How federal $ spreads across PIs nationally, FY${piDistLatest.fy ?? piDistFy}`}
+          dek={`Average dollar amount per PI in each decile of the FY${piDistLatest.fy ?? piDistFy} roster, averaged across institutions (decile-of-deciles).`}
           sources={[
             {
               id: 'nsf_awards',
-              subset: `Lead PI obligations bucketed into deciles per institution, FY${selectedFy}`,
+              subset: `Lead PI obligations bucketed into deciles per institution, FY${piDistFy}`,
             },
-            { id: 'nih_exporter', subset: `PI total_cost bucketed into deciles per institution, FY${selectedFy}` },
+            { id: 'nih_exporter', subset: `PI total_cost bucketed into deciles per institution, FY${piDistFy}` },
           ]}
           note={
             piDistLatest.rows.length > 0
@@ -1381,6 +1371,7 @@ export default function NationalPage() {
               'Averaging deciles across institutions is a coarse but defensible national lens. PIs holding grants at multiple universities are counted once per institution.',
           }}
         >
+          <PanelYearPicker value={piDistFy} onChange={setPiDistFy} />
           <ResponsiveSvg height={280}>
             {(w, h) => <DistributionPlot data={piDistLatest.rows} width={w} height={h} />}
           </ResponsiveSvg>
@@ -1423,6 +1414,39 @@ export default function NationalPage() {
   );
 }
 
+/* ───────────── Inline UI helpers (kept local to the file) ──────────── */
+
+function PanelYearPicker({
+  label,
+  value,
+  onChange,
+}: {
+  label?: string;
+  value: number;
+  onChange: (y: number) => void;
+}) {
+  const id = useId();
+  return (
+    <div className="-mt-1 mb-3 flex flex-wrap items-center gap-2 text-[12px]">
+      <label htmlFor={id} className="text-[11px] uppercase tracking-wider text-text-tertiary">
+        {label ?? 'Year'}
+      </label>
+      <select
+        id={id}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="h-7 w-24 rounded border border-rule bg-surface px-2 text-sm tnum focus:outline-none focus:ring-2 focus:ring-ring"
+      >
+        {ALL_YEARS.map((y) => (
+          <option key={y} value={y}>
+            FY{y}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 /* ───────────── Inline visx components (kept local to the file) ──────────── */
 
 function IcBars({
@@ -1434,7 +1458,7 @@ function IcBars({
   width: number;
   height: number;
 }) {
-  const margin = { top: 8, right: 100, bottom: 28, left: 240 };
+  const margin = { top: 8, right: 100, bottom: 28, left: 260 };
   const innerW = Math.max(0, width - margin.left - margin.right);
   const innerH = Math.max(0, height - margin.top - margin.bottom);
   const labels = bars.map((b) => b.ic_full_name);
@@ -1444,6 +1468,11 @@ function IcBars({
     range: [0, innerW],
     nice: true,
   });
+  // IC display name — truncate aggressively so 240px margin always holds
+  // the full string at 11px. d3-axis decimates ticks on its own when names
+  // collide, so passing an explicit `tickValues` is not enough; we render
+  // labels manually inside the band centerlines instead.
+  const labelFor = (full: string) => (full.length > 38 ? `${full.slice(0, 37)}…` : full);
   return (
     <svg width={width} height={height} role="img" aria-label="National NIH funding by Institute or Center">
       <Group left={margin.left} top={margin.top}>
@@ -1453,6 +1482,11 @@ function IcBars({
           const bh = y.bandwidth();
           return (
             <g key={b.ic_code}>
+              {/* Y-axis label rendered manually per row so every IC name shows */}
+              <text x={-6} y={by + bh / 2} dy="0.35em" textAnchor="end" className="fill-text-primary text-[11px]">
+                <title>{b.ic_full_name}</title>
+                {labelFor(b.ic_full_name)}
+              </text>
               <rect x={0} y={by} width={bw} height={bh} fill="hsl(var(--agency-nih))" rx={2} />
               <text x={bw + 6} y={by + bh / 2} dy="0.35em" className="fill-text-secondary text-[11px] tnum">
                 {formatDollars(b.amount)} · {formatPercent(b.pct)}
@@ -1469,17 +1503,6 @@ function IcBars({
             className: 'fill-text-tertiary text-[11px] tnum',
             textAnchor: 'middle',
           })}
-        />
-        <AxisLeft
-          scale={y}
-          tickLabelProps={() => ({
-            className: 'fill-text-primary text-[11px]',
-            textAnchor: 'end',
-            dx: -6,
-            dy: 4,
-          })}
-          hideAxisLine
-          hideTicks
         />
       </Group>
     </svg>
