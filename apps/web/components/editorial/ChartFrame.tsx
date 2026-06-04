@@ -3,7 +3,6 @@
 import { type ReactNode, useId, useState } from 'react';
 
 import type { SourceCitation } from '@/lib/sources';
-import { useInView } from '@/lib/use-in-view';
 
 import { SourceLine } from './SourceLine';
 
@@ -59,16 +58,11 @@ interface Props {
 export function ChartFrame({ eyebrow, title, dek, source, sources, note, methodology, children }: Props) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
-  const { ref, inView } = useInView();
   const hasStructured = Array.isArray(sources) && sources.length > 0;
   const hasFooter = hasStructured || Boolean(source) || Boolean(note);
 
   return (
-    <figure
-      ref={ref}
-      className="reveal group/figure border-t border-rule pt-5"
-      data-state={inView ? 'visible' : undefined}
-    >
+    <figure className="group/figure border-t border-rule pt-5">
       <header className="space-y-2">
         {eyebrow && <p className="t-eyebrow text-text-tertiary">{eyebrow}</p>}
         <div className="flex items-baseline gap-2 flex-wrap">
