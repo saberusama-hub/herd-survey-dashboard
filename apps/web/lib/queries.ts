@@ -1251,8 +1251,10 @@ export interface TopicLeaderRow extends Row {
   topic_rank_national: number;
 }
 
-/** For each topic, top-N universities by uni_topic_amount in the latest FY. */
-export async function getNationalTopicLeaders(topN = 5): Promise<TopicLeaderRow[]> {
+/** For each topic, top-N universities by uni_topic_amount in the given FY
+ *  (defaults to the latest year present in agg_uni_specialization). */
+export async function getNationalTopicLeaders(topN = 5, fy?: number): Promise<TopicLeaderRow[]> {
+  const fyClause = fy !== undefined && fy !== null ? `${fy}` : '(SELECT MAX(fiscal_year) FROM agg_uni_specialization)';
   // Use a scalar subquery for the latest FY rather than a CROSS JOIN with a
   // CTE. DuckDB-WASM rejects `FROM x, cte LEFT JOIN y ...` with
   // "Non-inner join on correlated columns not supported" because the
@@ -1269,7 +1271,7 @@ export async function getNationalTopicLeaders(topN = 5): Promise<TopicLeaderRow[
       s.topic_rank_national
     FROM agg_uni_specialization s
     LEFT JOIN dim_institution di ON di.institution_sk = s.institution_sk
-    WHERE s.fiscal_year = (SELECT MAX(fiscal_year) FROM agg_uni_specialization)
+    WHERE s.fiscal_year = ${fyClause}
       AND s.topic_rank_national <= ${topN}
     ORDER BY s.topic, s.topic_rank_national
   `);
@@ -1284,8 +1286,10 @@ export interface StateTopicRow extends Row {
   top_uni_in_state: string | null;
 }
 
-/** For each topic, top-N states by state_topic_amount in the latest FY. */
-export async function getStateTopicLeaders(topN = 10): Promise<StateTopicRow[]> {
+/** For each topic, top-N states by state_topic_amount in the given FY
+ *  (defaults to the latest year present in agg_state_topic). */
+export async function getStateTopicLeaders(topN = 10, fy?: number): Promise<StateTopicRow[]> {
+  const fyClause = fy !== undefined && fy !== null ? `${fy}` : '(SELECT MAX(fiscal_year) FROM agg_state_topic)';
   return query<StateTopicRow>(`
     WITH ranked AS (
       SELECT
@@ -1299,7 +1303,7 @@ export async function getStateTopicLeaders(topN = 10): Promise<StateTopicRow[]> 
           PARTITION BY s.topic ORDER BY s.state_topic_amount DESC
         ) AS rn
       FROM agg_state_topic s
-      WHERE s.fiscal_year = (SELECT MAX(fiscal_year) FROM agg_state_topic)
+      WHERE s.fiscal_year = ${fyClause}
     )
     SELECT state_code, fiscal_year, topic, state_topic_amount,
            state_topic_share, top_uni_in_state

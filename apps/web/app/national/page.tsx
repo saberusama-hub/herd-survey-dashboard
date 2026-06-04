@@ -3,7 +3,7 @@
 import { AxisBottom, AxisLeft } from '@visx/axis';
 import { Group } from '@visx/group';
 import { scaleBand, scaleLinear } from '@visx/scale';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 
 import { useDuckDB } from '@/app/providers';
 import { DistributionPlot } from '@/components/charts/DistributionPlot';
@@ -42,6 +42,10 @@ import {
   getTopClimbers,
   getTopFallers,
 } from '@/lib/queries';
+
+const FY_MIN = 2005;
+const FY_MAX = 2024;
+const ALL_YEARS = Array.from({ length: FY_MAX - FY_MIN + 1 }, (_, i) => FY_MAX - i);
 
 const SECTIONS = [
   { id: 'overview', label: 'Overview' },
@@ -173,6 +177,15 @@ export default function NationalPage() {
   // §5 trends explorer: which national metric to plot
   const [trendMetric, setTrendMetric] = useState<TrendMetricKey>('total_rd_nominal');
 
+  // Page-wide year selector. Every panel except the multi-year timelines
+  // (Overview stack, Agency lines, Concentration lines, Trends explorer,
+  // Disciplines stack, NIH IC 20-year share, Topic share 20-year, Team size
+  // 20-year, Climbers/fallers) re-ranks at this year.
+  const [selectedFy, setSelectedFy] = useState<number>(FY_MAX);
+  const yearSelectId = useId();
+
+  // Evergreen multi-FY queries — fetched once. The same payload powers both
+  // the always-on timelines and the per-year rankings (just filter by FY).
   useEffect(() => {
     if (!ready) return;
     let cancelled = false;
@@ -181,32 +194,26 @@ export default function NationalPage() {
       getNationalOverview(),
       getNationalAgencyTrend(),
       getNationalConcentration(),
-      getNationalStateRollup(),
       getNationalFieldMix(),
       getNationalPiDistribution(),
       getNationalTrends(),
       getNationalTeamSize(),
       getNationalTopics(),
       getNationalNihICs(),
-      getNationalTopicLeaders(5),
-      getStateTopicLeaders(10),
       getTopClimbers('5yr', 10),
       getTopFallers('5yr', 10),
     ])
-      .then(([o, a, c, s, f, p, t, ts, tp, ic, tl, st, cl, fa]) => {
+      .then(([o, a, c, f, p, t, ts, tp, ic, cl, fa]) => {
         if (cancelled) return;
         setOverview(o as OverviewRow[]);
         setAgencies(a as AgencyRow[]);
         setConcentration(c as ConcentrationRow[]);
-        setStateRollup(s);
         setFieldMix(f);
         setPiDist(p);
         setTrends(t);
         setTeamSize(ts);
         setTopics(tp);
         setNihIcs(ic);
-        setTopicLeaders(tl);
-        setStateTopics(st);
         setClimbers(cl);
         setFallers(fa);
         setLoading(false);
@@ -220,6 +227,31 @@ export default function NationalPage() {
       cancelled = true;
     };
   }, [ready]);
+
+  // FY-locked queries — refetched when selectedFy changes. These three views
+  // are tied to one specific FY at the SQL level.
+  useEffect(() => {
+    if (!ready) return;
+    let cancelled = false;
+    Promise.all([
+      getNationalStateRollup(selectedFy),
+      getNationalTopicLeaders(5, selectedFy),
+      getStateTopicLeaders(10, selectedFy),
+    ])
+      .then(([s, tl, st]) => {
+        if (cancelled) return;
+        setStateRollup(s);
+        setTopicLeaders(tl);
+        setStateTopics(st);
+      })
+      .catch((e: Error) => {
+        if (cancelled) return;
+        setError(e.message);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, selectedFy]);
 
   /* ─── Overview pivot: rows of {fiscal_year, federal, state, ...} ─── */
   const overviewWide = useMemo(() => {
@@ -276,21 +308,22 @@ export default function NationalPage() {
     }));
   }, [agencies]);
 
-  /* ─── Agency leader in latest FY ─── */
+  /* ─── Agency leader in the selected FY ─── */
   const agencyLeader = useMemo(() => {
-    if (agencyWide.length === 0) return null;
-    const latest = agencyWide[agencyWide.length - 1];
+    const target = agencyWide.find((r) => Number(r.fiscal_year) === selectedFy);
+    const row = target ?? agencyWide[agencyWide.length - 1];
+    if (!row) return null;
     let topKey: AgencyKey = 'NIH';
     let topAmt = 0;
     for (const k of AGENCY_ORDER) {
-      const v = Number(latest[k]) || 0;
+      const v = Number(row[k]) || 0;
       if (v > topAmt) {
         topAmt = v;
         topKey = k;
       }
     }
-    return { fy: Number(latest.fiscal_year), key: topKey, amount: topAmt };
-  }, [agencyWide]);
+    return { fy: Number(row.fiscal_year), key: topKey, amount: topAmt };
+  }, [agencyWide, selectedFy]);
 
   /* ─── Concentration pivot — share is 0..1, render as 0..100% ─── */
   const concentrationWide = useMemo(() => {
@@ -344,6 +377,8 @@ export default function NationalPage() {
 
   const stateSummary = useMemo(() => {
     if (stateRollup.length === 0) return null;
+    // Rows come back already filtered to selectedFy from the query, but if a
+    // mixed payload ever lands here we still need a year to display.
     const fy = Number(stateRollup[0].fiscal_year);
     const sorted = [...stateRollup].sort((a, b) => Number(b.total_rd_nominal) - Number(a.total_rd_nominal));
     return {
@@ -396,26 +431,30 @@ export default function NationalPage() {
 
   const stemSummary = useMemo(() => {
     if (stemStackWide.length === 0) return null;
-    const last = stemStackWide[stemStackWide.length - 1];
-    const total = last.stem + last.non_stem;
+    const target = stemStackWide.find((r) => r.fiscal_year === selectedFy);
+    const row = target ?? stemStackWide[stemStackWide.length - 1];
+    const total = row.stem + row.non_stem;
     return {
-      fy: Number(last.fiscal_year),
-      stemShare: total > 0 ? last.stem / total : null,
+      fy: Number(row.fiscal_year),
+      stemShare: total > 0 ? row.stem / total : null,
     };
-  }, [stemStackWide]);
+  }, [stemStackWide, selectedFy]);
 
-  /* ─── §7 PI distribution: latest-FY decile averages ─── */
+  /* ─── §7 PI distribution: decile averages for the selected FY ─── */
   const piDistLatest = useMemo(() => {
     if (piDist.length === 0) return { fy: null as number | null, rows: [] as { decile: number; avg_amount: number }[] };
-    const latestFy = piDist.reduce((m, r) => (r.fiscal_year > m ? r.fiscal_year : m), piDist[0].fiscal_year);
+    const have = piDist.some((r) => r.fiscal_year === selectedFy);
+    const fy = have
+      ? selectedFy
+      : piDist.reduce((m, r) => (r.fiscal_year > m ? r.fiscal_year : m), piDist[0].fiscal_year);
     const rows = piDist
-      .filter((r) => r.fiscal_year === latestFy)
+      .filter((r) => r.fiscal_year === fy)
       .sort((a, b) => a.decile - b.decile)
       .map((r) => ({ decile: r.decile, avg_amount: Number(r.avg_amount) || 0 }));
-    return { fy: latestFy, rows };
-  }, [piDist]);
+    return { fy, rows };
+  }, [piDist, selectedFy]);
 
-  /* ─── §8 Topics: latest FY ranking + 20-year share for the top 10 ─── */
+  /* ─── §8 Topics: ranking at selected FY + 20-year share for the top 10 ─── */
   const topicsView = useMemo(() => {
     if (topics.length === 0) {
       return {
@@ -425,7 +464,10 @@ export default function NationalPage() {
         shareTrend: [] as Array<Record<string, number>>,
       };
     }
-    const latestFy = topics.reduce((m, r) => (r.fiscal_year > m ? r.fiscal_year : m), topics[0].fiscal_year);
+    const have = topics.some((r) => r.fiscal_year === selectedFy);
+    const latestFy = have
+      ? selectedFy
+      : topics.reduce((m, r) => (r.fiscal_year > m ? r.fiscal_year : m), topics[0].fiscal_year);
     const latest = topics.filter((r) => r.fiscal_year === latestFy);
     const ranked = latest
       .map((r) => ({
@@ -453,7 +495,7 @@ export default function NationalPage() {
         return row;
       });
     return { latestFy, ranked, top10, shareTrend };
-  }, [topics]);
+  }, [topics, selectedFy]);
 
   /* ─── §9 Team size: pivot to wide per-FY with 5 bucket columns ─── */
   const teamSizeView = useMemo(() => {
@@ -464,7 +506,10 @@ export default function NationalPage() {
         trend: [] as Array<Record<string, number>>,
       };
     }
-    const latestFy = teamSize.reduce((m, r) => (r.fiscal_year > m ? r.fiscal_year : m), teamSize[0].fiscal_year);
+    const have = teamSize.some((r) => r.fiscal_year === selectedFy);
+    const latestFy = have
+      ? selectedFy
+      : teamSize.reduce((m, r) => (r.fiscal_year > m ? r.fiscal_year : m), teamSize[0].fiscal_year);
     const latest = teamSize.filter((r) => r.fiscal_year === latestFy);
     const latestRows = TEAM_BUCKET_ORDER.map((b) => {
       const row = latest.find((r) => r.team_size_bucket === b);
@@ -490,9 +535,9 @@ export default function NationalPage() {
         return row;
       });
     return { latestFy, latestRows, trend };
-  }, [teamSize]);
+  }, [teamSize, selectedFy]);
 
-  /* ─── §S5.1 NIH IC view: latest-FY 27-IC ranking + top-5 20yr trends ─── */
+  /* ─── §S5.1 NIH IC view: 27-IC ranking at selected FY + top-5 20yr trends ─── */
   const nihIcView = useMemo(() => {
     if (nihIcs.length === 0) {
       return {
@@ -502,7 +547,10 @@ export default function NationalPage() {
         trend: [] as Array<Record<string, number>>,
       };
     }
-    const latestFy = nihIcs.reduce((m, r) => (r.fiscal_year > m ? r.fiscal_year : m), nihIcs[0].fiscal_year);
+    const have = nihIcs.some((r) => r.fiscal_year === selectedFy);
+    const latestFy = have
+      ? selectedFy
+      : nihIcs.reduce((m, r) => (r.fiscal_year > m ? r.fiscal_year : m), nihIcs[0].fiscal_year);
     const ranked = nihIcs
       .filter((r) => r.fiscal_year === latestFy)
       .map((r) => ({
@@ -532,7 +580,7 @@ export default function NationalPage() {
         return row;
       });
     return { latestFy, ranked, top5, trend };
-  }, [nihIcs]);
+  }, [nihIcs, selectedFy]);
 
   /* ─── §S5.2 Topic leaders: group {topic: [leader rows]} ─── */
   const topicLeadersByTopic = useMemo(() => {
@@ -567,8 +615,30 @@ export default function NationalPage() {
       <PageHeader
         eyebrow="National view"
         title="U.S. university research funding"
-        description="Cross-cutting trends across all ~800 institutions in the HERD universe, FY2005 – FY2024."
+        description="Cross-cutting trends across all ~800 institutions in the HERD universe, FY2005 – FY2024. Use the year selector to re-rank every snapshot panel — 20-year trend charts stay full-window."
       />
+
+      <div className="flex flex-col gap-2 rounded-md border border-rule bg-surface-elevated px-4 py-3 sm:flex-row sm:items-center sm:gap-4">
+        <label htmlFor={yearSelectId} className="text-[11px] uppercase tracking-wider text-text-tertiary">
+          Snapshot year
+        </label>
+        <select
+          id={yearSelectId}
+          value={selectedFy}
+          onChange={(e) => setSelectedFy(Number(e.target.value))}
+          className="h-7 w-24 rounded border border-rule bg-surface px-2 text-sm tnum focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          {ALL_YEARS.map((y) => (
+            <option key={y} value={y}>
+              FY{y}
+            </option>
+          ))}
+        </select>
+        <span className="text-[11px] italic text-text-tertiary">
+          Drives the Geography map, NIH IC ranking, Topics ranking, State specialization, Team size mix, and PI
+          distribution panels. 20-year line / stack charts always show the full FY{FY_MIN}–FY{FY_MAX} window.
+        </span>
+      </div>
 
       {/* Anchored section nav */}
       <nav
@@ -692,13 +762,12 @@ export default function NationalPage() {
         />
         <ChartFrame
           eyebrow={nihIcView.latestFy ? `FY${nihIcView.latestFy} ranking` : 'NIH ICs'}
-          title="National NIH funding by Institute / Center"
-          dek="Sorted by total NIH funding in the latest reported fiscal year. % is share of national NIH total that year (sums to 100%)."
+          title={`National NIH funding by Institute / Center, FY${nihIcView.latestFy ?? selectedFy}`}
+          dek={`Sorted by total NIH funding in FY${nihIcView.latestFy ?? selectedFy}. % is share of national NIH total that year (sums to 100%).`}
           sources={[
             {
               id: 'nih_exporter',
-              subset:
-                'Project total_cost grouped by ADMIN_IC (27 NIH Institutes/Centers + legacy codes), summed across all U.S. universities for the latest FY',
+              subset: `Project total_cost grouped by ADMIN_IC (27 NIH Institutes/Centers + legacy codes), summed across all U.S. universities for FY${nihIcView.latestFy ?? selectedFy}`,
             },
           ]}
           methodology={{
@@ -726,9 +795,9 @@ export default function NationalPage() {
             ]}
             methodology={{
               what: 'Whether the dominant NIH Institutes have held steady or shifted relative to each other over 20 years.',
-              how: 'For each FY we compute IC share = IC dollars ÷ total NIH dollars that year. One line per IC, using the top-5 latest-FY ranking by dollar amount.',
+              how: 'For each FY we compute IC share = IC dollars ÷ total NIH dollars that year. One line per IC, using the top-5 ranking at the selected FY by dollar amount.',
               caveats:
-                'Membership of "top 5" is fixed to the latest-FY ranking, so earlier years may show some non-top-5 ICs missing from this view.',
+                'Membership of "top 5" is fixed to the ranking at the selected FY, so earlier years may show some non-top-5 ICs missing from this view.',
             }}
           >
             <LineChart
@@ -807,12 +876,12 @@ export default function NationalPage() {
         />
         <ChartFrame
           eyebrow={stateSummary ? `FY${stateSummary.fy} totals` : 'State totals'}
-          title="HERD R&D by state"
-          dek="Choropleth of the latest available fiscal year. Hover a state for its total; the leaderboard at right shows the top 5."
+          title={`HERD R&D by state, FY${stateSummary?.fy ?? selectedFy}`}
+          dek="Choropleth for the selected fiscal year. Hover a state for its total; the leaderboard at right shows the top 5."
           sources={[
             {
               id: 'ncses_herd',
-              subset: 'Q01 (Total R&D) per institution × FY, summed by headquarters state, latest reported FY',
+              subset: `Q01 (Total R&D) per institution × FY, summed by headquarters state, FY${selectedFy}`,
             },
             { id: 'ipeds', subset: 'HD directory: STABBR (state) attached to each institution_sk' },
           ]}
@@ -823,7 +892,7 @@ export default function NationalPage() {
           }
           methodology={{
             what: 'Where the U.S. university research money is geographically — which states host the biggest research economies.',
-            how: 'For the latest reported fiscal year we sum total HERD R&D across all HERD-tracked universities in each state (joining `agg_uni_total_rd` to `dim_institution.state_code`). Darker fill = higher total.',
+            how: 'For the selected fiscal year we sum total HERD R&D across all HERD-tracked universities in each state (joining `agg_uni_total_rd` to `dim_institution.state_code`). Darker fill = higher total.',
             caveats:
               'Counts a university’s spending in its headquarters state, even if research is performed at branch campuses elsewhere.',
           }}
@@ -999,24 +1068,22 @@ export default function NationalPage() {
         />
         <ChartFrame
           eyebrow={topicsView.latestFy ? `FY${topicsView.latestFy} ranking` : 'Research topics'}
-          title="All 30 research topics by federal $"
-          dek="Total tagged dollars per topic in the most recent fiscal year. Ranking is by dollar amount; share is of total federal $ that FY (sum can exceed 100% — topics overlap)."
+          title={`All 30 research topics by federal $, FY${topicsView.latestFy ?? selectedFy}`}
+          dek={`Total tagged dollars per topic in FY${topicsView.latestFy ?? selectedFy}. Ranking is by dollar amount; share is of total federal $ that FY (sum can exceed 100% — topics overlap).`}
           sources={[
             {
               id: 'nsf_awards',
-              subset:
-                'Award title + abstract text regex-matched against the 30-topic taxonomy; $ summed per topic for latest FY',
+              subset: `Award title + abstract text regex-matched against the 30-topic taxonomy; $ summed per topic for FY${topicsView.latestFy ?? selectedFy}`,
             },
             {
               id: 'nih_exporter',
-              subset:
-                'Project title + structured terms regex-matched against the 30-topic taxonomy; $ summed per topic for latest FY',
+              subset: `Project title + structured terms regex-matched against the 30-topic taxonomy; $ summed per topic for FY${topicsView.latestFy ?? selectedFy}`,
             },
           ]}
           note="Topics use word-boundary regex on title + abstract / project terms. See /methodology for the exact pattern list."
           methodology={{
             what: 'A nationwide ranking of 30 concrete research topics — Cancer, AI/ML, Climate, Quantum, etc. — sorted by how many federal dollars matched each topic in the most recent year.',
-            how: 'Each NSF and NIH grant is scanned for keyword matches against a hand-tuned 30-topic regex taxonomy (titles + NSF abstracts + NIH project terms). We sum the tagged dollars per topic nationally for the latest FY.',
+            how: 'Each NSF and NIH grant is scanned for keyword matches against a hand-tuned 30-topic regex taxonomy (titles + NSF abstracts + NIH project terms). We sum the tagged dollars per topic nationally for the selected FY.',
             caveats:
               'Topics are NOT mutually exclusive — one grant can match multiple topics (e.g., "Cancer" and "AI/ML"). Patterns were tightened in May 2026 to reduce false positives. Shares can sum above 100% by design.',
           }}
@@ -1042,7 +1109,7 @@ export default function NationalPage() {
           ]}
           methodology={{
             what: 'Whether the 10 most-funded research topics have grown or shrunk relative to the rest of the federal research portfolio over 20 years.',
-            how: 'For each FY we compute each topic’s share = topic dollars ÷ total federal $ that year. One line per topic, using the top-10 latest-FY ranking.',
+            how: 'For each FY we compute each topic’s share = topic dollars ÷ total federal $ that year. One line per topic, using the top-10 ranking at the selected FY.',
             caveats:
               'Topic overlap means shares are not exclusive (a grant can match several topics). A rising line reflects either growing absolute funding or shrinking competition from other topics — read alongside the ranking above.',
           }}
@@ -1076,13 +1143,16 @@ export default function NationalPage() {
         {topicLeaders.length > 0 && topicsView.top10.length > 0 && (
           <ChartFrame
             eyebrow="Top universities per topic"
-            title="The top 5 universities funded for each top-10 topic"
-            dek="For each of the 10 most-funded topics, the universities that received the largest tagged federal $ in the latest fiscal year."
+            title={`The top 5 universities funded for each top-10 topic, FY${topicsView.latestFy ?? selectedFy}`}
+            dek={`For each of the 10 most-funded topics, the universities that received the largest tagged federal $ in FY${topicsView.latestFy ?? selectedFy}.`}
             sources={[
-              { id: 'nsf_awards', subset: 'Tagged award $ per institution × topic, ranked within topic for latest FY' },
+              {
+                id: 'nsf_awards',
+                subset: `Tagged award $ per institution × topic, ranked within topic for FY${selectedFy}`,
+              },
               {
                 id: 'nih_exporter',
-                subset: 'Tagged project $ per institution × topic, ranked within topic for latest FY',
+                subset: `Tagged project $ per institution × topic, ranked within topic for FY${selectedFy}`,
               },
               {
                 id: 'ncses_herd',
@@ -1091,7 +1161,7 @@ export default function NationalPage() {
             ]}
             methodology={{
               what: 'Where the biggest research-topic dollars actually land — for AI/ML, Cancer, Quantum, etc., which 5 universities are at the top.',
-              how: "For the latest reported FY we rank universities by tagged federal $ within each topic (topic_rank_national), then list the top 5. Click a name to open that uni's profile.",
+              how: "For the selected FY we rank universities by tagged federal $ within each topic (topic_rank_national), then list the top 5. Click a name to open that uni's profile.",
               caveats:
                 'Ranking uses the same regex-tagged grant text as the topics chart above. Topic overlap rules apply (a grant can match multiple topics).',
             }}
@@ -1135,13 +1205,13 @@ export default function NationalPage() {
         <SectionDivider
           eyebrow="National · State specialization"
           title="Which states lead each research topic"
-          dek="Small-multiples view: for each of the top 6 topics by national $, the 5 states that captured the largest share in the latest fiscal year."
+          dek="Small-multiples view: for each of the top 6 topics by national $, the 5 states that captured the largest share in the selected fiscal year."
           color="hsl(var(--agency-nasa))"
         />
         <ChartFrame
           eyebrow={nihIcView.latestFy ? `FY${nihIcView.latestFy} state ranking` : 'State topic leaders'}
-          title="Top 5 states per research topic"
-          dek="Each panel shows one topic; bars are the top 5 states by tagged federal $ that year, with each state's share of the national topic total."
+          title={`Top 5 states per research topic, FY${nihIcView.latestFy ?? selectedFy}`}
+          dek={`Each panel shows one topic; bars are the top 5 states by tagged federal $ in FY${nihIcView.latestFy ?? selectedFy}, with each state's share of the national topic total.`}
           sources={[
             {
               id: 'nsf_awards',
@@ -1209,13 +1279,16 @@ export default function NationalPage() {
         />
         <ChartFrame
           eyebrow={teamSizeView.latestFy ? `FY${teamSizeView.latestFy} mix` : 'Team size'}
-          title="Federal $ by PI team size, latest fiscal year"
-          dek="Each bar is one team-size bucket of NSF + NIH grants. Width is the bucket's total federal funding for the year."
+          title={`Federal $ by PI team size, FY${teamSizeView.latestFy ?? selectedFy}`}
+          dek="Each bar is one team-size bucket of NSF + NIH grants. Width is the bucket's total federal funding for the selected year."
           sources={[
-            { id: 'nsf_awards', subset: 'Lead PI + n_pi field per award; bucketed by team count for the latest FY' },
+            {
+              id: 'nsf_awards',
+              subset: `Lead PI + n_pi field per award; bucketed by team count for FY${selectedFy}`,
+            },
             {
               id: 'nih_exporter',
-              subset: 'PI bridge file COUNT(DISTINCT pi_id) per project; bucketed by team count for the latest FY',
+              subset: `PI bridge file COUNT(DISTINCT pi_id) per project; bucketed by team count for FY${selectedFy}`,
             },
           ]}
           note={
@@ -1225,7 +1298,7 @@ export default function NationalPage() {
           }
           methodology={{
             what: 'Nationally, how much research money is going to lone-investigator grants versus larger collaborative teams in the most recent year.',
-            how: 'Each NSF + NIH grant is bucketed by team size (1, 2-5, 6-10, 11-20, 21+ PIs) using the NSF `n_pi` field and the NIH `PI_IDS` array. We sum federal dollars per bucket for the latest fiscal year.',
+            how: 'Each NSF + NIH grant is bucketed by team size (1, 2-5, 6-10, 11-20, 21+ PIs) using the NSF `n_pi` field and the NIH `PI_IDS` array. We sum federal dollars per bucket for the selected fiscal year.',
             caveats:
               'NSF does not publish the full co-PI roster, so grants are placed in their reported team-size bucket but co-PIs are not counted individually — slightly conservative on the larger buckets.',
           }}
@@ -1287,11 +1360,14 @@ export default function NationalPage() {
         />
         <ChartFrame
           eyebrow={piDistLatest.fy ? `FY${piDistLatest.fy} distribution` : 'PI $ distribution'}
-          title="How federal $ spreads across PIs nationally"
-          dek="Average dollar amount per PI in each decile of the latest-year roster, averaged across institutions (decile-of-deciles)."
+          title={`How federal $ spreads across PIs nationally, FY${piDistLatest.fy ?? selectedFy}`}
+          dek={`Average dollar amount per PI in each decile of the FY${piDistLatest.fy ?? selectedFy} roster, averaged across institutions (decile-of-deciles).`}
           sources={[
-            { id: 'nsf_awards', subset: 'Lead PI obligations bucketed into deciles per institution, latest FY' },
-            { id: 'nih_exporter', subset: 'PI total_cost bucketed into deciles per institution, latest FY' },
+            {
+              id: 'nsf_awards',
+              subset: `Lead PI obligations bucketed into deciles per institution, FY${selectedFy}`,
+            },
+            { id: 'nih_exporter', subset: `PI total_cost bucketed into deciles per institution, FY${selectedFy}` },
           ]}
           note={
             piDistLatest.rows.length > 0
