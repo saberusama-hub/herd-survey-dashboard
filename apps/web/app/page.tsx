@@ -1,19 +1,13 @@
-'use client';
-
-import { useDuckDB } from '@/app/providers';
 import { ResponsiveSvg } from '@/components/charts/ResponsiveSvg';
 import { ChartFrame } from '@/components/editorial/ChartFrame';
 import { KpiStrip, type KpiTile } from '@/components/editorial/KpiStrip';
 import { UniversitySearchBox } from '@/components/editorial/UniversitySearchBox';
-import { query } from '@/lib/duckdb';
 import { formatDollars, formatPercent } from '@/lib/format';
-import { type UniversityIndexRow, getUniversityIndex } from '@/lib/queries';
-import type { Row } from '@/lib/types';
+import snapshot from '@/public/data/home-snapshot.json' assert { type: 'json' };
 import { AxisBottom, AxisLeft } from '@visx/axis';
 import { Group } from '@visx/group';
 import { scaleBand, scaleLinear } from '@visx/scale';
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
 
 // ───────── Color tokens used across the home charts ─────────
 const SOURCE_ORDER = ['federal', 'state', 'industry', 'institutional', 'nonprofit', 'other'] as const;
@@ -57,260 +51,121 @@ const AGENCY_LABEL: Record<string, string> = {
   Other: 'Other federal',
 };
 
-// Single source of truth: query DuckDB-WASM for the headline KPI values.
-// All amounts use HERD nominal dollars (the canonical reporting basis).
-interface KpiRow extends Row {
-  total_entities: number;
-  herd_universities: number;
-  fy24_total: number;
-  fy24_federal: number;
-  cum20_federal: number;
-  fy24: number;
-}
-interface AgencyKpiRow extends Row {
-  fy: number;
-  agency_bucket: string;
-  amount_nominal: number;
-  pct_of_federal: number;
-}
-interface TopicRow extends Row {
-  fy: number;
-  topic: string;
-  tagged_amount: number;
-}
-interface AgencyShareRow extends Row {
-  fy: number;
-  agency_bucket: string;
-  amount_nominal: number;
-}
-interface SourceTotalRow extends Row {
-  source_category: string;
-  total: number;
-}
-interface StateRow extends Row {
-  state_code: string;
-  total: number;
-  n_institutions: number;
-}
+/**
+ * Homepage is rendered from a precomputed snapshot at apps/web/public/data/
+ * home-snapshot.json. The snapshot is built by scripts/precompute_home_snapshot.js
+ * whenever the parquet bundle changes, then committed alongside the parquets so
+ * the page imports it at compile time and renders instantly without ever
+ * initialising DuckDB-WASM.
+ *
+ * Before this refactor the homepage ran 7 queries through DuckDB-WASM on
+ * mount, gating data behind a ~26s cold-start path (CDN WASM download + 41
+ * sequential parquet view registrations + 7 await query() calls). After,
+ * first paint is the static render itself.
+ */
 
 export default function HomePage() {
-  const { ready } = useDuckDB();
-  const [top10, setTop10] = useState<UniversityIndexRow[]>([]);
-  const [kpis, setKpis] = useState<KpiRow | null>(null);
-  const [topAgency, setTopAgency] = useState<AgencyKpiRow | null>(null);
-  const [topics, setTopics] = useState<TopicRow[]>([]);
-  const [agencies, setAgencies] = useState<AgencyShareRow[]>([]);
-  const [sourceTotals, setSourceTotals] = useState<SourceTotalRow[]>([]);
-  const [states, setStates] = useState<StateRow[]>([]);
-
-  useEffect(() => {
-    if (!ready) return;
-    let cancelled = false;
-    Promise.all([
-      getUniversityIndex(),
-      // KPI strip aggregates. Computes in a single round-trip to keep the
-      // initial-paint cost flat (every SELECT subquery is a small scan).
-      query<KpiRow>(`
-        WITH herd_fys AS (SELECT MAX(fiscal_year) AS fy FROM agg_uni_total_rd)
-        SELECT
-          (SELECT COUNT(*) FROM dim_institution) AS total_entities,
-          (SELECT COUNT(DISTINCT institution_sk) FROM agg_uni_total_rd) AS herd_universities,
-          (SELECT SUM(amount_nominal) FROM agg_national_overview WHERE fiscal_year = (SELECT fy FROM herd_fys)) AS fy24_total,
-          (SELECT SUM(amount_nominal) FROM agg_national_overview WHERE fiscal_year = (SELECT fy FROM herd_fys) AND source_category = 'federal') AS fy24_federal,
-          (SELECT SUM(amount_nominal) FROM agg_national_overview WHERE source_category = 'federal') AS cum20_federal,
-          (SELECT fy FROM herd_fys) AS fy24
-      `),
-      // Largest single federal funder in the latest agency-trend FY (HERD Q09).
-      // The Q09 aggregation lags Q01 by ~one year — that's why we compute its
-      // own "latest" rather than tying to fy24.
-      query<AgencyKpiRow>(`
-        WITH latest AS (SELECT MAX(fiscal_year) AS fy FROM agg_national_agency_trend),
-        fed_total AS (
-          SELECT SUM(amount_nominal) AS total
-          FROM agg_national_agency_trend
-          WHERE fiscal_year = (SELECT fy FROM latest)
-        )
-        SELECT
-          (SELECT fy FROM latest) AS fy,
-          agency_bucket,
-          amount_nominal,
-          amount_nominal / (SELECT total FROM fed_total) AS pct_of_federal
-        FROM agg_national_agency_trend
-        WHERE fiscal_year = (SELECT fy FROM latest)
-        ORDER BY amount_nominal DESC
-        LIMIT 1
-      `),
-      // Top 10 topics latest FY.
-      query<TopicRow>(`
-        WITH latest AS (SELECT MAX(fiscal_year) AS fy FROM agg_national_topic)
-        SELECT (SELECT fy FROM latest) AS fy, topic, tagged_amount
-        FROM agg_national_topic
-        WHERE fiscal_year = (SELECT fy FROM latest)
-        ORDER BY tagged_amount DESC
-        LIMIT 10
-      `),
-      // Agencies latest FY (all 7 buckets).
-      query<AgencyShareRow>(`
-        WITH latest AS (SELECT MAX(fiscal_year) AS fy FROM agg_national_agency_trend)
-        SELECT (SELECT fy FROM latest) AS fy, agency_bucket, amount_nominal
-        FROM agg_national_agency_trend
-        WHERE fiscal_year = (SELECT fy FROM latest)
-        ORDER BY amount_nominal DESC
-      `),
-      // 20-year cumulative source totals.
-      query<SourceTotalRow>(`
-        SELECT source_category, SUM(amount_nominal) AS total
-        FROM agg_national_overview
-        GROUP BY source_category
-        ORDER BY total DESC
-      `),
-      // Top 10 states by federal R&D in the latest HERD FY.
-      query<StateRow>(`
-        WITH latest AS (SELECT MAX(fiscal_year) AS fy FROM agg_uni_source_split)
-        SELECT
-          i.state_code,
-          SUM(s.amount_nominal) AS total,
-          COUNT(DISTINCT s.institution_sk) AS n_institutions
-        FROM agg_uni_source_split s
-        JOIN dim_institution i USING (institution_sk)
-        WHERE s.fiscal_year = (SELECT fy FROM latest)
-          AND s.source_category = 'federal'
-          AND i.state_code IS NOT NULL
-          AND s.amount_nominal IS NOT NULL
-        GROUP BY i.state_code
-        ORDER BY total DESC
-        LIMIT 10
-      `),
-    ]).then(([idx, kpiRows, agencyRows, topicRows, agencyShares, srcTotals, stateRows]) => {
-      if (cancelled) return;
-      setTop10(idx.slice(0, 10));
-      setKpis(kpiRows[0] ?? null);
-      setTopAgency(agencyRows[0] ?? null);
-      setTopics(topicRows);
-      setAgencies(agencyShares);
-      setSourceTotals(srcTotals);
-      setStates(stateRows);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [ready]);
+  const kpis = snapshot.kpis;
+  const topAgency = snapshot.top_agency;
+  const top10 = snapshot.top10_universities;
+  const topics = snapshot.topics;
+  const agencies = snapshot.agencies;
+  const sourceTotals = snapshot.source_totals;
+  const states = snapshot.states;
 
   // ───────── Derived figures for KPI strip ─────────
-  const fy24FederalPct = useMemo(() => {
-    if (!kpis || !kpis.fy24_total || !kpis.fy24_federal) return null;
-    return kpis.fy24_federal / kpis.fy24_total;
-  }, [kpis]);
+  const fy24FederalPct = kpis?.fy24_total && kpis?.fy24_federal ? kpis.fy24_federal / kpis.fy24_total : null;
 
-  const tiles: KpiTile[] = useMemo(
-    () => [
-      {
-        label: 'Tracked entities',
-        value: kpis ? kpis.total_entities.toLocaleString('en-US') : '—',
-        hint: (
-          <span className="text-text-tertiary text-[11px]">
-            every uni, FFRDC, hospital, lab, etc. in the federal-grant universe
-          </span>
-        ),
-        sources: [
-          { id: 'ipeds', subset: 'HD directory file, latest available year' },
-          { id: 'usaspending', subset: 'Recipient UEI universe joined to IPEDS' },
-        ],
-      },
-      {
-        label: 'HERD-surveyed universities',
-        value: kpis ? kpis.herd_universities.toLocaleString('en-US') : '—',
-        hint: (
-          <span className="text-text-tertiary text-[11px]">
-            the funding-traced subset (every $ flow on this site is for these)
-          </span>
-        ),
-        sources: [{ id: 'ncses_herd', subset: 'Reporting universe, FY2005–FY2024' }],
-      },
-      {
-        label: kpis ? `FY${kpis.fy24} total university R&D` : 'Latest total R&D',
-        value: kpis ? formatDollars(kpis.fy24_total) : '—',
-        hint: <span className="text-text-tertiary text-[11px]">HERD Q01, all six funding sources combined</span>,
-        sources: [{ id: 'ncses_herd', subset: 'Q01 Total R&D summed across all institutions (latest FY)' }],
-      },
-      {
-        label: kpis ? `FY${kpis.fy24} federal share` : 'Latest federal share',
-        value: kpis ? formatDollars(kpis.fy24_federal) : '—',
-        hint: (
-          <span className="text-text-tertiary text-[11px]">
-            {fy24FederalPct !== null ? `${formatPercent(fy24FederalPct)} of the total` : 'federal slice of HERD'}
-          </span>
-        ),
-        sources: [
-          { id: 'ncses_herd', subset: 'Q01 federal-source dollars summed across all institutions (latest FY)' },
-        ],
-      },
-      {
-        label: '20-yr cumulative federal R&D',
-        value: kpis ? formatDollars(kpis.cum20_federal) : '—',
-        hint: <span className="text-text-tertiary text-[11px]">FY2005–FY{kpis?.fy24 ?? '—'}, nominal dollars</span>,
-        sources: [{ id: 'ncses_herd', subset: 'Q01 federal-source dollars summed across all institutions × FY' }],
-      },
-      {
-        label: topAgency ? `Largest funder, FY${topAgency.fy}` : 'Largest funder',
-        value: topAgency ? `${AGENCY_LABEL[topAgency.agency_bucket] ?? topAgency.agency_bucket}` : '—',
-        hint: topAgency ? (
-          <span className="text-text-tertiary text-[11px]">
-            {formatDollars(topAgency.amount_nominal)} · {formatPercent(topAgency.pct_of_federal)} of federal R&D
-          </span>
-        ) : undefined,
-        sources: [{ id: 'ncses_herd', subset: 'Q09 Federal R&D by Agency, largest bucket in latest FY' }],
-      },
-    ],
-    [kpis, fy24FederalPct, topAgency],
-  );
+  const tiles: KpiTile[] = [
+    {
+      label: 'Tracked entities',
+      value: kpis ? kpis.total_entities.toLocaleString('en-US') : '—',
+      hint: (
+        <span className="text-text-tertiary text-[11px]">
+          every uni, FFRDC, hospital, lab, etc. in the federal-grant universe
+        </span>
+      ),
+      sources: [
+        { id: 'ipeds', subset: 'HD directory file, latest available year' },
+        { id: 'usaspending', subset: 'Recipient UEI universe joined to IPEDS' },
+      ],
+    },
+    {
+      label: 'HERD-surveyed universities',
+      value: kpis ? kpis.herd_universities.toLocaleString('en-US') : '—',
+      hint: (
+        <span className="text-text-tertiary text-[11px]">
+          the funding-traced subset (every $ flow on this site is for these)
+        </span>
+      ),
+      sources: [{ id: 'ncses_herd', subset: 'Reporting universe, FY2005–FY2024' }],
+    },
+    {
+      label: kpis ? `FY${kpis.fy24} total university R&D` : 'Latest total R&D',
+      value: kpis ? formatDollars(kpis.fy24_total) : '—',
+      hint: <span className="text-text-tertiary text-[11px]">HERD Q01, all six funding sources combined</span>,
+      sources: [{ id: 'ncses_herd', subset: 'Q01 Total R&D summed across all institutions (latest FY)' }],
+    },
+    {
+      label: kpis ? `FY${kpis.fy24} federal share` : 'Latest federal share',
+      value: kpis ? formatDollars(kpis.fy24_federal) : '—',
+      hint: (
+        <span className="text-text-tertiary text-[11px]">
+          {fy24FederalPct !== null ? `${formatPercent(fy24FederalPct)} of the total` : 'federal slice of HERD'}
+        </span>
+      ),
+      sources: [{ id: 'ncses_herd', subset: 'Q01 federal-source dollars summed across all institutions (latest FY)' }],
+    },
+    {
+      label: '20-yr cumulative federal R&D',
+      value: kpis ? formatDollars(kpis.cum20_federal) : '—',
+      hint: <span className="text-text-tertiary text-[11px]">FY2005–FY{kpis?.fy24 ?? '—'}, nominal dollars</span>,
+      sources: [{ id: 'ncses_herd', subset: 'Q01 federal-source dollars summed across all institutions × FY' }],
+    },
+    {
+      label: topAgency ? `Largest funder, FY${topAgency.fy}` : 'Largest funder',
+      value: topAgency ? `${AGENCY_LABEL[topAgency.agency_bucket] ?? topAgency.agency_bucket}` : '—',
+      hint: topAgency ? (
+        <span className="text-text-tertiary text-[11px]">
+          {formatDollars(topAgency.amount_nominal)} · {formatPercent(topAgency.pct_of_federal)} of federal R&D
+        </span>
+      ) : undefined,
+      sources: [{ id: 'ncses_herd', subset: 'Q09 Federal R&D by Agency, largest bucket in latest FY' }],
+    },
+  ];
 
-  // ───────── Chart-ready slices ─────────
-  const topicBars = useMemo(
-    () =>
-      topics.map((t) => ({
-        label: t.topic,
-        amount: Number(t.tagged_amount) || 0,
-      })),
-    [topics],
-  );
+  // ───────── Chart-ready slices (static — no React state to derive from) ─────────
+  const topicBars = topics.map((t) => ({
+    label: t.topic,
+    amount: Number(t.tagged_amount) || 0,
+  }));
 
-  const agencyBars = useMemo(() => {
-    if (agencies.length === 0) return [];
-    const total = agencies.reduce((s, r) => s + (Number(r.amount_nominal) || 0), 0);
-    return agencies.map((r) => ({
-      label: AGENCY_LABEL[r.agency_bucket] ?? r.agency_bucket,
-      bucket: r.agency_bucket,
-      amount: Number(r.amount_nominal) || 0,
-      share: total > 0 ? Number(r.amount_nominal) / total : 0,
-      color: AGENCY_COLOR[r.agency_bucket] ?? 'hsl(var(--agency-other))',
-    }));
-  }, [agencies]);
+  const totalAgency = agencies.reduce((s, r) => s + (Number(r.amount_nominal) || 0), 0);
+  const agencyBars = agencies.map((r) => ({
+    label: AGENCY_LABEL[r.agency_bucket] ?? r.agency_bucket,
+    bucket: r.agency_bucket,
+    amount: Number(r.amount_nominal) || 0,
+    share: totalAgency > 0 ? Number(r.amount_nominal) / totalAgency : 0,
+    color: AGENCY_COLOR[r.agency_bucket] ?? 'hsl(var(--agency-other))',
+  }));
 
   const agencyFy = agencies[0]?.fy ?? null;
 
-  const sourceBars = useMemo(() => {
-    if (sourceTotals.length === 0) return [];
-    return SOURCE_ORDER.map((k) => {
-      const row = sourceTotals.find((r) => r.source_category === k);
-      return {
-        label: SOURCE_LABEL[k],
-        key: k,
-        amount: row ? Number(row.total) || 0 : 0,
-        color: SOURCE_COLOR[k],
-      };
-    }).sort((a, b) => b.amount - a.amount);
-  }, [sourceTotals]);
+  const sourceBars = SOURCE_ORDER.map((k) => {
+    const row = sourceTotals.find((r) => r.source_category === k);
+    return {
+      label: SOURCE_LABEL[k],
+      key: k,
+      amount: row ? Number(row.total) || 0 : 0,
+      color: SOURCE_COLOR[k],
+    };
+  }).sort((a, b) => b.amount - a.amount);
 
-  const stateBars = useMemo(
-    () =>
-      states.map((r) => ({
-        label: r.state_code,
-        amount: Number(r.total) || 0,
-        nInstitutions: Number(r.n_institutions) || 0,
-      })),
-    [states],
-  );
+  const stateBars = states.map((r) => ({
+    label: r.state_code,
+    amount: Number(r.total) || 0,
+    nInstitutions: Number(r.n_institutions) || 0,
+  }));
 
   return (
     <div className="container-wide pt-12 pb-20 md:pt-20 md:pb-28 space-y-16 md:space-y-24">

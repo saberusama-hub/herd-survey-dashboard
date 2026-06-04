@@ -1,0 +1,246 @@
+{
+  "generated_at": "2026-06-04T13:06:11.385Z",
+  "kpis": {
+    "total_entities": 75204,
+    "herd_universities": 1014,
+    "fy24_total": 117661158000,
+    "fy24_federal": 64698348000,
+    "cum20_federal": 826875606000,
+    "fy24": 2024
+  },
+  "top_agency": {
+    "fy": 2024,
+    "agency_bucket": "HHS",
+    "amount_nominal": 35500073000,
+    "pct_of_federal": 0.5491971751645008
+  },
+  "topics": [
+    {
+      "fy": 2024,
+      "topic": "Genomics & genetics",
+      "tagged_amount": 16917959182
+    },
+    {
+      "fy": 2024,
+      "topic": "Neuroscience & brain",
+      "tagged_amount": 10880355301
+    },
+    {
+      "fy": 2024,
+      "topic": "Infectious disease & vaccines",
+      "tagged_amount": 10305847336
+    },
+    {
+      "fy": 2024,
+      "topic": "Cancer research",
+      "tagged_amount": 9682122071
+    },
+    {
+      "fy": 2024,
+      "topic": "Public health & epidemiology",
+      "tagged_amount": 9025149122
+    },
+    {
+      "fy": 2024,
+      "topic": "Immunology",
+      "tagged_amount": 8764044833
+    },
+    {
+      "fy": 2024,
+      "topic": "Aging & longevity",
+      "tagged_amount": 7024812170
+    },
+    {
+      "fy": 2024,
+      "topic": "Diabetes & metabolic",
+      "tagged_amount": 6886561484
+    },
+    {
+      "fy": 2024,
+      "topic": "Cardiovascular",
+      "tagged_amount": 5862497955
+    },
+    {
+      "fy": 2024,
+      "topic": "Artificial intelligence & ML",
+      "tagged_amount": 5352977725
+    }
+  ],
+  "agencies": [
+    {
+      "fy": 2024,
+      "agency_bucket": "HHS",
+      "amount_nominal": 35500073000
+    },
+    {
+      "fy": 2024,
+      "agency_bucket": "NSF",
+      "amount_nominal": 7173758000
+    },
+    {
+      "fy": 2024,
+      "agency_bucket": "DOD",
+      "amount_nominal": 10173898000
+    },
+    {
+      "fy": 2024,
+      "agency_bucket": "DOE",
+      "amount_nominal": 2941393000
+    },
+    {
+      "fy": 2024,
+      "agency_bucket": "NASA",
+      "amount_nominal": 2368711000
+    },
+    {
+      "fy": 2024,
+      "agency_bucket": "USDA",
+      "amount_nominal": 1976398000
+    },
+    {
+      "fy": 2024,
+      "agency_bucket": "Other",
+      "amount_nominal": 4505710000
+    }
+  ],
+  "source_totals": [
+    {
+      "source_category": "federal",
+      "total": 826875606000
+    },
+    {
+      "source_category": "institutional",
+      "total": 338974735000
+    },
+    {
+      "source_category": "state",
+      "total": 81980262000
+    },
+    {
+      "source_category": "industry",
+      "total": 81409327000
+    },
+    {
+      "source_category": "nonprofit",
+      "total": 75340142000
+    },
+    {
+      "source_category": "other",
+      "total": 51079747000
+    }
+  ],
+  "states": [
+    {
+      "state_code": "CA",
+      "total": 7812049000,
+      "n_institutions": 66
+    },
+    {
+      "state_code": "NY",
+      "total": 5275041000,
+      "n_institutions": 85
+    },
+    {
+      "state_code": "MD",
+      "total": 5209433000,
+      "n_institutions": 16
+    },
+    {
+      "state_code": "TX",
+      "total": 3911765000,
+      "n_institutions": 55
+    },
+    {
+      "state_code": "PA",
+      "total": 3613467000,
+      "n_institutions": 47
+    },
+    {
+      "state_code": "MA",
+      "total": 2980267000,
+      "n_institutions": 37
+    },
+    {
+      "state_code": "NC",
+      "total": 2736658000,
+      "n_institutions": 21
+    },
+    {
+      "state_code": "GA",
+      "total": 2501165000,
+      "n_institutions": 21
+    },
+    {
+      "state_code": "IL",
+      "total": 2306459000,
+      "n_institutions": 29
+    },
+    {
+      "state_code": "OH",
+      "total": 2146462000,
+      "n_institutions": 25
+    }
+  ],
+  "top10_universities": [
+    {
+      "institution_sk": "INST0001086",
+      "name": "Johns Hopkins University",
+      "state": "MD",
+      "total_rd_fy2024": 4129264000
+    },
+    {
+      "institution_sk": "INST0000040",
+      "name": "University of Pennsylvania",
+      "state": "PA",
+      "total_rd_fy2024": 2167504000
+    },
+    {
+      "institution_sk": "INST0000140",
+      "name": "University of California, San Francisco",
+      "state": "CA",
+      "total_rd_fy2024": 2127637000
+    },
+    {
+      "institution_sk": "INST0000210",
+      "name": "University of Michigan, Ann Arbor",
+      "state": "MI",
+      "total_rd_fy2024": 2110961000
+    },
+    {
+      "institution_sk": "INST0000053",
+      "name": "University of Wisconsin-Madison",
+      "state": "WI",
+      "total_rd_fy2024": 1933229000
+    },
+    {
+      "institution_sk": "INST0000152",
+      "name": "University of California, Los Angeles",
+      "state": "CA",
+      "total_rd_fy2024": 1896227000
+    },
+    {
+      "institution_sk": "INST0000019",
+      "name": "University of California, San Diego",
+      "state": "CA",
+      "total_rd_fy2024": 1881289000
+    },
+    {
+      "institution_sk": "INST0000285",
+      "name": "University of Washington, Seattle",
+      "state": "WA",
+      "total_rd_fy2024": 1691302000
+    },
+    {
+      "institution_sk": "INST0000160",
+      "name": "Stanford University",
+      "state": "CA",
+      "total_rd_fy2024": 1641961000
+    },
+    {
+      "institution_sk": "INST0000016",
+      "name": "Cornell University",
+      "state": "NY",
+      "total_rd_fy2024": 1613631000
+    }
+  ]
+}
