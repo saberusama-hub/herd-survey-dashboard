@@ -953,73 +953,94 @@ export interface UniversityIndexRow extends Row {
   institution_sk: string;
   name: string;
   state: string;
-  total_rd_fy2024: number;
-  cagr_20yr: number | null;
+  /** HERD-reported total R&D in the selected FY (nominal $). */
+  total_rd: number;
+  /** Cumulative CAGR FY2005 → selected FY. Null when year ≤ 2005. */
+  cagr_long_run: number | null;
+  /** Trailing 5-year CAGR ending at the selected FY. Null when year < 2010. */
   cagr_5yr: number | null;
+  /** Federal share of total R&D in the selected FY (fraction 0–1). */
   federal_share: number | null;
+  /** Distinct PI count in the selected FY (federal grants). */
   pi_count: number;
+  /** STEM share of total R&D in the selected FY (fraction 0–1). */
   stem_share: number | null;
 }
 
-export async function getUniversityIndex(): Promise<UniversityIndexRow[]> {
+/**
+ * Year-parameterized institutions index. Every numeric column is computed
+ * for the requested fiscal year. CAGRs use trailing windows ending at `year`
+ * and fall back to null when the window starts before FY2005.
+ *
+ * Note: agg_uni_growth (the pre-baked 5y CAGR table) is FY24-locked, so the
+ * 5y CAGR for other years is computed on the fly directly from
+ * agg_uni_total_rd.
+ */
+export async function getUniversityIndex(year = 2024): Promise<UniversityIndexRow[]> {
+  const fyMin = 2005;
   return query<UniversityIndexRow>(`
-    WITH latest AS (
-      SELECT institution_sk, total_rd_nominal AS total_rd_fy2024
+    WITH sel AS (
+      SELECT institution_sk, total_rd_nominal AS total_rd
       FROM agg_uni_total_rd
-      WHERE fiscal_year = 2024
+      WHERE fiscal_year = ${year}
     ),
-    cagr AS (
-      SELECT institution_sk,
-        POWER(
-          MAX(CASE WHEN fiscal_year = 2024 THEN total_rd_nominal END)
-            / NULLIF(MAX(CASE WHEN fiscal_year = 2005 THEN total_rd_nominal END), 0),
-          1.0 / 19.0
-        ) - 1 AS cagr_20yr
+    five_back AS (
+      SELECT institution_sk, total_rd_nominal AS rd_5yr_back
       FROM agg_uni_total_rd
-      GROUP BY institution_sk
+      WHERE fiscal_year = ${year - 5}
+    ),
+    anchor AS (
+      SELECT institution_sk, total_rd_nominal AS rd_2005
+      FROM agg_uni_total_rd
+      WHERE fiscal_year = ${fyMin}
     ),
     fed AS (
       SELECT institution_sk,
         SUM(CASE WHEN source_category = 'federal' THEN amount_nominal ELSE 0 END)
           / NULLIF(SUM(amount_nominal), 0) AS federal_share
       FROM agg_uni_source_split
-      WHERE fiscal_year = 2024
+      WHERE fiscal_year = ${year}
       GROUP BY institution_sk
     ),
     pi AS (
       SELECT institution_sk, distinct_pi_count AS pi_count
       FROM agg_uni_pi_universe
-      WHERE fiscal_year = 2024
+      WHERE fiscal_year = ${year}
     ),
     stem AS (
       SELECT institution_sk,
         SUM(CASE WHEN is_stem THEN amount_nominal ELSE 0 END)
           / NULLIF(SUM(amount_nominal), 0) AS stem_share
       FROM agg_uni_field_mix
-      WHERE fiscal_year = 2024
+      WHERE fiscal_year = ${year}
       GROUP BY institution_sk
-    ),
-    growth AS (
-      SELECT institution_sk, cagr_5yr FROM agg_uni_growth
     )
     SELECT
-      l.institution_sk,
+      sel.institution_sk,
       i.canonical_name AS name,
       i.state_code AS state,
-      l.total_rd_fy2024,
-      c.cagr_20yr,
-      g.cagr_5yr,
-      f.federal_share,
+      sel.total_rd,
+      CASE
+        WHEN ${year} > ${fyMin} AND anchor.rd_2005 > 0
+          THEN POWER(sel.total_rd / anchor.rd_2005, 1.0 / NULLIF(${year} - ${fyMin}, 0)) - 1
+        ELSE NULL
+      END AS cagr_long_run,
+      CASE
+        WHEN ${year} >= ${fyMin + 5} AND five_back.rd_5yr_back > 0
+          THEN POWER(sel.total_rd / five_back.rd_5yr_back, 1.0 / 5.0) - 1
+        ELSE NULL
+      END AS cagr_5yr,
+      fed.federal_share,
       COALESCE(pi.pi_count, 0) AS pi_count,
-      s.stem_share
-    FROM latest l
+      stem.stem_share
+    FROM sel
     JOIN dim_institution i USING (institution_sk)
-    LEFT JOIN cagr c USING (institution_sk)
-    LEFT JOIN fed f USING (institution_sk)
+    LEFT JOIN five_back USING (institution_sk)
+    LEFT JOIN anchor USING (institution_sk)
+    LEFT JOIN fed USING (institution_sk)
     LEFT JOIN pi USING (institution_sk)
-    LEFT JOIN stem s USING (institution_sk)
-    LEFT JOIN growth g USING (institution_sk)
-    ORDER BY l.total_rd_fy2024 DESC
+    LEFT JOIN stem USING (institution_sk)
+    ORDER BY sel.total_rd DESC NULLS LAST
   `);
 }
 

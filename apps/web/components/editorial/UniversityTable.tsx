@@ -13,63 +13,75 @@ interface ColumnDef {
   key: SortKey;
   label: string;
   align: Align;
+  title?: string;
   /** Default sort direction when this column is first clicked. */
   defaultDir: SortDir;
   /** Cell formatter. Receives the row value (may be null). */
   fmt?: (v: UniversityIndexRow[SortKey]) => string;
 }
 
-const COLS: ColumnDef[] = [
-  { key: 'name', label: 'Institution', align: 'left', defaultDir: 'asc' },
-  { key: 'state', label: 'State', align: 'left', defaultDir: 'asc' },
-  {
-    key: 'total_rd_fy2024',
-    label: 'Total R&D FY24',
-    align: 'right',
-    defaultDir: 'desc',
-    fmt: (v) => (typeof v === 'number' ? formatDollars(v) : '—'),
-  },
-  {
-    key: 'cagr_5yr',
-    label: '5-yr growth %',
-    align: 'right',
-    defaultDir: 'desc',
-    fmt: (v) => (typeof v === 'number' ? formatPercent(v) : '—'),
-  },
-  {
-    key: 'cagr_20yr',
-    label: '20-yr CAGR',
-    align: 'right',
-    defaultDir: 'desc',
-    fmt: (v) => (typeof v === 'number' ? formatPercent(v) : '—'),
-  },
-  {
-    key: 'federal_share',
-    label: 'Federal %',
-    align: 'right',
-    defaultDir: 'desc',
-    fmt: (v) => (typeof v === 'number' ? formatPercent(v) : '—'),
-  },
-  {
-    key: 'pi_count',
-    label: '# PIs',
-    align: 'right',
-    defaultDir: 'desc',
-    fmt: (v) => (typeof v === 'number' ? v.toLocaleString('en-US') : '—'),
-  },
-  {
-    key: 'stem_share',
-    label: 'STEM %',
-    align: 'right',
-    defaultDir: 'desc',
-    fmt: (v) => (typeof v === 'number' ? formatPercent(v) : '—'),
-  },
-];
+function buildColumns(year: number): ColumnDef[] {
+  return [
+    { key: 'name', label: 'Institution', align: 'left', defaultDir: 'asc' },
+    { key: 'state', label: 'State', align: 'left', defaultDir: 'asc' },
+    {
+      key: 'total_rd',
+      label: `Total R&D FY${String(year).slice(-2)}`,
+      align: 'right',
+      defaultDir: 'desc',
+      title: `Total R&D expenditures for the institution in FY${year} (HERD Q01, nominal $).`,
+      fmt: (v) => (typeof v === 'number' ? formatDollars(v) : '—'),
+    },
+    {
+      key: 'cagr_5yr',
+      label: '5y CAGR',
+      align: 'right',
+      defaultDir: 'desc',
+      title: `Trailing 5-year CAGR ending FY${year}. Blank for years before FY2010 (window starts before FY2005).`,
+      fmt: (v) => (typeof v === 'number' ? formatPercent(v) : '—'),
+    },
+    {
+      key: 'cagr_long_run',
+      label: 'Long-run CAGR',
+      align: 'right',
+      defaultDir: 'desc',
+      title: `Cumulative compound-annual-growth-rate FY2005 → FY${year}.`,
+      fmt: (v) => (typeof v === 'number' ? formatPercent(v) : '—'),
+    },
+    {
+      key: 'federal_share',
+      label: 'Federal %',
+      align: 'right',
+      defaultDir: 'desc',
+      title: `Federal R&D ÷ Total R&D for the institution in FY${year}.`,
+      fmt: (v) => (typeof v === 'number' ? formatPercent(v) : '—'),
+    },
+    {
+      key: 'pi_count',
+      label: '# PIs',
+      align: 'right',
+      defaultDir: 'desc',
+      title: `Distinct PIs receiving federal grants in FY${year} (NSF lead PI + NIH bridge).`,
+      fmt: (v) => (typeof v === 'number' ? v.toLocaleString('en-US') : '—'),
+    },
+    {
+      key: 'stem_share',
+      label: 'STEM %',
+      align: 'right',
+      defaultDir: 'desc',
+      title: `STEM share of total R&D in FY${year}.`,
+      fmt: (v) => (typeof v === 'number' ? formatPercent(v) : '—'),
+    },
+  ];
+}
 
 const MAX_ROWS = 500;
 
 interface Props {
   rows: UniversityIndexRow[];
+  /** Selected fiscal year — used for column labels + tooltips only.
+   *  The query is responsible for delivering the right values. */
+  year: number;
 }
 
 /**
@@ -83,11 +95,13 @@ interface Props {
  * - The wrapping `overflow-x-auto` keeps the table usable on narrow screens
  *   without forcing layout shifts on the rest of the page.
  */
-export function UniversityTable({ rows }: Props) {
-  const [sortKey, setSortKey] = useState<SortKey>('total_rd_fy2024');
+export function UniversityTable({ rows, year }: Props) {
+  const [sortKey, setSortKey] = useState<SortKey>('total_rd');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [stateFilter, setStateFilter] = useState('');
   const [search, setSearch] = useState('');
+
+  const cols = useMemo(() => buildColumns(year), [year]);
 
   const states = useMemo(
     () => Array.from(new Set(rows.map((r) => r.state).filter((s): s is string => Boolean(s)))).sort(),
@@ -163,13 +177,14 @@ export function UniversityTable({ rows }: Props) {
         <table className="w-full text-sm border-collapse">
           <thead className="bg-mute-3">
             <tr>
-              {COLS.map((c) => {
+              {cols.map((c) => {
                 const isActive = sortKey === c.key;
                 return (
                   <th
                     key={c.key}
                     scope="col"
                     aria-sort={isActive ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
+                    title={c.title}
                     className={`py-2 px-3 whitespace-nowrap ${
                       c.align === 'right' ? 'text-right' : 'text-left'
                     } ${c.align === 'right' ? 'tnum' : ''}`}
@@ -200,7 +215,7 @@ export function UniversityTable({ rows }: Props) {
                   </Link>
                 </td>
                 <td className="py-1.5 px-3 whitespace-nowrap text-text-secondary tnum">{r.state ?? '—'}</td>
-                {COLS.slice(2).map((c) => (
+                {cols.slice(2).map((c) => (
                   <td
                     key={c.key}
                     className={`py-1.5 px-3 whitespace-nowrap ${c.align === 'right' ? 'text-right tnum' : 'text-left'}`}
@@ -212,7 +227,7 @@ export function UniversityTable({ rows }: Props) {
             ))}
             {visible.length === 0 && (
               <tr>
-                <td colSpan={COLS.length} className="py-6 px-3 text-center text-text-tertiary text-sm">
+                <td colSpan={cols.length} className="py-6 px-3 text-center text-text-tertiary text-sm">
                   No institutions match the current filters.
                 </td>
               </tr>

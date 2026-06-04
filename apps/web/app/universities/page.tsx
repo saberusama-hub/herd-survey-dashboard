@@ -5,43 +5,78 @@ import { SourceLine } from '@/components/editorial/SourceLine';
 import { UniversityTable } from '@/components/editorial/UniversityTable';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { type UniversityIndexRow, getUniversityIndex } from '@/lib/queries';
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
+
+const FY_MIN = 2005;
+const FY_MAX = 2024;
+const ALL_YEARS = Array.from({ length: FY_MAX - FY_MIN + 1 }, (_, i) => FY_MAX - i);
 
 /**
- * Sortable directory of every HERD-tracked institution. The heavy lifting
- * (sort, filter, search) lives in `UniversityTable` — this page is just the
- * data fetch + header chrome.
- *
- * The query waits on `useDuckDB().ready` so we don't fire it during SSR or
- * before the WASM bundle has initialised.
+ * Sortable directory of every HERD-tracked institution. Year selector above
+ * the table drives the FY-specific columns (Total R&D, Federal %, # PIs,
+ * STEM %, trailing 5y CAGR, long-run CAGR FY2005→year). UniversityTable
+ * handles sort/search/state-filter internally.
  */
 export default function UniversitiesPage() {
   const { ready, error } = useDuckDB();
+  const [year, setYear] = useState<number>(FY_MAX);
   const [rows, setRows] = useState<UniversityIndexRow[] | null>(null);
   const [loadError, setLoadError] = useState<Error | null>(null);
+  const [pending, setPending] = useState(false);
+  const yearSelectId = useId();
 
   useEffect(() => {
     if (!ready) return;
     let cancelled = false;
-    getUniversityIndex()
+    setPending(true);
+    setLoadError(null);
+    getUniversityIndex(year)
       .then((r) => {
-        if (!cancelled) setRows(r);
+        if (!cancelled) {
+          setRows(r);
+          setPending(false);
+        }
       })
       .catch((e) => {
-        if (!cancelled) setLoadError(e instanceof Error ? e : new Error(String(e)));
+        if (!cancelled) {
+          setLoadError(e instanceof Error ? e : new Error(String(e)));
+          setPending(false);
+        }
       });
     return () => {
       cancelled = true;
     };
-  }, [ready]);
+  }, [ready, year]);
 
   return (
     <div className="container-wide py-10 md:py-14 space-y-6">
       <PageHeader
         eyebrow="Browse"
         title="All universities"
-        description="Sortable directory of every institution in the dataset. Click a column to sort, filter by state, or jump to a single university's profile."
+        description={`Sortable directory of every institution in the dataset. Every numeric column is computed for the selected fiscal year — change the year dropdown to re-rank for any FY${FY_MIN}–FY${FY_MAX}. Click a column header to sort.`}
       />
+
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+        <label htmlFor={yearSelectId} className="text-[11px] uppercase tracking-wider text-text-tertiary">
+          Year
+        </label>
+        <select
+          id={yearSelectId}
+          value={year}
+          onChange={(e) => setYear(Number(e.target.value))}
+          className="h-8 w-32 rounded-md border border-rule bg-surface-elevated px-2 text-sm tnum focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          {ALL_YEARS.map((y) => (
+            <option key={y} value={y}>
+              FY{y}
+            </option>
+          ))}
+        </select>
+        <span className="text-[11px] italic text-text-tertiary">
+          Re-ranks the table for the selected year. Trailing 5y CAGR is blank for FY{FY_MIN}–FY{FY_MIN + 4} (window
+          starts before FY{FY_MIN}); long-run CAGR is blank at FY{FY_MIN}.
+        </span>
+      </div>
 
       {error || loadError ? (
         <p className="text-sm text-negative">
@@ -49,19 +84,21 @@ export default function UniversitiesPage() {
         </p>
       ) : rows ? (
         <>
-          <UniversityTable rows={rows} />
+          <div className={pending ? 'opacity-60 transition-opacity' : 'transition-opacity'} aria-busy={pending}>
+            <UniversityTable rows={rows} year={year} />
+          </div>
           <div className="border-t border-rule pt-3 text-[11px] leading-relaxed text-text-tertiary">
             <SourceLine
               variant="block"
               sources={[
-                { id: 'ncses_herd', subset: 'Q01 Total R&D FY2024, federal share, 5-yr/20-yr CAGR per institution' },
+                { id: 'ncses_herd', subset: `Q01 Total R&D for FY${year}; federal & STEM shares for FY${year}` },
                 {
                   id: 'nsf_awards',
-                  subset: 'Lead PI per award contributes to # PIs column',
+                  subset: `Lead PI per award for FY${year} contributes to # PIs column`,
                 },
                 {
                   id: 'nih_exporter',
-                  subset: 'PI bridge file (project × PI) contributes to # PIs column',
+                  subset: `PI bridge file (project × PI) for FY${year} contributes to # PIs column`,
                 },
                 { id: 'ipeds', subset: 'HD directory: institution name, state, IPEDS UNITID' },
               ]}

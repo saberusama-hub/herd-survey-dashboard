@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 
 import { useDuckDB } from '@/app/providers';
 import { USStateMap } from '@/components/charts/USStateMap';
@@ -26,6 +26,10 @@ import {
   getSbirYearStack,
 } from '@/lib/queries';
 
+const FY_MIN = 2005;
+const FY_MAX = 2024;
+const ALL_YEARS = Array.from({ length: FY_MAX - FY_MIN + 1 }, (_, i) => FY_MAX - i);
+
 export default function SbirPage() {
   const { ready } = useDuckDB();
   const [overview, setOverview] = useState<SbirOverview | null>(null);
@@ -36,32 +40,66 @@ export default function SbirPage() {
   const [states, setStates] = useState<SbirState[]>([]);
   const [demo, setDemo] = useState<SbirDemographics | null>(null);
 
+  // FY window for the cumulative panels (Agency / Firms / RI unis /
+  // Demographics). Single FY for the State map + leaderboard.
+  const [windowStart, setWindowStart] = useState<number>(2020);
+  const [windowEnd, setWindowEnd] = useState<number>(FY_MAX);
+  const [stateYear, setStateYear] = useState<number>(FY_MAX);
+
+  // Overview + year-stack are 20-year aggregates — fetched once.
   useEffect(() => {
     if (!ready) return;
     let cancelled = false;
     (async () => {
-      const [ov, ys, ag, fm, ri, st, dm] = await Promise.all([
-        getSbirOverview(),
-        getSbirYearStack(),
-        getSbirAgencies(2020, 2024),
-        getSbirTopFirms(2020, 2024, 15),
-        getSbirTopRiUnis(2020, 2024, 15),
-        getSbirStates(2024),
-        getSbirDemographics(2020, 2024),
-      ]);
+      const [ov, ys] = await Promise.all([getSbirOverview(), getSbirYearStack()]);
       if (cancelled) return;
       setOverview(ov);
       setYearStack(ys);
-      setAgencies(ag);
-      setFirms(fm);
-      setRiUnis(ri);
-      setStates(st);
-      setDemo(dm);
     })();
     return () => {
       cancelled = true;
     };
   }, [ready]);
+
+  // Cumulative panels — refetched on window change.
+  useEffect(() => {
+    if (!ready) return;
+    let cancelled = false;
+    const lo = Math.min(windowStart, windowEnd);
+    const hi = Math.max(windowStart, windowEnd);
+    (async () => {
+      const [ag, fm, ri, dm] = await Promise.all([
+        getSbirAgencies(lo, hi),
+        getSbirTopFirms(lo, hi, 15),
+        getSbirTopRiUnis(lo, hi, 15),
+        getSbirDemographics(lo, hi),
+      ]);
+      if (cancelled) return;
+      setAgencies(ag);
+      setFirms(fm);
+      setRiUnis(ri);
+      setDemo(dm);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, windowStart, windowEnd]);
+
+  // Single-FY state geography.
+  useEffect(() => {
+    if (!ready) return;
+    let cancelled = false;
+    getSbirStates(stateYear).then((st) => {
+      if (!cancelled) setStates(st);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, stateYear]);
+
+  const winLo = Math.min(windowStart, windowEnd);
+  const winHi = Math.max(windowStart, windowEnd);
+  const winLabel = winLo === winHi ? `FY${winLo}` : `FY${winLo}–${winHi}`;
 
   return (
     <div className="container-wide py-10 md:py-14 space-y-8">
@@ -152,20 +190,22 @@ export default function SbirPage() {
         <YearStackTable rows={yearStack} />
       </ChartFrame>
 
+      {/* Cumulative-window selector for the four panels below */}
+      <WindowPicker windowStart={windowStart} windowEnd={windowEnd} onStart={setWindowStart} onEnd={setWindowEnd} />
+
       {/* Agencies */}
       <ChartFrame
         eyebrow="Federal agencies"
-        title="SBIR / STTR by agency, FY2020-2024 cumulative"
+        title={`SBIR / STTR by agency, ${winLabel} cumulative`}
         sources={[
           {
             id: 'sbir_sttr',
-            subset:
-              'Filter fiscal_year BETWEEN 2020 AND 2024, group by agency_name; two shares reported — share of award count and share of award $ (both ≤100%)',
+            subset: `Filter fiscal_year BETWEEN ${winLo} AND ${winHi}, group by agency_name; two shares reported — share of award count and share of award $ (both ≤100%)`,
           },
         ]}
         methodology={{
-          what: 'Total real award dollars by federal agency over the most recent 5-year window, with shares of program total — one by number of awards, one by award $.',
-          how: 'sheet_06_sbir_sttr filtered to fiscal_year BETWEEN 2020 AND 2024, grouped by agency_name. Awards share = agency award count ÷ total awards; $ share = agency $ ÷ total $. Each ≤100%; together each column sums to 100%.',
+          what: `Total real award dollars by federal agency over ${winLabel}, with shares of program total — one by number of awards, one by award $.`,
+          how: `sheet_06_sbir_sttr filtered to fiscal_year BETWEEN ${winLo} AND ${winHi}, grouped by agency_name. Awards share = agency award count ÷ total awards; $ share = agency $ ÷ total $. Each ≤100%; together each column sums to 100%.`,
           caveats:
             'DOD typically takes ~50% of the program $ but a smaller share of award count; HHS (NIH-heavy) ~30%.',
         }}
@@ -176,15 +216,15 @@ export default function SbirPage() {
       {/* Top firms */}
       <ChartFrame
         eyebrow="Top recipients"
-        title="Top 15 firms by SBIR / STTR funding, FY2020-2024"
+        title={`Top 15 firms by SBIR / STTR funding, ${winLabel}`}
         sources={[
           {
             id: 'sbir_sttr',
-            subset: 'Filter fiscal_year BETWEEN 2020 AND 2024, group by firm_name + firm_state, summed and ranked',
+            subset: `Filter fiscal_year BETWEEN ${winLo} AND ${winHi}, group by firm_name + firm_state, summed and ranked`,
           },
         ]}
         methodology={{
-          what: 'Firms ranked by total real award dollars over FY2020-2024.',
+          what: `Firms ranked by total real award dollars over ${winLabel}.`,
           how: 'sheet_06_sbir_sttr grouped by firm_name + firm_state, summed and ranked.',
           caveats:
             'Firm-name dedup is exact-string; corporate-relationship dedup (parent vs subsidiary) is not applied. Some firms appear under multiple capitalizations.',
@@ -196,11 +236,11 @@ export default function SbirPage() {
       {/* Top RI universities */}
       <ChartFrame
         eyebrow="University research partners"
-        title="Top 15 university research-institution (RI) partners, FY2020-2024"
+        title={`Top 15 university research-institution (RI) partners, ${winLabel}`}
         sources={[
           {
             id: 'sbir_sttr',
-            subset: 'ri_canonical_name filtered non-null (RI partner named on award), grouped + summed FY2020–FY2024',
+            subset: `ri_canonical_name filtered non-null (RI partner named on award), grouped + summed FY${winLo}–FY${winHi}`,
           },
         ]}
         methodology={{
@@ -213,19 +253,22 @@ export default function SbirPage() {
         <RiUniTable rows={riUnis} />
       </ChartFrame>
 
+      {/* Single-FY selector for the geography panels */}
+      <SingleYearPicker year={stateYear} onChange={setStateYear} />
+
       {/* State geography */}
       <ChartFrame
         eyebrow="Geography"
-        title="SBIR / STTR award $ by firm state, FY2024"
+        title={`SBIR / STTR award $ by firm state, FY${stateYear}`}
         sources={[
           {
             id: 'sbir_sttr',
-            subset: 'Filter fiscal_year = 2024, group by firm_state, summed; choropleth fills by total real $',
+            subset: `Filter fiscal_year = ${stateYear}, group by firm_state, summed; choropleth fills by total real $`,
           },
         ]}
         methodology={{
-          what: 'Total FY2024 award dollars by the firm headquarters state.',
-          how: 'sheet_06_sbir_sttr filtered to fiscal_year = 2024, grouped by firm_state.',
+          what: `Total FY${stateYear} award dollars by the firm headquarters state.`,
+          how: `sheet_06_sbir_sttr filtered to fiscal_year = ${stateYear}, grouped by firm_state.`,
           caveats:
             'CA + MA together routinely capture ~40% of the national total. Reflects firm HQ, not award performance location.',
         }}
@@ -240,28 +283,30 @@ export default function SbirPage() {
       {/* State table */}
       <ChartFrame
         eyebrow="State leaderboard"
-        title="Top 10 states by SBIR / STTR award $, FY2024"
+        title={`Top 10 states by SBIR / STTR award $, FY${stateYear}`}
         sources={[
-          { id: 'sbir_sttr', subset: 'Filter fiscal_year = 2024, group by firm_state, summed and ranked top 10' },
+          {
+            id: 'sbir_sttr',
+            subset: `Filter fiscal_year = ${stateYear}, group by firm_state, summed and ranked top 10`,
+          },
         ]}
       >
         <StateTable rows={states.slice(0, 10)} />
       </ChartFrame>
 
-      {/* Demographics */}
+      {/* Demographics — uses cumulative window */}
       <ChartFrame
         eyebrow="Demographic set-asides"
-        title="Set-aside program participation, FY2020-2024"
+        title={`Set-aside program participation, ${winLabel}`}
         sources={[
           {
             id: 'sbir_sttr',
-            subset:
-              'Boolean flags is_woman_owned, is_hubzone, is_socially_economically_disadvantaged per award; share = flagged ÷ total awards FY2020–FY2024',
+            subset: `Boolean flags is_woman_owned, is_hubzone, is_socially_economically_disadvantaged per award; share = flagged ÷ total awards FY${winLo}–FY${winHi}`,
           },
         ]}
         methodology={{
           what: 'Share of awards going to small businesses that self-certify as woman-owned, HUBZone, or socially/economically disadvantaged.',
-          how: 'Boolean flags is_woman_owned, is_hubzone, is_socially_economically_disadvantaged on each award row, summed and divided by the 5-year award total.',
+          how: `Boolean flags is_woman_owned, is_hubzone, is_socially_economically_disadvantaged on each award row, summed and divided by the ${winLabel} award total.`,
           caveats:
             'Categories overlap (a firm can certify multiple). Reflects firm self-certification at award time, not verified status.',
         }}
@@ -290,6 +335,90 @@ interface YearStackRow {
   sttr1: number;
   sttr2: number;
   total: number;
+}
+
+function WindowPicker({
+  windowStart,
+  windowEnd,
+  onStart,
+  onEnd,
+}: {
+  windowStart: number;
+  windowEnd: number;
+  onStart: (y: number) => void;
+  onEnd: (y: number) => void;
+}) {
+  const startId = useId();
+  const endId = useId();
+  return (
+    <div className="-mb-2 flex flex-col gap-2 rounded-md border border-rule bg-surface-elevated px-4 py-3 sm:flex-row sm:items-center sm:gap-4">
+      <p className="text-[11px] uppercase tracking-wider text-text-tertiary">Cumulative window</p>
+      <div className="flex items-center gap-2">
+        <label htmlFor={startId} className="text-xs text-text-tertiary">
+          From
+        </label>
+        <select
+          id={startId}
+          value={windowStart}
+          onChange={(e) => onStart(Number(e.target.value))}
+          className="h-7 w-24 rounded border border-rule bg-surface px-2 text-sm tnum focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          {ALL_YEARS.map((y) => (
+            <option key={y} value={y}>
+              FY{y}
+            </option>
+          ))}
+        </select>
+        <label htmlFor={endId} className="text-xs text-text-tertiary">
+          to
+        </label>
+        <select
+          id={endId}
+          value={windowEnd}
+          onChange={(e) => onEnd(Number(e.target.value))}
+          className="h-7 w-24 rounded border border-rule bg-surface px-2 text-sm tnum focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          {ALL_YEARS.map((y) => (
+            <option key={y} value={y}>
+              FY{y}
+            </option>
+          ))}
+        </select>
+      </div>
+      <span className="text-[11px] italic text-text-tertiary">
+        Drives the Agency, Top firms, RI partners, and Demographics panels below.
+      </span>
+    </div>
+  );
+}
+
+function SingleYearPicker({ year, onChange }: { year: number; onChange: (y: number) => void }) {
+  const id = useId();
+  return (
+    <div className="-mb-2 flex flex-col gap-2 rounded-md border border-rule bg-surface-elevated px-4 py-3 sm:flex-row sm:items-center sm:gap-4">
+      <p className="text-[11px] uppercase tracking-wider text-text-tertiary">State view year</p>
+      <div className="flex items-center gap-2">
+        <label htmlFor={id} className="text-xs text-text-tertiary">
+          FY
+        </label>
+        <select
+          id={id}
+          value={year}
+          onChange={(e) => onChange(Number(e.target.value))}
+          className="h-7 w-24 rounded border border-rule bg-surface px-2 text-sm tnum focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          {ALL_YEARS.map((y) => (
+            <option key={y} value={y}>
+              FY{y}
+            </option>
+          ))}
+        </select>
+      </div>
+      <span className="text-[11px] italic text-text-tertiary">
+        Drives both the choropleth map and the state leaderboard below.
+      </span>
+    </div>
+  );
 }
 
 function YearStackTable({ rows }: { rows: SbirYearStack[] }) {
