@@ -3,19 +3,19 @@
 import { AxisBottom, AxisLeft } from '@visx/axis';
 import { Group } from '@visx/group';
 import { scaleBand, scaleLinear } from '@visx/scale';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { ResponsiveSvg } from '@/components/charts/ResponsiveSvg';
 import { Sparkline } from '@/components/charts/Sparkline';
 import { ChartFrame } from '@/components/editorial/ChartFrame';
 import { SectionDivider } from '@/components/editorial/SectionDivider';
 import { formatDollars, formatPercent } from '@/lib/format';
-import { type NihIcRow, type UniversityProfile, getUniversityNihICs } from '@/lib/queries';
+import type { NihIcRow, UniversityProfile } from '@/lib/queries';
 
 interface Props {
   profile: UniversityProfile;
-  /** institution_sk for lazy NIH-IC drill-down query. */
-  institutionSk: string;
+  /** NIH-IC breakdown rows pre-loaded from the profile snapshot. */
+  icRows: NihIcRow[];
 }
 
 const AGENCY_ORDER = ['HHS', 'NSF', 'DOD', 'DOE', 'NASA', 'USDA', 'Other'] as const;
@@ -47,25 +47,9 @@ const AGENCY_LABEL: Record<AgencyKey, string> = {
  * sorted descending with fixed agency colors. Each row also gets a 20-year
  * sparkline of that agency's funding trajectory.
  */
-export function Section4Agencies({ profile, institutionSk }: Props) {
+export function Section4Agencies({ profile, icRows }: Props) {
   const [icExpanded, setIcExpanded] = useState(false);
-  const [icRows, setIcRows] = useState<NihIcRow[] | null>(null);
-  const [icError, setIcError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!icExpanded || icRows !== null) return;
-    let cancelled = false;
-    getUniversityNihICs(institutionSk)
-      .then((r) => {
-        if (!cancelled) setIcRows(r);
-      })
-      .catch((e) => {
-        if (!cancelled) setIcError(e instanceof Error ? e.message : String(e));
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [icExpanded, icRows, institutionSk]);
+  const icError: string | null = null;
 
   const { latestFy, bars, sparkData, dominantNote } = useMemo(() => {
     if (profile.agencies.length === 0) {
@@ -196,9 +180,6 @@ export function Section4Agencies({ profile, institutionSk }: Props) {
           {icExpanded && (
             <div className="mt-4">
               {icError && <p className="text-[11px] text-negative">Failed to load NIH IC data: {icError}</p>}
-              {!icError && icRows === null && (
-                <p className="text-[11px] text-text-tertiary">Loading NIH Institute breakdown…</p>
-              )}
               {icView && icView.rows.length > 0 && (
                 <ChartFrame
                   eyebrow={`FY${icView.latestFy} NIH Institute split`}

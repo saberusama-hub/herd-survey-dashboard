@@ -20,7 +20,6 @@
 import Link from 'next/link';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 
-import { useDuckDB } from '@/app/providers';
 import { BarChart } from '@/components/charts/BarChart';
 import { ChartFrame } from '@/components/editorial/ChartFrame';
 import { SortableTh, useTableSort } from '@/components/editorial/SortableTable';
@@ -28,9 +27,16 @@ import { SourceLine } from '@/components/editorial/SourceLine';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/Card';
 import { formatCount, formatDollars, formatFy, formatPercent } from '@/lib/format';
-import { type UniversityProfile, getUniversityProfile, searchInstitutions } from '@/lib/queries';
+import type { UniversityProfile } from '@/lib/queries';
 import type { SourceCitation } from '@/lib/sources';
 import { Download, Search, X } from 'lucide-react';
+
+/** Search-only directory entry. Loaded from a static JSON, never queried. */
+interface InstitutionDirEntry {
+  sk: string;
+  name: string;
+  state: string | null;
+}
 
 const MIN_PICKS = 2;
 const MAX_PICKS = 5;
@@ -437,7 +443,6 @@ interface LoadedUni {
 /* ────────────────────── Component ────────────────────── */
 
 export default function ComparePage() {
-  const { ready, error } = useDuckDB();
   const [picks, setPicks] = useState<string[]>([]);
   const [loaded, setLoaded] = useState<Record<string, UniversityProfile>>({});
   const [loadingSk, setLoadingSk] = useState<string | null>(null);
@@ -446,18 +451,25 @@ export default function ComparePage() {
   const [startFy, setStartFy] = useState<number>(DEFAULT_START);
   const [endFy, setEndFy] = useState<number>(DEFAULT_END);
 
-  // Fetch UniversityProfile each time picks grows by one. Cleanup unused entries.
+  // Fetch the static profile JSON each time picks grows by one. Cleanup
+  // unused entries. Each JSON is ~8 KB brotli'd and edge-cached, so each
+  // selection is <150 ms wall time instead of a 10-15 s DuckDB roundtrip.
   useEffect(() => {
-    if (!ready) return;
     const next = picks.find((sk) => !loaded[sk]);
     if (!next) return;
     let cancelled = false;
     setLoadingSk(next);
     setLoadError(null);
-    getUniversityProfile(next)
-      .then((p) => {
+    fetch(`/data/profiles/${encodeURIComponent(next)}.json`)
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((p: UniversityProfile) => {
         if (cancelled) return;
-        setLoaded((prev) => ({ ...prev, [next]: p }));
+        // Backfill institution_sk — the per-profile JSON drops it as redundant.
+        const profile = { ...p, institution_sk: next };
+        setLoaded((prev) => ({ ...prev, [next]: profile }));
         setLoadingSk((cur) => (cur === next ? null : cur));
       })
       .catch((e) => {
@@ -469,7 +481,7 @@ export default function ComparePage() {
     return () => {
       cancelled = true;
     };
-  }, [ready, picks, loaded]);
+  }, [picks, loaded]);
 
   // Prune loaded entries no longer in picks.
   useEffect(() => {
@@ -498,17 +510,6 @@ export default function ComparePage() {
 
   const activeMetric = METRIC_BY_KEY.get(metricKey) ?? METRICS[0];
 
-  if (error) {
-    return (
-      <div className="container-wide py-10">
-        <PageHeader eyebrow="Compare" title="Side-by-side university comparison" />
-        <div className="mt-6 rounded border border-rule bg-surface p-6 text-sm text-text-secondary">
-          Failed to initialize the data layer: {error.message}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="container-wide py-10 md:py-14 space-y-8">
       <PageHeader
@@ -536,12 +537,10 @@ export default function ComparePage() {
             loaded={loaded}
             onAdd={addPick}
             onRemove={removePick}
-            disabled={!ready}
+            disabled={false}
             loadingSk={loadingSk}
             loadError={loadError}
           />
-
-          {!ready && picks.length === 0 && <p className="text-xs text-text-tertiary">Loading data layer…</p>}
         </CardContent>
       </Card>
 
@@ -758,38 +757,28 @@ function SearchTypeahead({
   disabled: boolean;
   placeholder: string;
 }) {
-  const { ready } = useDuckDB();
+  // Lazy-fetch the institution directory on first focus. ~80 KB JSON,
+  // edge-cached. Plain-JS substring search replaces the DuckDB query —
+  // no WASM bundle, no parquet roundtrip.
+  const [directory, setDirectory] = useState<InstitutionDirEntry[] | null>(null);
   const [q, setQ] = useState('');
-  const [results, setResults] = useState<Array<{ sk: string; name: string; state: string | null }>>([]);
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const listboxId = useId();
 
-  useEffect(() => {
-    if (!ready) {
-      setResults([]);
-      return;
-    }
-    const needle = q.trim();
-    if (needle.length < 2) {
-      setResults([]);
-      return;
-    }
-    let cancelled = false;
-    const handle = setTimeout(() => {
-      searchInstitutions(needle)
-        .then((rows) => {
-          if (!cancelled) setResults(rows);
-        })
-        .catch(() => {
-          if (!cancelled) setResults([]);
-        });
-    }, 150);
-    return () => {
-      cancelled = true;
-      clearTimeout(handle);
-    };
-  }, [ready, q]);
+  const ensureDirectory = () => {
+    if (directory !== null) return;
+    fetch('/data/dim_institution.json')
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then((data: InstitutionDirEntry[]) => setDirectory(data))
+      .catch(() => setDirectory([]));
+  };
+
+  const needle = q.trim().toLowerCase();
+  const results = useMemo<InstitutionDirEntry[]>(() => {
+    if (!directory || needle.length < 2) return [];
+    return directory.filter((r) => r.name.toLowerCase().includes(needle)).slice(0, 20);
+  }, [directory, needle]);
 
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
@@ -815,9 +804,13 @@ function SearchTypeahead({
         value={q}
         onChange={(e) => {
           setQ(e.target.value);
+          ensureDirectory();
           setOpen(true);
         }}
-        onFocus={() => setOpen(true)}
+        onFocus={() => {
+          ensureDirectory();
+          setOpen(true);
+        }}
         placeholder={placeholder}
         disabled={disabled}
         role="combobox"
@@ -841,7 +834,6 @@ function SearchTypeahead({
                   e.preventDefault();
                   onPick(r.sk);
                   setQ('');
-                  setResults([]);
                   setOpen(false);
                 }}
                 className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-accent-soft/40 focus:bg-accent-soft/40 focus:outline-none"
@@ -853,7 +845,7 @@ function SearchTypeahead({
           ))}
         </ul>
       )}
-      {open && ready && q.trim().length >= 2 && filtered.length === 0 && (
+      {open && directory !== null && q.trim().length >= 2 && filtered.length === 0 && (
         <p className="absolute z-20 left-0 right-0 mt-1 rounded-md border border-rule bg-surface-elevated px-3 py-2 text-xs text-text-tertiary">
           No matches for &ldquo;{q}&rdquo;.
         </p>

@@ -5,7 +5,6 @@ import { Group } from '@visx/group';
 import { scaleBand, scaleLinear } from '@visx/scale';
 import { useEffect, useId, useMemo, useState } from 'react';
 
-import { useDuckDB } from '@/app/providers';
 import { DistributionPlot } from '@/components/charts/DistributionPlot';
 import { LineChart } from '@/components/charts/LineChart';
 import { ResponsiveSvg } from '@/components/charts/ResponsiveSvg';
@@ -16,31 +15,17 @@ import { SectionDivider } from '@/components/editorial/SectionDivider';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { largestYoY, peakYear } from '@/lib/annotations';
 import { formatCount, formatDollars, formatPercent } from '@/lib/format';
-import {
-  type GrowthRow,
-  type NationalFieldMixRow,
-  type NationalNihIcRow,
-  type NationalPiDistributionRow,
-  type NationalStateRollupRow,
-  type NationalTeamSizeRow,
-  type NationalTopicRow,
-  type NationalTrendRow,
-  type StateTopicRow,
-  type TopicLeaderRow,
-  getNationalAgencyTrend,
-  getNationalConcentration,
-  getNationalFieldMix,
-  getNationalNihICs,
-  getNationalOverview,
-  getNationalPiDistribution,
-  getNationalStateRollup,
-  getNationalTeamSize,
-  getNationalTopicLeaders,
-  getNationalTopics,
-  getNationalTrends,
-  getStateTopicLeaders,
-  getTopClimbers,
-  getTopFallers,
+import type {
+  GrowthRow,
+  NationalFieldMixRow,
+  NationalNihIcRow,
+  NationalPiDistributionRow,
+  NationalStateRollupRow,
+  NationalTeamSizeRow,
+  NationalTopicRow,
+  NationalTrendRow,
+  StateTopicRow,
+  TopicLeaderRow,
 } from '@/lib/queries';
 
 const FY_MIN = 2005;
@@ -155,22 +140,25 @@ type ConcentrationRow = {
   share: number;
 };
 
+interface NationalSnapshot {
+  overview: OverviewRow[];
+  agencies: AgencyRow[];
+  concentration: ConcentrationRow[];
+  state_rollup: NationalStateRollupRow[];
+  trends: NationalTrendRow[];
+  field_mix: NationalFieldMixRow[];
+  pi_distribution: NationalPiDistributionRow[];
+  topics: NationalTopicRow[];
+  team_size: NationalTeamSizeRow[];
+  nih_ics: NationalNihIcRow[];
+  topic_leaders: TopicLeaderRow[];
+  state_topic_leaders: StateTopicRow[];
+  climbers: GrowthRow[];
+  fallers: GrowthRow[];
+}
+
 export default function NationalPage() {
-  const { ready } = useDuckDB();
-  const [overview, setOverview] = useState<OverviewRow[]>([]);
-  const [agencies, setAgencies] = useState<AgencyRow[]>([]);
-  const [concentration, setConcentration] = useState<ConcentrationRow[]>([]);
-  const [stateRollup, setStateRollup] = useState<NationalStateRollupRow[]>([]);
-  const [fieldMix, setFieldMix] = useState<NationalFieldMixRow[]>([]);
-  const [piDist, setPiDist] = useState<NationalPiDistributionRow[]>([]);
-  const [trends, setTrends] = useState<NationalTrendRow[]>([]);
-  const [teamSize, setTeamSize] = useState<NationalTeamSizeRow[]>([]);
-  const [topics, setTopics] = useState<NationalTopicRow[]>([]);
-  const [nihIcs, setNihIcs] = useState<NationalNihIcRow[]>([]);
-  const [topicLeaders, setTopicLeaders] = useState<TopicLeaderRow[]>([]);
-  const [stateTopics, setStateTopics] = useState<StateTopicRow[]>([]);
-  const [climbers, setClimbers] = useState<GrowthRow[]>([]);
-  const [fallers, setFallers] = useState<GrowthRow[]>([]);
+  const [snapshot, setSnapshot] = useState<NationalSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -186,82 +174,64 @@ export default function NationalPage() {
   const [teamSizeFy, setTeamSizeFy] = useState<number>(FY_MAX);
   const [piDistFy, setPiDistFy] = useState<number>(FY_MAX);
 
-  // Evergreen multi-FY queries — fetched once. The same payload powers both
-  // the always-on timelines and the per-year rankings (just filter by FY).
+  // Single static-JSON fetch replaces 14 runtime DuckDB-WASM queries +
+  // multi-MB WASM bundle download. Snapshot is precomputed by
+  // scripts/precompute_national_snapshot.js at build time and served from
+  // /data/snapshots/national-snapshot.json (brotli-compressed at edge to
+  // ~200 KB). All per-year filtering happens in-memory below.
   useEffect(() => {
-    if (!ready) return;
     let cancelled = false;
     setLoading(true);
-    Promise.all([
-      getNationalOverview(),
-      getNationalAgencyTrend(),
-      getNationalConcentration(),
-      getNationalFieldMix(),
-      getNationalPiDistribution(),
-      getNationalTrends(),
-      getNationalTeamSize(),
-      getNationalTopics(),
-      getNationalNihICs(),
-      getTopClimbers('5yr', 10),
-      getTopFallers('5yr', 10),
-    ])
-      .then(([o, a, c, f, p, t, ts, tp, ic, cl, fa]) => {
-        if (cancelled) return;
-        setOverview(o as OverviewRow[]);
-        setAgencies(a as AgencyRow[]);
-        setConcentration(c as ConcentrationRow[]);
-        setFieldMix(f);
-        setPiDist(p);
-        setTrends(t);
-        setTeamSize(ts);
-        setTopics(tp);
-        setNihIcs(ic);
-        setClimbers(cl);
-        setFallers(fa);
-        setLoading(false);
+    fetch('/data/snapshots/national-snapshot.json')
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((data: NationalSnapshot) => {
+        if (!cancelled) {
+          setSnapshot(data);
+          setLoading(false);
+        }
       })
       .catch((e: Error) => {
-        if (cancelled) return;
-        setError(e.message);
-        setLoading(false);
+        if (!cancelled) {
+          setError(e.message);
+          setLoading(false);
+        }
       });
     return () => {
       cancelled = true;
     };
-  }, [ready]);
+  }, []);
 
-  // FY-locked refetches — one per panel.
-  useEffect(() => {
-    if (!ready) return;
-    let cancelled = false;
-    getNationalStateRollup(geographyFy)
-      .then((s) => {
-        if (!cancelled) setStateRollup(s);
-      })
-      .catch((e: Error) => {
-        if (!cancelled) setError(e.message);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [ready, geographyFy]);
+  // Derived slices — pulled out of the snapshot via memoised selectors so
+  // each useMemo downstream sees the same row shape it always did.
+  const overview = snapshot?.overview ?? [];
+  const agencies = snapshot?.agencies ?? [];
+  const concentration = snapshot?.concentration ?? [];
+  const fieldMix = snapshot?.field_mix ?? [];
+  const piDist = snapshot?.pi_distribution ?? [];
+  const trends = snapshot?.trends ?? [];
+  const teamSize = snapshot?.team_size ?? [];
+  const topics = snapshot?.topics ?? [];
+  const nihIcs = snapshot?.nih_ics ?? [];
+  const climbers = snapshot?.climbers ?? [];
+  const fallers = snapshot?.fallers ?? [];
 
-  useEffect(() => {
-    if (!ready) return;
-    let cancelled = false;
-    Promise.all([getNationalTopicLeaders(5, topicsFy), getStateTopicLeaders(10, topicsFy)])
-      .then(([tl, st]) => {
-        if (cancelled) return;
-        setTopicLeaders(tl);
-        setStateTopics(st);
-      })
-      .catch((e: Error) => {
-        if (!cancelled) setError(e.message);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [ready, topicsFy]);
+  // FY-locked slices — filter the snapshot in-memory on every change.
+  // Was previously a DuckDB refetch (50–500 ms); now <5 ms.
+  const stateRollup = useMemo(
+    () => (snapshot?.state_rollup ?? []).filter((r) => Number(r.fiscal_year) === geographyFy),
+    [snapshot, geographyFy],
+  );
+  const topicLeaders = useMemo(
+    () => (snapshot?.topic_leaders ?? []).filter((r) => Number(r.fiscal_year) === topicsFy),
+    [snapshot, topicsFy],
+  );
+  const stateTopics = useMemo(
+    () => (snapshot?.state_topic_leaders ?? []).filter((r) => Number(r.fiscal_year) === topicsFy),
+    [snapshot, topicsFy],
+  );
 
   /* ─── Overview pivot: rows of {fiscal_year, federal, state, ...} ─── */
   const overviewWide = useMemo(() => {

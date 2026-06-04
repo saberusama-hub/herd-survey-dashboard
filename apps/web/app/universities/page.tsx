@@ -1,52 +1,87 @@
 'use client';
 
-import { useDuckDB } from '@/app/providers';
 import { SourceLine } from '@/components/editorial/SourceLine';
 import { UniversityTable } from '@/components/editorial/UniversityTable';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { type UniversityIndexRow, getUniversityIndex } from '@/lib/queries';
-import { useEffect, useId, useState } from 'react';
+import type { UniversityIndexRow } from '@/lib/queries';
+import { useEffect, useId, useMemo, useState } from 'react';
 
 const FY_MIN = 2005;
 const FY_MAX = 2024;
 const ALL_YEARS = Array.from({ length: FY_MAX - FY_MIN + 1 }, (_, i) => FY_MAX - i);
 
+interface UniversitiesSnapshot {
+  years: number[];
+  institutions: Array<{ sk: string; name: string; state: string | null }>;
+  /** total_rd[institutionIdx][yearIdx] */
+  total_rd: Array<Array<number | null>>;
+  federal_share: Array<Array<number | null>>;
+  pi_count: Array<Array<number | null>>;
+  stem_share: Array<Array<number | null>>;
+}
+
 /**
- * Sortable directory of every HERD-tracked institution. Year selector above
- * the table drives the FY-specific columns (Total R&D, Federal %, # PIs,
- * STEM %, trailing 5y CAGR, long-run CAGR FY2005→year). UniversityTable
- * handles sort/search/state-filter internally.
+ * Sortable directory of every HERD-tracked institution. The snapshot holds
+ * every institution × year for every column the table renders, in a
+ * columnar layout (parallel arrays). Year-change re-pivot happens client
+ * side over ~20k cells in <10 ms.
  */
 export default function UniversitiesPage() {
-  const { ready, error } = useDuckDB();
-  const [year, setYear] = useState<number>(FY_MAX);
-  const [rows, setRows] = useState<UniversityIndexRow[] | null>(null);
+  const [snapshot, setSnapshot] = useState<UniversitiesSnapshot | null>(null);
   const [loadError, setLoadError] = useState<Error | null>(null);
-  const [pending, setPending] = useState(false);
+  const [year, setYear] = useState<number>(FY_MAX);
   const yearSelectId = useId();
 
   useEffect(() => {
-    if (!ready) return;
     let cancelled = false;
-    setPending(true);
-    setLoadError(null);
-    getUniversityIndex(year)
+    fetch('/data/snapshots/universities-snapshot.json')
       .then((r) => {
-        if (!cancelled) {
-          setRows(r);
-          setPending(false);
-        }
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
       })
-      .catch((e) => {
-        if (!cancelled) {
-          setLoadError(e instanceof Error ? e : new Error(String(e)));
-          setPending(false);
-        }
+      .then((data: UniversitiesSnapshot) => {
+        if (!cancelled) setSnapshot(data);
+      })
+      .catch((e: Error) => {
+        if (!cancelled) setLoadError(e);
       });
     return () => {
       cancelled = true;
     };
-  }, [ready, year]);
+  }, []);
+
+  // Pivot the columnar snapshot to UniversityIndexRow[] for the selected
+  // FY. Computes trailing 5y CAGR and long-run CAGR (FY2005→year) in JS.
+  // Was a multi-CTE DuckDB query (~2 s); now ~5 ms.
+  const rows = useMemo<UniversityIndexRow[] | null>(() => {
+    if (!snapshot) return null;
+    const yi = snapshot.years.indexOf(year);
+    if (yi < 0) return [];
+    const yi5 = snapshot.years.indexOf(year - 5);
+    const yiFirst = 0; // FY2005 always present per precompute coverage
+    const fiscalYearGap = year - snapshot.years[yiFirst];
+    return snapshot.institutions
+      .map((inst, i) => {
+        const total = snapshot.total_rd[i][yi];
+        if (total === null) return null;
+        const t5 = yi5 >= 0 ? snapshot.total_rd[i][yi5] : null;
+        const tFirst = snapshot.total_rd[i][yiFirst];
+        return {
+          institution_sk: inst.sk,
+          name: inst.name,
+          state: inst.state ?? '',
+          total_rd: total,
+          cagr_5yr: yi5 >= 0 && t5 !== null && t5 > 0 ? (total / t5) ** (1 / 5) - 1 : null,
+          cagr_long_run:
+            fiscalYearGap > 0 && tFirst !== null && tFirst > 0 ? (total / tFirst) ** (1 / fiscalYearGap) - 1 : null,
+          federal_share: snapshot.federal_share[i][yi],
+          pi_count: snapshot.pi_count[i][yi] ?? 0,
+          stem_share: snapshot.stem_share[i][yi],
+        };
+      })
+      .filter((r): r is UniversityIndexRow => r !== null)
+      .sort((a, b) => (b.total_rd ?? 0) - (a.total_rd ?? 0));
+  }, [snapshot, year]);
 
   return (
     <div className="container-wide py-10 md:py-14 space-y-6">
@@ -78,15 +113,11 @@ export default function UniversitiesPage() {
         </span>
       </div>
 
-      {error || loadError ? (
-        <p className="text-sm text-negative">
-          Failed to load institutions: {(error ?? loadError)?.message ?? 'unknown error'}
-        </p>
+      {loadError ? (
+        <p className="text-sm text-negative">Failed to load institutions: {loadError.message}</p>
       ) : rows ? (
         <>
-          <div className={pending ? 'opacity-60 transition-opacity' : 'transition-opacity'} aria-busy={pending}>
-            <UniversityTable rows={rows} year={year} />
-          </div>
+          <UniversityTable rows={rows} year={year} />
           <div className="border-t border-rule pt-3 text-[11px] leading-relaxed text-text-tertiary">
             <SourceLine
               variant="block"

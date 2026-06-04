@@ -1,44 +1,51 @@
 'use client';
 
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 
-import { useDuckDB } from '@/app/providers';
 import { USStateMap } from '@/components/charts/USStateMap';
 import { ChartFrame } from '@/components/editorial/ChartFrame';
 import { KpiStrip } from '@/components/editorial/KpiStrip';
 import { SortableTh, useTableSort } from '@/components/editorial/SortableTable';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { formatCount, formatPercent } from '@/lib/format';
-import {
-  type SbirAgency,
-  type SbirDemographics,
-  type SbirFirm,
-  type SbirOverview,
-  type SbirRiUni,
-  type SbirState,
-  type SbirYearStack,
-  getSbirAgencies,
-  getSbirDemographics,
-  getSbirOverview,
-  getSbirStates,
-  getSbirTopFirms,
-  getSbirTopRiUnis,
-  getSbirYearStack,
+import type {
+  SbirAgency,
+  SbirDemographics,
+  SbirFirm,
+  SbirOverview,
+  SbirRiUni,
+  SbirState,
+  SbirYearStack,
 } from '@/lib/queries';
 
 const FY_MIN = 2005;
 const FY_MAX = 2024;
 const ALL_YEARS = Array.from({ length: FY_MAX - FY_MIN + 1 }, (_, i) => FY_MAX - i);
 
+interface SbirSnapshot {
+  overview: SbirOverview;
+  year_stack: SbirYearStack[];
+  agency_facts: Array<{ fiscal_year: number; agency_name: string; n_awards: number; amount: number }>;
+  firm_facts: Array<{
+    fiscal_year: number;
+    firm_name: string;
+    firm_state: string | null;
+    n_awards: number;
+    amount_real_m: number;
+  }>;
+  ri_facts: Array<{ fiscal_year: number; ri_canonical_name: string; n_awards: number; amount_real_m: number }>;
+  state_facts: Array<{ fiscal_year: number; firm_state: string; n_awards: number; amount_real_m: number }>;
+  demo_facts: Array<{
+    fiscal_year: number;
+    total_awards: number;
+    woman_owned: number;
+    hubzone: number;
+    disadvantaged: number;
+  }>;
+}
+
 export default function SbirPage() {
-  const { ready } = useDuckDB();
-  const [overview, setOverview] = useState<SbirOverview | null>(null);
-  const [yearStack, setYearStack] = useState<SbirYearStack[]>([]);
-  const [agencies, setAgencies] = useState<SbirAgency[]>([]);
-  const [firms, setFirms] = useState<SbirFirm[]>([]);
-  const [riUnis, setRiUnis] = useState<SbirRiUni[]>([]);
-  const [states, setStates] = useState<SbirState[]>([]);
-  const [demo, setDemo] = useState<SbirDemographics | null>(null);
+  const [snapshot, setSnapshot] = useState<SbirSnapshot | null>(null);
 
   // FY window for the cumulative panels (Agency / Firms / RI unis /
   // Demographics). Single FY for the State map + leaderboard.
@@ -46,60 +53,127 @@ export default function SbirPage() {
   const [windowEnd, setWindowEnd] = useState<number>(FY_MAX);
   const [stateYear, setStateYear] = useState<number>(FY_MAX);
 
-  // Overview + year-stack are 20-year aggregates — fetched once.
   useEffect(() => {
-    if (!ready) return;
     let cancelled = false;
-    (async () => {
-      const [ov, ys] = await Promise.all([getSbirOverview(), getSbirYearStack()]);
-      if (cancelled) return;
-      setOverview(ov);
-      setYearStack(ys);
-    })();
+    fetch('/data/snapshots/sbir-snapshot.json')
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((data: SbirSnapshot) => {
+        if (!cancelled) setSnapshot(data);
+      })
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
-  }, [ready]);
-
-  // Cumulative panels — refetched on window change.
-  useEffect(() => {
-    if (!ready) return;
-    let cancelled = false;
-    const lo = Math.min(windowStart, windowEnd);
-    const hi = Math.max(windowStart, windowEnd);
-    (async () => {
-      const [ag, fm, ri, dm] = await Promise.all([
-        getSbirAgencies(lo, hi),
-        getSbirTopFirms(lo, hi, 15),
-        getSbirTopRiUnis(lo, hi, 15),
-        getSbirDemographics(lo, hi),
-      ]);
-      if (cancelled) return;
-      setAgencies(ag);
-      setFirms(fm);
-      setRiUnis(ri);
-      setDemo(dm);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [ready, windowStart, windowEnd]);
-
-  // Single-FY state geography.
-  useEffect(() => {
-    if (!ready) return;
-    let cancelled = false;
-    getSbirStates(stateYear).then((st) => {
-      if (!cancelled) setStates(st);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [ready, stateYear]);
+  }, []);
 
   const winLo = Math.min(windowStart, windowEnd);
   const winHi = Math.max(windowStart, windowEnd);
   const winLabel = winLo === winHi ? `FY${winLo}` : `FY${winLo}–${winHi}`;
+
+  // Derived per-window aggregations: sum per-year facts over the chosen
+  // window. Was a DuckDB roundtrip; now <5 ms client-side reduce.
+  const overview = snapshot?.overview ?? null;
+  const yearStack = snapshot?.year_stack ?? [];
+
+  const agencies = useMemo<SbirAgency[]>(() => {
+    const f = snapshot?.agency_facts ?? [];
+    const byAgency = new Map<string, { n: number; amt: number }>();
+    for (const r of f) {
+      if (r.fiscal_year < winLo || r.fiscal_year > winHi) continue;
+      const cur = byAgency.get(r.agency_name) ?? { n: 0, amt: 0 };
+      cur.n += r.n_awards;
+      cur.amt += r.amount;
+      byAgency.set(r.agency_name, cur);
+    }
+    const totalAmt = [...byAgency.values()].reduce((s, x) => s + x.amt, 0);
+    const totalN = [...byAgency.values()].reduce((s, x) => s + x.n, 0);
+    return [...byAgency.entries()]
+      .map(([agency_name, { n, amt }]) => ({
+        agency_name,
+        n_awards: n,
+        amount_real_b: amt / 1e9,
+        share_pct: totalAmt > 0 ? (amt / totalAmt) * 100 : 0,
+        share_n_pct: totalN > 0 ? (n / totalN) * 100 : 0,
+      }))
+      .sort((a, b) => b.amount_real_b - a.amount_real_b);
+  }, [snapshot, winLo, winHi]);
+
+  const firms = useMemo<SbirFirm[]>(() => {
+    const f = snapshot?.firm_facts ?? [];
+    const byFirm = new Map<string, { state: string | null; n: number; amt: number }>();
+    for (const r of f) {
+      if (r.fiscal_year < winLo || r.fiscal_year > winHi) continue;
+      const cur = byFirm.get(r.firm_name) ?? { state: r.firm_state, n: 0, amt: 0 };
+      cur.n += r.n_awards;
+      cur.amt += r.amount_real_m;
+      byFirm.set(r.firm_name, cur);
+    }
+    return [...byFirm.entries()]
+      .map(([firm_name, { state, n, amt }]) => ({
+        firm_name,
+        firm_state: state,
+        n_awards: n,
+        amount_real_m: amt,
+      }))
+      .sort((a, b) => b.amount_real_m - a.amount_real_m)
+      .slice(0, 15);
+  }, [snapshot, winLo, winHi]);
+
+  const riUnis = useMemo<SbirRiUni[]>(() => {
+    const f = snapshot?.ri_facts ?? [];
+    const byRi = new Map<string, { n: number; amt: number }>();
+    for (const r of f) {
+      if (r.fiscal_year < winLo || r.fiscal_year > winHi) continue;
+      const cur = byRi.get(r.ri_canonical_name) ?? { n: 0, amt: 0 };
+      cur.n += r.n_awards;
+      cur.amt += r.amount_real_m;
+      byRi.set(r.ri_canonical_name, cur);
+    }
+    return [...byRi.entries()]
+      .map(([ri_canonical_name, { n, amt }]) => ({ ri_canonical_name, n_awards: n, amount_real_m: amt }))
+      .sort((a, b) => b.amount_real_m - a.amount_real_m)
+      .slice(0, 15);
+  }, [snapshot, winLo, winHi]);
+
+  const demo = useMemo<SbirDemographics | null>(() => {
+    const f = snapshot?.demo_facts ?? [];
+    let total = 0;
+    let woman = 0;
+    let hub = 0;
+    let disadv = 0;
+    for (const r of f) {
+      if (r.fiscal_year < winLo || r.fiscal_year > winHi) continue;
+      total += r.total_awards;
+      woman += r.woman_owned;
+      hub += r.hubzone;
+      disadv += r.disadvantaged;
+    }
+    if (total === 0) return null;
+    return {
+      total_awards: total,
+      woman_owned: woman,
+      hubzone: hub,
+      disadvantaged: disadv,
+      woman_pct: (woman * 100) / total,
+      hubzone_pct: (hub * 100) / total,
+      disadvantaged_pct: (disadv * 100) / total,
+    };
+  }, [snapshot, winLo, winHi]);
+
+  const states = useMemo<SbirState[]>(() => {
+    const f = snapshot?.state_facts ?? [];
+    return f
+      .filter((r) => r.fiscal_year === stateYear)
+      .map((r) => ({
+        firm_state: r.firm_state,
+        n_awards: r.n_awards,
+        amount_real_m: r.amount_real_m,
+      }))
+      .sort((a, b) => b.amount_real_m - a.amount_real_m);
+  }, [snapshot, stateYear]);
 
   return (
     <div className="container-wide py-10 md:py-14 space-y-8">

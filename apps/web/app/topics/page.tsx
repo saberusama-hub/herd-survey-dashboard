@@ -3,53 +3,61 @@
 import Link from 'next/link';
 import { useEffect, useId, useMemo, useState } from 'react';
 
-import { useDuckDB } from '@/app/providers';
 import { LineChart } from '@/components/charts/LineChart';
 import { ChartFrame } from '@/components/editorial/ChartFrame';
 import { KpiStrip } from '@/components/editorial/KpiStrip';
 import { SortableTh, useTableSort } from '@/components/editorial/SortableTable';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { formatCount, formatPercent } from '@/lib/format';
-import {
-  type TopicSummary,
-  type TopicTimeline,
-  type TopicTopState,
-  type TopicTopUni,
-  getTopicSummaries,
-  getTopicTimeline,
-  getTopicTopStates,
-  getTopicTopUnis,
-} from '@/lib/queries';
+import type { TopicSummary, TopicTimeline, TopicTopState, TopicTopUni } from '@/lib/queries';
 
 const FY_MIN = 2005;
 const FY_MAX = 2024;
 const ALL_YEARS = Array.from({ length: FY_MAX - FY_MIN + 1 }, (_, i) => FY_MAX - i);
 
+interface TopicsSnapshot {
+  summaries: Array<TopicSummary & { fiscal_year: number }>;
+  timelines: Array<TopicTimeline & { topic: string }>;
+  top_unis: Array<TopicTopUni & { fiscal_year: number; topic: string }>;
+  top_states: Array<TopicTopState & { fiscal_year: number; topic: string }>;
+}
+
 export default function TopicsPage() {
-  const { ready } = useDuckDB();
+  const [snapshot, setSnapshot] = useState<TopicsSnapshot | null>(null);
   const [summaryYear, setSummaryYear] = useState<number>(FY_MAX);
-  const [summaries, setSummaries] = useState<TopicSummary[]>([]);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!ready) return;
     let cancelled = false;
-    (async () => {
-      const data = await getTopicSummaries(summaryYear);
-      if (cancelled) return;
-      setSummaries(data);
-      // Auto-pick a default drill-down topic if none is selected, or if the
-      // currently-selected topic disappeared from this year's data.
-      if (data.length > 0) {
-        if (!selectedTopic || !data.some((r) => r.topic === selectedTopic)) {
-          setSelectedTopic(data[0].topic);
-        }
-      }
-    })();
+    fetch('/data/snapshots/topics-snapshot.json')
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((data: TopicsSnapshot) => {
+        if (!cancelled) setSnapshot(data);
+      })
+      .catch(() => {
+        if (!cancelled) setSnapshot({ summaries: [], timelines: [], top_unis: [], top_states: [] });
+      });
     return () => {
       cancelled = true;
     };
-  }, [ready, summaryYear, selectedTopic]);
+  }, []);
+
+  // Filter summaries to the selected year in-memory (was a DuckDB query).
+  const summaries = useMemo(
+    () => (snapshot?.summaries ?? []).filter((r) => r.fiscal_year === summaryYear),
+    [snapshot, summaryYear],
+  );
+
+  // Auto-pick a default drill-down topic when summaries change.
+  useEffect(() => {
+    if (summaries.length === 0) return;
+    if (!selectedTopic || !summaries.some((r) => r.topic === selectedTopic)) {
+      setSelectedTopic(summaries[0].topic);
+    }
+  }, [summaries, selectedTopic]);
 
   const fySummaryTotal = summaries.reduce((s, r) => s + r.fy24_amount_m, 0);
   const topicCount = summaries.length;
@@ -152,7 +160,12 @@ export default function TopicsPage() {
 
       {/* Per-topic drill-down */}
       {summaries.length > 0 && (
-        <TopicDetail topic={selectedTopic} onTopicChange={setSelectedTopic} topics={summaries.map((r) => r.topic)} />
+        <TopicDetail
+          topic={selectedTopic}
+          onTopicChange={setSelectedTopic}
+          topics={summaries.map((r) => r.topic)}
+          snapshot={snapshot}
+        />
       )}
     </div>
   );
@@ -299,35 +312,37 @@ function TopicDetail({
   topic,
   topics,
   onTopicChange,
+  snapshot,
 }: {
   topic: string | null;
   topics: string[];
   onTopicChange: (t: string) => void;
+  snapshot: TopicsSnapshot | null;
 }) {
-  const { ready } = useDuckDB();
-  const [timeline, setTimeline] = useState<TopicTimeline[]>([]);
-  const [topUnis, setTopUnis] = useState<TopicTopUni[]>([]);
-  const [topStates, setTopStates] = useState<TopicTopState[]>([]);
   const [drillYear, setDrillYear] = useState<number>(FY_MAX);
 
-  useEffect(() => {
-    if (!ready || !topic) return;
-    let cancelled = false;
-    (async () => {
-      const [tl, tu, ts] = await Promise.all([
-        getTopicTimeline(topic),
-        getTopicTopUnis(topic, 15, drillYear),
-        getTopicTopStates(topic, 10, drillYear),
-      ]);
-      if (cancelled) return;
-      setTimeline(tl);
-      setTopUnis(tu);
-      setTopStates(ts);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [ready, topic, drillYear]);
+  // Client-side filtering of the snapshot replaces 3 DuckDB queries per
+  // (topic, year) change. Each filter runs over ~9k rows in <5 ms.
+  const timeline = useMemo<TopicTimeline[]>(
+    () =>
+      (snapshot?.timelines ?? [])
+        .filter((r) => r.topic === topic)
+        .map((r) => ({
+          fiscal_year: r.fiscal_year,
+          tagged_amount_m: r.tagged_amount_m,
+          grant_count: r.grant_count,
+          share_pct: r.share_pct,
+        })),
+    [snapshot, topic],
+  );
+  const topUnis = useMemo<TopicTopUni[]>(
+    () => (snapshot?.top_unis ?? []).filter((r) => r.topic === topic && r.fiscal_year === drillYear),
+    [snapshot, topic, drillYear],
+  );
+  const topStates = useMemo<TopicTopState[]>(
+    () => (snapshot?.top_states ?? []).filter((r) => r.topic === topic && r.fiscal_year === drillYear),
+    [snapshot, topic, drillYear],
+  );
 
   if (!topic) return null;
 

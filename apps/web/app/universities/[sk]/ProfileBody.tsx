@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 
-import { useDuckDB } from '@/app/providers';
 import { Section1Hero } from '@/components/profile/Section1Hero';
 import { Section2TotalRD } from '@/components/profile/Section2TotalRD';
 import { Section3Sources } from '@/components/profile/Section3Sources';
@@ -12,48 +11,51 @@ import { Section6PIs } from '@/components/profile/Section6PIs';
 import { Section7Disciplines } from '@/components/profile/Section7Disciplines';
 import { Section8Concentration } from '@/components/profile/Section8Concentration';
 import { Section9StateContext } from '@/components/profile/Section9StateContext';
-import { type UniversityProfile, getUniversityProfile } from '@/lib/queries';
+import type { NihIcRow, SpecializationRow, UniversityProfile } from '@/lib/queries';
+
+type ProfileSnapshot = UniversityProfile & {
+  nihIcs: NihIcRow[];
+  specialization: SpecializationRow[];
+};
 
 interface Props {
   sk: string;
-  /** Fallback name when DuckDB hasn't loaded yet (or fails). */
+  /** Fallback name when the profile JSON hasn't loaded yet (or fails). */
   fallbackName: string;
   /** State code from the static dim_institution.json. */
   state: string;
 }
 
 /**
- * Client-side profile body. Loads the full UniversityProfile bundle in one
- * call and hands each slice to a dedicated section component. The 9 sections
- * render in the editorial order specified in §3.3 of the design.
+ * Client-side profile body. Reads a single static JSON (~50 KB before
+ * brotli, ~10 KB after) from /data/profiles/<sk>.json — precomputed at
+ * build time by scripts/precompute_profile_snapshots.js. No DuckDB-WASM
+ * load. No per-section queries. Profile sections that used to fire their
+ * own DB queries (Section4 NIH ICs, Section7 specialization) now read
+ * those slices from the same snapshot.
  */
 export function ProfileBody({ sk, fallbackName, state }: Props) {
-  const { ready, error } = useDuckDB();
-  const [profile, setProfile] = useState<UniversityProfile | null>(null);
+  const [snapshot, setSnapshot] = useState<ProfileSnapshot | null>(null);
   const [loadError, setLoadError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!ready) return;
     let cancelled = false;
-    getUniversityProfile(sk)
-      .then((p) => {
-        if (!cancelled) setProfile(p);
+    fetch(`/data/profiles/${encodeURIComponent(sk)}.json`)
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
       })
-      .catch((e) => {
-        if (!cancelled) setLoadError(e instanceof Error ? e : new Error(String(e)));
+      .then((data: ProfileSnapshot) => {
+        if (!cancelled) setSnapshot(data);
+      })
+      .catch((e: Error) => {
+        if (!cancelled) setLoadError(e);
       });
     return () => {
       cancelled = true;
     };
-  }, [sk, ready]);
+  }, [sk]);
 
-  if (error) {
-    return (
-      <div className="mt-10 rounded border border-rule bg-surface p-6 text-sm text-text-secondary">
-        Failed to initialize the data layer: {error.message}
-      </div>
-    );
-  }
   if (loadError) {
     return (
       <div className="mt-10 rounded border border-rule bg-surface p-6 text-sm text-text-secondary">
@@ -61,9 +63,8 @@ export function ProfileBody({ sk, fallbackName, state }: Props) {
       </div>
     );
   }
-  if (!profile) {
-    // Skeleton placeholder — keeps the page layout from jumping while DuckDB-WASM
-    // streams parquet aggregates from /data/.
+  if (!snapshot) {
+    // Skeleton placeholder — brief flash while the ~50 KB JSON streams in.
     return (
       <div className="mt-12 space-y-12" aria-busy="true">
         <div className="h-24 animate-pulse rounded bg-border/20" />
@@ -73,19 +74,23 @@ export function ProfileBody({ sk, fallbackName, state }: Props) {
     );
   }
 
+  // Reconstruct the UniversityProfile object the section components expect.
+  // The snapshot JSON happens to match the shape because we serialise from
+  // the same SQL columns at precompute time; institution_sk is the URL key.
+  const profile: UniversityProfile = { ...snapshot, institution_sk: sk };
+
   return (
     <div className="mt-10 space-y-2">
       <Section1Hero profile={profile} state={state} />
       <Section2TotalRD profile={profile} />
       <Section3Sources profile={profile} />
-      <Section4Agencies profile={profile} institutionSk={sk} />
+      <Section4Agencies profile={profile} icRows={snapshot.nihIcs} />
       <Section5Reconciliation profile={profile} />
       <Section6PIs profile={profile} />
-      <Section7Disciplines profile={profile} institutionSk={sk} />
+      <Section7Disciplines profile={profile} specialization={snapshot.specialization} />
       <Section8Concentration profile={profile} />
       <Section9StateContext profile={profile} />
 
-      {/* Footer per spec §3.3 */}
       <footer className="mt-16 border-t border-rule pt-8 space-y-3">
         <p className="text-[11px] text-text-tertiary max-w-prose">
           Source: Federal R&amp;D data from NSF Federal Funds (Vol 70 FY2005–FY2023, Vol 71 FY2015–FY2024); NIH

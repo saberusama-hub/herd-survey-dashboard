@@ -3,7 +3,7 @@
 import { AxisBottom, AxisLeft } from '@visx/axis';
 import { Group } from '@visx/group';
 import { scaleBand, scaleLinear } from '@visx/scale';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { ResponsiveSvg } from '@/components/charts/ResponsiveSvg';
 import { Sparkline } from '@/components/charts/Sparkline';
@@ -11,12 +11,12 @@ import { ChartFrame } from '@/components/editorial/ChartFrame';
 import { KpiStrip, type KpiTile } from '@/components/editorial/KpiStrip';
 import { SectionDivider } from '@/components/editorial/SectionDivider';
 import { formatDollars, formatPercent } from '@/lib/format';
-import { type SpecializationRow, type UniversityProfile, getUniversitySpecialization } from '@/lib/queries';
+import type { SpecializationRow, UniversityProfile } from '@/lib/queries';
 
 interface Props {
   profile: UniversityProfile;
-  /** institution_sk for the specialization-scores query. */
-  institutionSk: string;
+  /** Pre-computed top-5 specialization rows from the profile snapshot. */
+  specialization: SpecializationRow[];
 }
 
 /**
@@ -28,24 +28,9 @@ interface Props {
  *     20-year sparkline per topic. Title + (NSF) abstract / (NIH) terms
  *     pattern-matched into 30 buckets — see /methodology.
  */
-export function Section7Disciplines({ profile, institutionSk }: Props) {
+export function Section7Disciplines({ profile, specialization }: Props) {
   const { fieldMix, topics } = profile;
   const [showAllTopics, setShowAllTopics] = useState(false);
-  const [specialization, setSpecialization] = useState<SpecializationRow[] | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    getUniversitySpecialization(institutionSk, 5)
-      .then((rows) => {
-        if (!cancelled) setSpecialization(rows);
-      })
-      .catch(() => {
-        if (!cancelled) setSpecialization([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [institutionSk]);
 
   const specializationKpis = useMemo<KpiTile[]>(() => {
     if (!specialization || specialization.length === 0) return [];
