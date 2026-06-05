@@ -201,16 +201,6 @@ export const PARQUET_SOURCES: Record<string, ParquetProvenance> = {
       },
     ],
   },
-  agg_uni_patents: {
-    parquet: 'agg_uni_patents',
-    description: 'Per-university patent counts (stub — minimal data; coverage will expand).',
-    sources: [
-      {
-        id: 'usaspending',
-        subset: 'USAS-linked patent disclosures (stub; replaced when USPTO Inventor bulk dataset is integrated).',
-      },
-    ],
-  },
   agg_uni_peers: {
     parquet: 'agg_uni_peers',
     description: 'Per-university peer-similarity rankings derived from HERD agency mix + field mix.',

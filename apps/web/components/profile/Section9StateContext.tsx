@@ -14,12 +14,13 @@ interface Props {
 }
 
 /**
- * Section 9 — State context, peers, patents.
+ * Section 9 — State context + peers.
  *
  *   - "Slope" callout: share of state R&D at first vs latest reported FY.
  *   - Peer panel: up to 5 same-state ±25%-size peers (from agg_uni_peers).
- *   - Patent stub: NULL in source data (USPTO ingestion not implemented),
- *     surfaced as an em-dash so readers see the box but understand the gap.
+ *
+ * Patent productivity used to live here as a stub; it has been removed pending
+ * a separate IP & commercialization tab built from a real USPTO ingestion.
  */
 export function Section9StateContext({ profile }: Props) {
   const { ready } = useDuckDB();
@@ -40,7 +41,7 @@ export function Section9StateContext({ profile }: Props) {
     };
   }, [ready, profile.institution_sk]);
 
-  const { firstShare, latestShare, firstFy, latestFy, shareSpark, latestPatents } = useMemo(() => {
+  const { firstShare, latestShare, firstFy, latestFy, shareSpark } = useMemo(() => {
     const sortedState = [...profile.stateContext].sort((a, b) => a.fiscal_year - b.fiscal_year);
     const firstFy = sortedState[0]?.fiscal_year ?? null;
     const latestFy = sortedState[sortedState.length - 1]?.fiscal_year ?? null;
@@ -50,9 +51,7 @@ export function Section9StateContext({ profile }: Props) {
       x: r.fiscal_year,
       y: r.share_of_state !== null ? Number(r.share_of_state) * 100 : null,
     }));
-    const sortedPatents = [...profile.patents].sort((a, b) => a.fiscal_year - b.fiscal_year);
-    const latestPatents = sortedPatents[sortedPatents.length - 1] ?? null;
-    return { firstShare, latestShare, firstFy, latestFy, shareSpark, latestPatents };
+    return { firstShare, latestShare, firstFy, latestFy, shareSpark };
   }, [profile]);
 
   return (
@@ -60,11 +59,11 @@ export function Section9StateContext({ profile }: Props) {
       <SectionDivider
         eyebrow="Section 9 · State context"
         title="In its state and among its peers"
-        dek="Share of state R&D over time, similar-size peer institutions, and patent productivity (currently a stub — USPTO ingestion is out of scope for this build)."
+        dek="Share of state R&D over time and similar-size peer institutions."
         color="hsl(var(--agency-nasa))"
       />
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         {/* State share slope */}
         <ChartFrame
           eyebrow="Share of state R&D"
@@ -157,41 +156,6 @@ export function Section9StateContext({ profile }: Props) {
               ))}
             </ul>
           )}
-        </ChartFrame>
-
-        {/* Patents (stub) */}
-        <ChartFrame
-          eyebrow="Patent productivity"
-          title="Patents per federal award"
-          dek="Patent counts come from USPTO assignee data — not yet loaded into this build."
-          sources={[
-            {
-              id: 'nsf_awards',
-              subset: 'Award counts per institution × FY used as denominator (numerator from USPTO not yet ingested)',
-            },
-            {
-              id: 'nih_exporter',
-              subset: 'Project counts per institution × FY used as denominator (numerator from USPTO not yet ingested)',
-            },
-          ]}
-          note="USPTO ingestion is out of scope for the current data layer. The metric will appear here once that source is added."
-          methodology={{
-            what: 'How efficiently this university converts federal research grants into issued patents — a rough proxy for translational productivity.',
-            how: 'Numerator (planned): USPTO assignee records matched to this institution. Denominator: count of NIH + NSF awards in the fiscal year. We currently show only the denominator since the USPTO source has not been ingested.',
-            caveats:
-              'USPTO data ingestion is out of scope for the current build, so the ratio is shown as "—" everywhere. Award counts are real but the patent numerator is missing.',
-          }}
-        >
-          <div className="space-y-2">
-            <p className="text-3xl font-semibold text-text-tertiary tnum">—</p>
-            <p className="text-[11px] text-text-tertiary">
-              {latestPatents
-                ? `Latest FY${latestPatents.fiscal_year}: ${
-                    latestPatents.award_count ?? 0
-                  } NIH/NSF awards on record · patent count not yet loaded.`
-                : 'No award-count reference available for this institution.'}
-            </p>
-          </div>
         </ChartFrame>
       </div>
     </section>

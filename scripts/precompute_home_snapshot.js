@@ -77,49 +77,62 @@ async function main() {
   `)
   )[0];
 
-  // Top 10 topics latest FY.
-  const topics = await db.all(`
-    WITH latest AS (SELECT MAX(fiscal_year) AS fy FROM agg_national_topic)
-    SELECT (SELECT fy FROM latest) AS fy, topic, tagged_amount
+  // Topics — ALL fiscal years. Client filters by selected FY and re-ranks.
+  // Each year carries every topic that received any federal $ that year.
+  const topicsAllYears = await db.all(`
+    SELECT fiscal_year AS fy, topic, tagged_amount
     FROM agg_national_topic
-    WHERE fiscal_year = (SELECT fy FROM latest)
-    ORDER BY tagged_amount DESC
-    LIMIT 10
+    WHERE tagged_amount IS NOT NULL
+    ORDER BY fiscal_year, tagged_amount DESC
   `);
 
-  // Agencies latest FY (all 7 buckets, sorted).
-  const agencies = await db.all(`
-    WITH latest AS (SELECT MAX(fiscal_year) AS fy FROM agg_national_agency_trend)
-    SELECT (SELECT fy FROM latest) AS fy, agency_bucket, amount_nominal
+  // Agencies — ALL fiscal years, all 7 buckets per year.
+  const agenciesAllYears = await db.all(`
+    SELECT fiscal_year AS fy, agency_bucket, amount_nominal
     FROM agg_national_agency_trend
-    WHERE fiscal_year = (SELECT fy FROM latest)
-    ORDER BY amount_nominal DESC
+    WHERE amount_nominal IS NOT NULL
+    ORDER BY fiscal_year, amount_nominal DESC
   `);
 
-  // 20-year cumulative source totals.
-  const sourceTotals = await db.all(`
-    SELECT source_category, SUM(amount_nominal) AS total
+  // Sources — ALL fiscal years, per-year breakdown (replaces 20-yr cumulative).
+  const sourcesAllYears = await db.all(`
+    SELECT fiscal_year AS fy, source_category, SUM(amount_nominal) AS total
     FROM agg_national_overview
-    GROUP BY source_category
-    ORDER BY total DESC
+    WHERE amount_nominal IS NOT NULL
+    GROUP BY fiscal_year, source_category
+    ORDER BY fiscal_year, total DESC
   `);
 
-  // Top 10 states by federal R&D in the latest HERD FY.
-  const states = await db.all(`
-    WITH latest AS (SELECT MAX(fiscal_year) AS fy FROM agg_uni_source_split)
-    SELECT
-      i.state_code,
-      SUM(s.amount_nominal) AS total,
-      COUNT(DISTINCT s.institution_sk) AS n_institutions
-    FROM agg_uni_source_split s
-    JOIN dim_institution i USING (institution_sk)
-    WHERE s.fiscal_year = (SELECT fy FROM latest)
-      AND s.source_category = 'federal'
-      AND i.state_code IS NOT NULL
-      AND s.amount_nominal IS NOT NULL
-    GROUP BY i.state_code
-    ORDER BY total DESC
-    LIMIT 10
+  // States — ALL fiscal years × top 10 by federal $ for that year.
+  const statesAllYears = await db.all(`
+    WITH ranked AS (
+      SELECT
+        s.fiscal_year AS fy,
+        i.state_code,
+        SUM(s.amount_nominal) AS total,
+        COUNT(DISTINCT s.institution_sk) AS n_institutions,
+        ROW_NUMBER() OVER (
+          PARTITION BY s.fiscal_year ORDER BY SUM(s.amount_nominal) DESC
+        ) AS rk
+      FROM agg_uni_source_split s
+      JOIN dim_institution i USING (institution_sk)
+      WHERE s.source_category = 'federal'
+        AND i.state_code IS NOT NULL
+        AND s.amount_nominal IS NOT NULL
+      GROUP BY s.fiscal_year, i.state_code
+    )
+    SELECT fy, state_code, total, n_institutions
+    FROM ranked
+    WHERE rk <= 10
+    ORDER BY fy, total DESC
+  `);
+
+  // Set of fiscal years available for the picker.
+  const availableYears = await db.all(`
+    SELECT DISTINCT fiscal_year AS fy
+    FROM agg_national_overview
+    WHERE amount_nominal IS NOT NULL
+    ORDER BY fy
   `);
 
   // Top 10 universities by FY24 total R&D (the leaderboard).
@@ -162,20 +175,14 @@ async function main() {
     generated_at: new Date().toISOString(),
     kpis: toJsonSafe(kpis),
     top_agency: toJsonSafe(topAgency),
-    topics: toJsonSafe(topics),
-    agencies: toJsonSafe(agencies),
-    source_totals: toJsonSafe(sourceTotals),
-    states: toJsonSafe(states),
+    // Flat per-FY arrays. Client filters by selected year.
+    topics_by_fy: toJsonSafe(topicsAllYears),
+    agencies_by_fy: toJsonSafe(agenciesAllYears),
+    sources_by_fy: toJsonSafe(sourcesAllYears),
+    states_by_fy: toJsonSafe(statesAllYears),
+    available_years: toJsonSafe(availableYears).map((r) => r.fy),
     top10_universities: toJsonSafe(top10),
   };
-
-  // Sort agency / source rows into the canonical orders the home page uses so
-  // the rendered chart matches what DuckDB would have returned.
-  const orderBy = (rows, key, canonical) => {
-    const idx = new Map(canonical.map((v, i) => [v, i]));
-    return [...rows].sort((a, b) => (idx.get(a[key]) ?? 99) - (idx.get(b[key]) ?? 99));
-  };
-  snapshot.agencies = orderBy(snapshot.agencies, 'agency_bucket', AGENCY_BUCKETS);
 
   fs.writeFileSync(OUT_PATH, JSON.stringify(snapshot, null, 2));
   console.log(`✓ Wrote ${OUT_PATH}`);
@@ -183,11 +190,15 @@ async function main() {
   console.log(`  fy24_total:      $${(snapshot.kpis.fy24_total / 1e9).toFixed(2)}B`);
   console.log(`  fy24_federal:    $${(snapshot.kpis.fy24_federal / 1e9).toFixed(2)}B`);
   console.log(`  top_uni:         ${snapshot.top10_universities[0]?.name}`);
-  console.log(`  top_topic:       ${snapshot.topics[0]?.topic}`);
+  console.log(`  topics rows:     ${snapshot.topics_by_fy.length}`);
+  console.log(`  agencies rows:   ${snapshot.agencies_by_fy.length}`);
+  console.log(`  sources rows:    ${snapshot.sources_by_fy.length}`);
+  console.log(`  states rows:     ${snapshot.states_by_fy.length}`);
+  console.log(`  years:           ${snapshot.available_years.length}`);
   console.log(`  bytes:           ${fs.statSync(OUT_PATH).size}`);
 
-  // Sanity check: SOURCE_ORDER values should be the only ones in source_totals.
-  for (const r of snapshot.source_totals) {
+  // Sanity check: SOURCE_ORDER values should be the only ones in sources_by_fy.
+  for (const r of snapshot.sources_by_fy) {
     if (!SOURCE_ORDER.includes(r.source_category)) {
       console.warn(`  ⚠ unknown source_category: ${r.source_category}`);
     }

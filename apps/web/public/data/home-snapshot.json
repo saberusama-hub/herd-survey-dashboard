@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-04T13:06:11.385Z",
+  "generated_at": "2026-06-05T09:18:57.498Z",
   "kpis": {
     "total_entities": 75204,
     "herd_universities": 1014,
@@ -14,7 +14,2857 @@
     "amount_nominal": 35500073000,
     "pct_of_federal": 0.5491971751645008
   },
-  "topics": [
+  "topics_by_fy": [
+    {
+      "fy": 2005,
+      "topic": "Cancer research",
+      "tagged_amount": 3088047304
+    },
+    {
+      "fy": 2005,
+      "topic": "Genomics & genetics",
+      "tagged_amount": 2713681830
+    },
+    {
+      "fy": 2005,
+      "topic": "Neuroscience & brain",
+      "tagged_amount": 1247523731
+    },
+    {
+      "fy": 2005,
+      "topic": "Infectious disease & vaccines",
+      "tagged_amount": 1155747103
+    },
+    {
+      "fy": 2005,
+      "topic": "Immunology",
+      "tagged_amount": 1145081293
+    },
+    {
+      "fy": 2005,
+      "topic": "Diabetes & metabolic",
+      "tagged_amount": 757565315
+    },
+    {
+      "fy": 2005,
+      "topic": "Education research",
+      "tagged_amount": 651027859
+    },
+    {
+      "fy": 2005,
+      "topic": "Cardiovascular",
+      "tagged_amount": 629927934
+    },
+    {
+      "fy": 2005,
+      "topic": "Climate & sustainability",
+      "tagged_amount": 569376404
+    },
+    {
+      "fy": 2005,
+      "topic": "Aging & longevity",
+      "tagged_amount": 552919091
+    },
+    {
+      "fy": 2005,
+      "topic": "Mental health & psychiatry",
+      "tagged_amount": 528523889
+    },
+    {
+      "fy": 2005,
+      "topic": "Bioengineering & synthetic biology",
+      "tagged_amount": 330333629
+    },
+    {
+      "fy": 2005,
+      "topic": "Materials science",
+      "tagged_amount": 317934984
+    },
+    {
+      "fy": 2005,
+      "topic": "Agriculture & food",
+      "tagged_amount": 292361806
+    },
+    {
+      "fy": 2005,
+      "topic": "Nanotechnology",
+      "tagged_amount": 220652146
+    },
+    {
+      "fy": 2005,
+      "topic": "Drug discovery & pharmacology",
+      "tagged_amount": 178583229
+    },
+    {
+      "fy": 2005,
+      "topic": "Renewable energy",
+      "tagged_amount": 159647425
+    },
+    {
+      "fy": 2005,
+      "topic": "Robotics & autonomy",
+      "tagged_amount": 150738555
+    },
+    {
+      "fy": 2005,
+      "topic": "Regenerative medicine",
+      "tagged_amount": 127201565
+    },
+    {
+      "fy": 2005,
+      "topic": "Earth observation",
+      "tagged_amount": 119477821
+    },
+    {
+      "fy": 2005,
+      "topic": "Water resources",
+      "tagged_amount": 67601605
+    },
+    {
+      "fy": 2005,
+      "topic": "Artificial intelligence & ML",
+      "tagged_amount": 65303113
+    },
+    {
+      "fy": 2005,
+      "topic": "Cybersecurity",
+      "tagged_amount": 61544203
+    },
+    {
+      "fy": 2005,
+      "topic": "Astrophysics & cosmology",
+      "tagged_amount": 57961073
+    },
+    {
+      "fy": 2005,
+      "topic": "Energy storage & batteries",
+      "tagged_amount": 41771537
+    },
+    {
+      "fy": 2005,
+      "topic": "Public health & epidemiology",
+      "tagged_amount": 34169591
+    },
+    {
+      "fy": 2005,
+      "topic": "Social & behavioral science",
+      "tagged_amount": 25881779
+    },
+    {
+      "fy": 2005,
+      "topic": "Quantum information",
+      "tagged_amount": 25875712
+    },
+    {
+      "fy": 2005,
+      "topic": "Computer vision",
+      "tagged_amount": 20929893
+    },
+    {
+      "fy": 2005,
+      "topic": "Natural language processing",
+      "tagged_amount": 10335503
+    },
+    {
+      "fy": 2006,
+      "topic": "Cancer research",
+      "tagged_amount": 2072215137
+    },
+    {
+      "fy": 2006,
+      "topic": "Genomics & genetics",
+      "tagged_amount": 1655993883
+    },
+    {
+      "fy": 2006,
+      "topic": "Public health & epidemiology",
+      "tagged_amount": 1078699215
+    },
+    {
+      "fy": 2006,
+      "topic": "Infectious disease & vaccines",
+      "tagged_amount": 885161572
+    },
+    {
+      "fy": 2006,
+      "topic": "Neuroscience & brain",
+      "tagged_amount": 864060183
+    },
+    {
+      "fy": 2006,
+      "topic": "Aging & longevity",
+      "tagged_amount": 594936976
+    },
+    {
+      "fy": 2006,
+      "topic": "Diabetes & metabolic",
+      "tagged_amount": 562715812
+    },
+    {
+      "fy": 2006,
+      "topic": "Education research",
+      "tagged_amount": 557718824
+    },
+    {
+      "fy": 2006,
+      "topic": "Materials science",
+      "tagged_amount": 549923428
+    },
+    {
+      "fy": 2006,
+      "topic": "Cardiovascular",
+      "tagged_amount": 530267360
+    },
+    {
+      "fy": 2006,
+      "topic": "Immunology",
+      "tagged_amount": 486687192
+    },
+    {
+      "fy": 2006,
+      "topic": "Mental health & psychiatry",
+      "tagged_amount": 375421965
+    },
+    {
+      "fy": 2006,
+      "topic": "Nanotechnology",
+      "tagged_amount": 323785377
+    },
+    {
+      "fy": 2006,
+      "topic": "Climate & sustainability",
+      "tagged_amount": 315376864
+    },
+    {
+      "fy": 2006,
+      "topic": "Renewable energy",
+      "tagged_amount": 166425095
+    },
+    {
+      "fy": 2006,
+      "topic": "Regenerative medicine",
+      "tagged_amount": 139206073
+    },
+    {
+      "fy": 2006,
+      "topic": "Agriculture & food",
+      "tagged_amount": 117763231
+    },
+    {
+      "fy": 2006,
+      "topic": "Energy storage & batteries",
+      "tagged_amount": 81124497
+    },
+    {
+      "fy": 2006,
+      "topic": "Robotics & autonomy",
+      "tagged_amount": 79327283
+    },
+    {
+      "fy": 2006,
+      "topic": "Bioengineering & synthetic biology",
+      "tagged_amount": 78130758
+    },
+    {
+      "fy": 2006,
+      "topic": "Astrophysics & cosmology",
+      "tagged_amount": 77379348
+    },
+    {
+      "fy": 2006,
+      "topic": "Artificial intelligence & ML",
+      "tagged_amount": 58461753
+    },
+    {
+      "fy": 2006,
+      "topic": "Earth observation",
+      "tagged_amount": 55164726
+    },
+    {
+      "fy": 2006,
+      "topic": "Drug discovery & pharmacology",
+      "tagged_amount": 50865194
+    },
+    {
+      "fy": 2006,
+      "topic": "Quantum information",
+      "tagged_amount": 48311073
+    },
+    {
+      "fy": 2006,
+      "topic": "Water resources",
+      "tagged_amount": 37606113
+    },
+    {
+      "fy": 2006,
+      "topic": "Social & behavioral science",
+      "tagged_amount": 28005962
+    },
+    {
+      "fy": 2006,
+      "topic": "Natural language processing",
+      "tagged_amount": 26666223
+    },
+    {
+      "fy": 2006,
+      "topic": "Computer vision",
+      "tagged_amount": 20453624
+    },
+    {
+      "fy": 2006,
+      "topic": "Cybersecurity",
+      "tagged_amount": 14107929
+    },
+    {
+      "fy": 2007,
+      "topic": "Genomics & genetics",
+      "tagged_amount": 7838660333
+    },
+    {
+      "fy": 2007,
+      "topic": "Cancer research",
+      "tagged_amount": 5371045839
+    },
+    {
+      "fy": 2007,
+      "topic": "Infectious disease & vaccines",
+      "tagged_amount": 4010772942
+    },
+    {
+      "fy": 2007,
+      "topic": "Neuroscience & brain",
+      "tagged_amount": 3971409161
+    },
+    {
+      "fy": 2007,
+      "topic": "Immunology",
+      "tagged_amount": 3314164020
+    },
+    {
+      "fy": 2007,
+      "topic": "Public health & epidemiology",
+      "tagged_amount": 3066786237
+    },
+    {
+      "fy": 2007,
+      "topic": "Diabetes & metabolic",
+      "tagged_amount": 2830331282
+    },
+    {
+      "fy": 2007,
+      "topic": "Cardiovascular",
+      "tagged_amount": 2596374401
+    },
+    {
+      "fy": 2007,
+      "topic": "Aging & longevity",
+      "tagged_amount": 1929617779
+    },
+    {
+      "fy": 2007,
+      "topic": "Mental health & psychiatry",
+      "tagged_amount": 1869953143
+    },
+    {
+      "fy": 2007,
+      "topic": "Drug discovery & pharmacology",
+      "tagged_amount": 1332800427
+    },
+    {
+      "fy": 2007,
+      "topic": "Education research",
+      "tagged_amount": 999730488
+    },
+    {
+      "fy": 2007,
+      "topic": "Climate & sustainability",
+      "tagged_amount": 725988117
+    },
+    {
+      "fy": 2007,
+      "topic": "Regenerative medicine",
+      "tagged_amount": 681594056
+    },
+    {
+      "fy": 2007,
+      "topic": "Nanotechnology",
+      "tagged_amount": 421269513
+    },
+    {
+      "fy": 2007,
+      "topic": "Materials science",
+      "tagged_amount": 351358564
+    },
+    {
+      "fy": 2007,
+      "topic": "Agriculture & food",
+      "tagged_amount": 233318312
+    },
+    {
+      "fy": 2007,
+      "topic": "Renewable energy",
+      "tagged_amount": 180547151
+    },
+    {
+      "fy": 2007,
+      "topic": "Astrophysics & cosmology",
+      "tagged_amount": 178109766
+    },
+    {
+      "fy": 2007,
+      "topic": "Social & behavioral science",
+      "tagged_amount": 155156011
+    },
+    {
+      "fy": 2007,
+      "topic": "Water resources",
+      "tagged_amount": 114596443
+    },
+    {
+      "fy": 2007,
+      "topic": "Robotics & autonomy",
+      "tagged_amount": 113704258
+    },
+    {
+      "fy": 2007,
+      "topic": "Earth observation",
+      "tagged_amount": 112201241
+    },
+    {
+      "fy": 2007,
+      "topic": "Artificial intelligence & ML",
+      "tagged_amount": 95154797
+    },
+    {
+      "fy": 2007,
+      "topic": "Bioengineering & synthetic biology",
+      "tagged_amount": 64436637
+    },
+    {
+      "fy": 2007,
+      "topic": "Energy storage & batteries",
+      "tagged_amount": 61511850
+    },
+    {
+      "fy": 2007,
+      "topic": "Natural language processing",
+      "tagged_amount": 56737977
+    },
+    {
+      "fy": 2007,
+      "topic": "Quantum information",
+      "tagged_amount": 33473599
+    },
+    {
+      "fy": 2007,
+      "topic": "Cybersecurity",
+      "tagged_amount": 25596146
+    },
+    {
+      "fy": 2007,
+      "topic": "Computer vision",
+      "tagged_amount": 23806314
+    },
+    {
+      "fy": 2008,
+      "topic": "Genomics & genetics",
+      "tagged_amount": 7724165400
+    },
+    {
+      "fy": 2008,
+      "topic": "Cancer research",
+      "tagged_amount": 5539102372
+    },
+    {
+      "fy": 2008,
+      "topic": "Public health & epidemiology",
+      "tagged_amount": 4778129063
+    },
+    {
+      "fy": 2008,
+      "topic": "Neuroscience & brain",
+      "tagged_amount": 4137845546
+    },
+    {
+      "fy": 2008,
+      "topic": "Infectious disease & vaccines",
+      "tagged_amount": 4079280566
+    },
+    {
+      "fy": 2008,
+      "topic": "Immunology",
+      "tagged_amount": 3227080066
+    },
+    {
+      "fy": 2008,
+      "topic": "Diabetes & metabolic",
+      "tagged_amount": 2809908031
+    },
+    {
+      "fy": 2008,
+      "topic": "Cardiovascular",
+      "tagged_amount": 2740469021
+    },
+    {
+      "fy": 2008,
+      "topic": "Aging & longevity",
+      "tagged_amount": 2064748424
+    },
+    {
+      "fy": 2008,
+      "topic": "Mental health & psychiatry",
+      "tagged_amount": 1976225909
+    },
+    {
+      "fy": 2008,
+      "topic": "Drug discovery & pharmacology",
+      "tagged_amount": 1315602124
+    },
+    {
+      "fy": 2008,
+      "topic": "Education research",
+      "tagged_amount": 1258586943
+    },
+    {
+      "fy": 2008,
+      "topic": "Climate & sustainability",
+      "tagged_amount": 793611091
+    },
+    {
+      "fy": 2008,
+      "topic": "Materials science",
+      "tagged_amount": 749297436
+    },
+    {
+      "fy": 2008,
+      "topic": "Regenerative medicine",
+      "tagged_amount": 729978479
+    },
+    {
+      "fy": 2008,
+      "topic": "Nanotechnology",
+      "tagged_amount": 543212416
+    },
+    {
+      "fy": 2008,
+      "topic": "Renewable energy",
+      "tagged_amount": 338589886
+    },
+    {
+      "fy": 2008,
+      "topic": "Astrophysics & cosmology",
+      "tagged_amount": 306266725
+    },
+    {
+      "fy": 2008,
+      "topic": "Agriculture & food",
+      "tagged_amount": 171838444
+    },
+    {
+      "fy": 2008,
+      "topic": "Earth observation",
+      "tagged_amount": 157853012
+    },
+    {
+      "fy": 2008,
+      "topic": "Social & behavioral science",
+      "tagged_amount": 152477754
+    },
+    {
+      "fy": 2008,
+      "topic": "Artificial intelligence & ML",
+      "tagged_amount": 112806931
+    },
+    {
+      "fy": 2008,
+      "topic": "Energy storage & batteries",
+      "tagged_amount": 98096419
+    },
+    {
+      "fy": 2008,
+      "topic": "Robotics & autonomy",
+      "tagged_amount": 96800912
+    },
+    {
+      "fy": 2008,
+      "topic": "Water resources",
+      "tagged_amount": 87404722
+    },
+    {
+      "fy": 2008,
+      "topic": "Bioengineering & synthetic biology",
+      "tagged_amount": 71892328
+    },
+    {
+      "fy": 2008,
+      "topic": "Natural language processing",
+      "tagged_amount": 58341195
+    },
+    {
+      "fy": 2008,
+      "topic": "Quantum information",
+      "tagged_amount": 54886437
+    },
+    {
+      "fy": 2008,
+      "topic": "Cybersecurity",
+      "tagged_amount": 32596201
+    },
+    {
+      "fy": 2008,
+      "topic": "Computer vision",
+      "tagged_amount": 31134432
+    },
+    {
+      "fy": 2009,
+      "topic": "Public health & epidemiology",
+      "tagged_amount": 11044221034
+    },
+    {
+      "fy": 2009,
+      "topic": "Genomics & genetics",
+      "tagged_amount": 10088307213
+    },
+    {
+      "fy": 2009,
+      "topic": "Cancer research",
+      "tagged_amount": 7024547799
+    },
+    {
+      "fy": 2009,
+      "topic": "Neuroscience & brain",
+      "tagged_amount": 5310641542
+    },
+    {
+      "fy": 2009,
+      "topic": "Infectious disease & vaccines",
+      "tagged_amount": 4808100597
+    },
+    {
+      "fy": 2009,
+      "topic": "Immunology",
+      "tagged_amount": 3876506971
+    },
+    {
+      "fy": 2009,
+      "topic": "Diabetes & metabolic",
+      "tagged_amount": 3843997345
+    },
+    {
+      "fy": 2009,
+      "topic": "Cardiovascular",
+      "tagged_amount": 3654899956
+    },
+    {
+      "fy": 2009,
+      "topic": "Aging & longevity",
+      "tagged_amount": 2714207717
+    },
+    {
+      "fy": 2009,
+      "topic": "Mental health & psychiatry",
+      "tagged_amount": 2663608200
+    },
+    {
+      "fy": 2009,
+      "topic": "Drug discovery & pharmacology",
+      "tagged_amount": 1775260927
+    },
+    {
+      "fy": 2009,
+      "topic": "Education research",
+      "tagged_amount": 1316529304
+    },
+    {
+      "fy": 2009,
+      "topic": "Climate & sustainability",
+      "tagged_amount": 1278312457
+    },
+    {
+      "fy": 2009,
+      "topic": "Regenerative medicine",
+      "tagged_amount": 1107113391
+    },
+    {
+      "fy": 2009,
+      "topic": "Nanotechnology",
+      "tagged_amount": 659322980
+    },
+    {
+      "fy": 2009,
+      "topic": "Materials science",
+      "tagged_amount": 588587707
+    },
+    {
+      "fy": 2009,
+      "topic": "Astrophysics & cosmology",
+      "tagged_amount": 476212268
+    },
+    {
+      "fy": 2009,
+      "topic": "Renewable energy",
+      "tagged_amount": 426629149
+    },
+    {
+      "fy": 2009,
+      "topic": "Agriculture & food",
+      "tagged_amount": 295808136
+    },
+    {
+      "fy": 2009,
+      "topic": "Earth observation",
+      "tagged_amount": 252069432
+    },
+    {
+      "fy": 2009,
+      "topic": "Social & behavioral science",
+      "tagged_amount": 244827680
+    },
+    {
+      "fy": 2009,
+      "topic": "Artificial intelligence & ML",
+      "tagged_amount": 209512195
+    },
+    {
+      "fy": 2009,
+      "topic": "Robotics & autonomy",
+      "tagged_amount": 166312008
+    },
+    {
+      "fy": 2009,
+      "topic": "Water resources",
+      "tagged_amount": 132827892
+    },
+    {
+      "fy": 2009,
+      "topic": "Bioengineering & synthetic biology",
+      "tagged_amount": 121231481
+    },
+    {
+      "fy": 2009,
+      "topic": "Natural language processing",
+      "tagged_amount": 88506417
+    },
+    {
+      "fy": 2009,
+      "topic": "Energy storage & batteries",
+      "tagged_amount": 86184393
+    },
+    {
+      "fy": 2009,
+      "topic": "Computer vision",
+      "tagged_amount": 45499327
+    },
+    {
+      "fy": 2009,
+      "topic": "Quantum information",
+      "tagged_amount": 37918183
+    },
+    {
+      "fy": 2009,
+      "topic": "Cybersecurity",
+      "tagged_amount": 32254201
+    },
+    {
+      "fy": 2010,
+      "topic": "Public health & epidemiology",
+      "tagged_amount": 13103749230
+    },
+    {
+      "fy": 2010,
+      "topic": "Genomics & genetics",
+      "tagged_amount": 10667925829
+    },
+    {
+      "fy": 2010,
+      "topic": "Cancer research",
+      "tagged_amount": 7892994210
+    },
+    {
+      "fy": 2010,
+      "topic": "Neuroscience & brain",
+      "tagged_amount": 5775544314
+    },
+    {
+      "fy": 2010,
+      "topic": "Infectious disease & vaccines",
+      "tagged_amount": 5750527489
+    },
+    {
+      "fy": 2010,
+      "topic": "Diabetes & metabolic",
+      "tagged_amount": 4568196899
+    },
+    {
+      "fy": 2010,
+      "topic": "Immunology",
+      "tagged_amount": 4417849978
+    },
+    {
+      "fy": 2010,
+      "topic": "Cardiovascular",
+      "tagged_amount": 4241418263
+    },
+    {
+      "fy": 2010,
+      "topic": "Aging & longevity",
+      "tagged_amount": 3059742965
+    },
+    {
+      "fy": 2010,
+      "topic": "Mental health & psychiatry",
+      "tagged_amount": 2748871274
+    },
+    {
+      "fy": 2010,
+      "topic": "Drug discovery & pharmacology",
+      "tagged_amount": 2055975780
+    },
+    {
+      "fy": 2010,
+      "topic": "Education research",
+      "tagged_amount": 1675762319
+    },
+    {
+      "fy": 2010,
+      "topic": "Climate & sustainability",
+      "tagged_amount": 1373395851
+    },
+    {
+      "fy": 2010,
+      "topic": "Regenerative medicine",
+      "tagged_amount": 1309897528
+    },
+    {
+      "fy": 2010,
+      "topic": "Renewable energy",
+      "tagged_amount": 896911718
+    },
+    {
+      "fy": 2010,
+      "topic": "Astrophysics & cosmology",
+      "tagged_amount": 713346426
+    },
+    {
+      "fy": 2010,
+      "topic": "Nanotechnology",
+      "tagged_amount": 624965071
+    },
+    {
+      "fy": 2010,
+      "topic": "Agriculture & food",
+      "tagged_amount": 550139577
+    },
+    {
+      "fy": 2010,
+      "topic": "Materials science",
+      "tagged_amount": 516690077
+    },
+    {
+      "fy": 2010,
+      "topic": "Social & behavioral science",
+      "tagged_amount": 270803109
+    },
+    {
+      "fy": 2010,
+      "topic": "Artificial intelligence & ML",
+      "tagged_amount": 270080504
+    },
+    {
+      "fy": 2010,
+      "topic": "Robotics & autonomy",
+      "tagged_amount": 228777471
+    },
+    {
+      "fy": 2010,
+      "topic": "Energy storage & batteries",
+      "tagged_amount": 162840918
+    },
+    {
+      "fy": 2010,
+      "topic": "Bioengineering & synthetic biology",
+      "tagged_amount": 135120081
+    },
+    {
+      "fy": 2010,
+      "topic": "Earth observation",
+      "tagged_amount": 131195130
+    },
+    {
+      "fy": 2010,
+      "topic": "Water resources",
+      "tagged_amount": 104234709
+    },
+    {
+      "fy": 2010,
+      "topic": "Natural language processing",
+      "tagged_amount": 79563210
+    },
+    {
+      "fy": 2010,
+      "topic": "Cybersecurity",
+      "tagged_amount": 73678594
+    },
+    {
+      "fy": 2010,
+      "topic": "Quantum information",
+      "tagged_amount": 38311815
+    },
+    {
+      "fy": 2010,
+      "topic": "Computer vision",
+      "tagged_amount": 37812787
+    },
+    {
+      "fy": 2011,
+      "topic": "Genomics & genetics",
+      "tagged_amount": 8900708338
+    },
+    {
+      "fy": 2011,
+      "topic": "Public health & epidemiology",
+      "tagged_amount": 7865535682
+    },
+    {
+      "fy": 2011,
+      "topic": "Cancer research",
+      "tagged_amount": 6455908805
+    },
+    {
+      "fy": 2011,
+      "topic": "Infectious disease & vaccines",
+      "tagged_amount": 5063057721
+    },
+    {
+      "fy": 2011,
+      "topic": "Neuroscience & brain",
+      "tagged_amount": 4773445112
+    },
+    {
+      "fy": 2011,
+      "topic": "Diabetes & metabolic",
+      "tagged_amount": 3839737431
+    },
+    {
+      "fy": 2011,
+      "topic": "Immunology",
+      "tagged_amount": 3699094391
+    },
+    {
+      "fy": 2011,
+      "topic": "Cardiovascular",
+      "tagged_amount": 3368170655
+    },
+    {
+      "fy": 2011,
+      "topic": "Aging & longevity",
+      "tagged_amount": 2642270639
+    },
+    {
+      "fy": 2011,
+      "topic": "Mental health & psychiatry",
+      "tagged_amount": 2345118561
+    },
+    {
+      "fy": 2011,
+      "topic": "Drug discovery & pharmacology",
+      "tagged_amount": 1766516868
+    },
+    {
+      "fy": 2011,
+      "topic": "Climate & sustainability",
+      "tagged_amount": 1242921813
+    },
+    {
+      "fy": 2011,
+      "topic": "Education research",
+      "tagged_amount": 1072053505
+    },
+    {
+      "fy": 2011,
+      "topic": "Regenerative medicine",
+      "tagged_amount": 1061569835
+    },
+    {
+      "fy": 2011,
+      "topic": "Nanotechnology",
+      "tagged_amount": 681261615
+    },
+    {
+      "fy": 2011,
+      "topic": "Renewable energy",
+      "tagged_amount": 656177416
+    },
+    {
+      "fy": 2011,
+      "topic": "Materials science",
+      "tagged_amount": 539597004
+    },
+    {
+      "fy": 2011,
+      "topic": "Agriculture & food",
+      "tagged_amount": 474566858
+    },
+    {
+      "fy": 2011,
+      "topic": "Earth observation",
+      "tagged_amount": 470911347
+    },
+    {
+      "fy": 2011,
+      "topic": "Artificial intelligence & ML",
+      "tagged_amount": 227807153
+    },
+    {
+      "fy": 2011,
+      "topic": "Water resources",
+      "tagged_amount": 224206078
+    },
+    {
+      "fy": 2011,
+      "topic": "Social & behavioral science",
+      "tagged_amount": 212490619
+    },
+    {
+      "fy": 2011,
+      "topic": "Astrophysics & cosmology",
+      "tagged_amount": 205688399
+    },
+    {
+      "fy": 2011,
+      "topic": "Robotics & autonomy",
+      "tagged_amount": 146738475
+    },
+    {
+      "fy": 2011,
+      "topic": "Energy storage & batteries",
+      "tagged_amount": 128289205
+    },
+    {
+      "fy": 2011,
+      "topic": "Bioengineering & synthetic biology",
+      "tagged_amount": 100777541
+    },
+    {
+      "fy": 2011,
+      "topic": "Natural language processing",
+      "tagged_amount": 65888550
+    },
+    {
+      "fy": 2011,
+      "topic": "Computer vision",
+      "tagged_amount": 52244008
+    },
+    {
+      "fy": 2011,
+      "topic": "Cybersecurity",
+      "tagged_amount": 49693136
+    },
+    {
+      "fy": 2011,
+      "topic": "Quantum information",
+      "tagged_amount": 41445794
+    },
+    {
+      "fy": 2012,
+      "topic": "Genomics & genetics",
+      "tagged_amount": 10385988244
+    },
+    {
+      "fy": 2012,
+      "topic": "Public health & epidemiology",
+      "tagged_amount": 7835704572
+    },
+    {
+      "fy": 2012,
+      "topic": "Cancer research",
+      "tagged_amount": 7200011996
+    },
+    {
+      "fy": 2012,
+      "topic": "Infectious disease & vaccines",
+      "tagged_amount": 5620377181
+    },
+    {
+      "fy": 2012,
+      "topic": "Neuroscience & brain",
+      "tagged_amount": 5319913279
+    },
+    {
+      "fy": 2012,
+      "topic": "Immunology",
+      "tagged_amount": 4526632369
+    },
+    {
+      "fy": 2012,
+      "topic": "Diabetes & metabolic",
+      "tagged_amount": 4285088495
+    },
+    {
+      "fy": 2012,
+      "topic": "Cardiovascular",
+      "tagged_amount": 3812510691
+    },
+    {
+      "fy": 2012,
+      "topic": "Aging & longevity",
+      "tagged_amount": 2957482534
+    },
+    {
+      "fy": 2012,
+      "topic": "Mental health & psychiatry",
+      "tagged_amount": 2615863412
+    },
+    {
+      "fy": 2012,
+      "topic": "Drug discovery & pharmacology",
+      "tagged_amount": 2204428286
+    },
+    {
+      "fy": 2012,
+      "topic": "Regenerative medicine",
+      "tagged_amount": 1463834982
+    },
+    {
+      "fy": 2012,
+      "topic": "Climate & sustainability",
+      "tagged_amount": 1285095464
+    },
+    {
+      "fy": 2012,
+      "topic": "Education research",
+      "tagged_amount": 1191465669
+    },
+    {
+      "fy": 2012,
+      "topic": "Nanotechnology",
+      "tagged_amount": 626564937
+    },
+    {
+      "fy": 2012,
+      "topic": "Materials science",
+      "tagged_amount": 481473046
+    },
+    {
+      "fy": 2012,
+      "topic": "Renewable energy",
+      "tagged_amount": 406049601
+    },
+    {
+      "fy": 2012,
+      "topic": "Agriculture & food",
+      "tagged_amount": 404921305
+    },
+    {
+      "fy": 2012,
+      "topic": "Social & behavioral science",
+      "tagged_amount": 275662801
+    },
+    {
+      "fy": 2012,
+      "topic": "Artificial intelligence & ML",
+      "tagged_amount": 261751395
+    },
+    {
+      "fy": 2012,
+      "topic": "Robotics & autonomy",
+      "tagged_amount": 213409073
+    },
+    {
+      "fy": 2012,
+      "topic": "Astrophysics & cosmology",
+      "tagged_amount": 179178519
+    },
+    {
+      "fy": 2012,
+      "topic": "Water resources",
+      "tagged_amount": 170905504
+    },
+    {
+      "fy": 2012,
+      "topic": "Bioengineering & synthetic biology",
+      "tagged_amount": 150956266
+    },
+    {
+      "fy": 2012,
+      "topic": "Energy storage & batteries",
+      "tagged_amount": 138668397
+    },
+    {
+      "fy": 2012,
+      "topic": "Quantum information",
+      "tagged_amount": 81679493
+    },
+    {
+      "fy": 2012,
+      "topic": "Cybersecurity",
+      "tagged_amount": 81318485
+    },
+    {
+      "fy": 2012,
+      "topic": "Earth observation",
+      "tagged_amount": 77623859
+    },
+    {
+      "fy": 2012,
+      "topic": "Natural language processing",
+      "tagged_amount": 69426973
+    },
+    {
+      "fy": 2012,
+      "topic": "Computer vision",
+      "tagged_amount": 48095710
+    },
+    {
+      "fy": 2013,
+      "topic": "Genomics & genetics",
+      "tagged_amount": 4086316824
+    },
+    {
+      "fy": 2013,
+      "topic": "Cancer research",
+      "tagged_amount": 3678865781
+    },
+    {
+      "fy": 2013,
+      "topic": "Public health & epidemiology",
+      "tagged_amount": 3081175971
+    },
+    {
+      "fy": 2013,
+      "topic": "Infectious disease & vaccines",
+      "tagged_amount": 2490819149
+    },
+    {
+      "fy": 2013,
+      "topic": "Neuroscience & brain",
+      "tagged_amount": 2191587727
+    },
+    {
+      "fy": 2013,
+      "topic": "Diabetes & metabolic",
+      "tagged_amount": 1717633609
+    },
+    {
+      "fy": 2013,
+      "topic": "Immunology",
+      "tagged_amount": 1651561614
+    },
+    {
+      "fy": 2013,
+      "topic": "Cardiovascular",
+      "tagged_amount": 1415503685
+    },
+    {
+      "fy": 2013,
+      "topic": "Aging & longevity",
+      "tagged_amount": 1225984929
+    },
+    {
+      "fy": 2013,
+      "topic": "Mental health & psychiatry",
+      "tagged_amount": 1067105801
+    },
+    {
+      "fy": 2013,
+      "topic": "Education research",
+      "tagged_amount": 1014435946
+    },
+    {
+      "fy": 2013,
+      "topic": "Climate & sustainability",
+      "tagged_amount": 978126897
+    },
+    {
+      "fy": 2013,
+      "topic": "Drug discovery & pharmacology",
+      "tagged_amount": 658812452
+    },
+    {
+      "fy": 2013,
+      "topic": "Materials science",
+      "tagged_amount": 546032009
+    },
+    {
+      "fy": 2013,
+      "topic": "Regenerative medicine",
+      "tagged_amount": 471208189
+    },
+    {
+      "fy": 2013,
+      "topic": "Renewable energy",
+      "tagged_amount": 386014678
+    },
+    {
+      "fy": 2013,
+      "topic": "Agriculture & food",
+      "tagged_amount": 377413911
+    },
+    {
+      "fy": 2013,
+      "topic": "Nanotechnology",
+      "tagged_amount": 309939812
+    },
+    {
+      "fy": 2013,
+      "topic": "Robotics & autonomy",
+      "tagged_amount": 194277773
+    },
+    {
+      "fy": 2013,
+      "topic": "Bioengineering & synthetic biology",
+      "tagged_amount": 169076285
+    },
+    {
+      "fy": 2013,
+      "topic": "Artificial intelligence & ML",
+      "tagged_amount": 165288182
+    },
+    {
+      "fy": 2013,
+      "topic": "Water resources",
+      "tagged_amount": 122567423
+    },
+    {
+      "fy": 2013,
+      "topic": "Astrophysics & cosmology",
+      "tagged_amount": 111675497
+    },
+    {
+      "fy": 2013,
+      "topic": "Social & behavioral science",
+      "tagged_amount": 109509250
+    },
+    {
+      "fy": 2013,
+      "topic": "Earth observation",
+      "tagged_amount": 95832493
+    },
+    {
+      "fy": 2013,
+      "topic": "Cybersecurity",
+      "tagged_amount": 89487285
+    },
+    {
+      "fy": 2013,
+      "topic": "Energy storage & batteries",
+      "tagged_amount": 80245917
+    },
+    {
+      "fy": 2013,
+      "topic": "Computer vision",
+      "tagged_amount": 40927699
+    },
+    {
+      "fy": 2013,
+      "topic": "Natural language processing",
+      "tagged_amount": 40304134
+    },
+    {
+      "fy": 2013,
+      "topic": "Quantum information",
+      "tagged_amount": 25767183
+    },
+    {
+      "fy": 2014,
+      "topic": "Public health & epidemiology",
+      "tagged_amount": 12495711165
+    },
+    {
+      "fy": 2014,
+      "topic": "Genomics & genetics",
+      "tagged_amount": 10504257576
+    },
+    {
+      "fy": 2014,
+      "topic": "Cancer research",
+      "tagged_amount": 7126905609
+    },
+    {
+      "fy": 2014,
+      "topic": "Infectious disease & vaccines",
+      "tagged_amount": 5952663965
+    },
+    {
+      "fy": 2014,
+      "topic": "Neuroscience & brain",
+      "tagged_amount": 5642879613
+    },
+    {
+      "fy": 2014,
+      "topic": "Immunology",
+      "tagged_amount": 4533353181
+    },
+    {
+      "fy": 2014,
+      "topic": "Diabetes & metabolic",
+      "tagged_amount": 4175960984
+    },
+    {
+      "fy": 2014,
+      "topic": "Cardiovascular",
+      "tagged_amount": 3746963462
+    },
+    {
+      "fy": 2014,
+      "topic": "Aging & longevity",
+      "tagged_amount": 3163249215
+    },
+    {
+      "fy": 2014,
+      "topic": "Mental health & psychiatry",
+      "tagged_amount": 2624117715
+    },
+    {
+      "fy": 2014,
+      "topic": "Drug discovery & pharmacology",
+      "tagged_amount": 2231885348
+    },
+    {
+      "fy": 2014,
+      "topic": "Regenerative medicine",
+      "tagged_amount": 1531040007
+    },
+    {
+      "fy": 2014,
+      "topic": "Education research",
+      "tagged_amount": 1503542883
+    },
+    {
+      "fy": 2014,
+      "topic": "Climate & sustainability",
+      "tagged_amount": 1205731059
+    },
+    {
+      "fy": 2014,
+      "topic": "Renewable energy",
+      "tagged_amount": 1113239978
+    },
+    {
+      "fy": 2014,
+      "topic": "Astrophysics & cosmology",
+      "tagged_amount": 720281224
+    },
+    {
+      "fy": 2014,
+      "topic": "Nanotechnology",
+      "tagged_amount": 690968636
+    },
+    {
+      "fy": 2014,
+      "topic": "Materials science",
+      "tagged_amount": 595982843
+    },
+    {
+      "fy": 2014,
+      "topic": "Agriculture & food",
+      "tagged_amount": 533804882
+    },
+    {
+      "fy": 2014,
+      "topic": "Artificial intelligence & ML",
+      "tagged_amount": 345720867
+    },
+    {
+      "fy": 2014,
+      "topic": "Social & behavioral science",
+      "tagged_amount": 290498274
+    },
+    {
+      "fy": 2014,
+      "topic": "Bioengineering & synthetic biology",
+      "tagged_amount": 190329308
+    },
+    {
+      "fy": 2014,
+      "topic": "Water resources",
+      "tagged_amount": 179918520
+    },
+    {
+      "fy": 2014,
+      "topic": "Robotics & autonomy",
+      "tagged_amount": 179665431
+    },
+    {
+      "fy": 2014,
+      "topic": "Energy storage & batteries",
+      "tagged_amount": 134755498
+    },
+    {
+      "fy": 2014,
+      "topic": "Cybersecurity",
+      "tagged_amount": 119311054
+    },
+    {
+      "fy": 2014,
+      "topic": "Earth observation",
+      "tagged_amount": 99392786
+    },
+    {
+      "fy": 2014,
+      "topic": "Natural language processing",
+      "tagged_amount": 92019138
+    },
+    {
+      "fy": 2014,
+      "topic": "Quantum information",
+      "tagged_amount": 79775233
+    },
+    {
+      "fy": 2014,
+      "topic": "Computer vision",
+      "tagged_amount": 60324637
+    },
+    {
+      "fy": 2015,
+      "topic": "Genomics & genetics",
+      "tagged_amount": 10776165062
+    },
+    {
+      "fy": 2015,
+      "topic": "Public health & epidemiology",
+      "tagged_amount": 9885123333
+    },
+    {
+      "fy": 2015,
+      "topic": "Cancer research",
+      "tagged_amount": 6857751264
+    },
+    {
+      "fy": 2015,
+      "topic": "Infectious disease & vaccines",
+      "tagged_amount": 5943066557
+    },
+    {
+      "fy": 2015,
+      "topic": "Neuroscience & brain",
+      "tagged_amount": 5779213176
+    },
+    {
+      "fy": 2015,
+      "topic": "Immunology",
+      "tagged_amount": 4705892767
+    },
+    {
+      "fy": 2015,
+      "topic": "Diabetes & metabolic",
+      "tagged_amount": 4291362713
+    },
+    {
+      "fy": 2015,
+      "topic": "Cardiovascular",
+      "tagged_amount": 3699639853
+    },
+    {
+      "fy": 2015,
+      "topic": "Aging & longevity",
+      "tagged_amount": 3240499841
+    },
+    {
+      "fy": 2015,
+      "topic": "Mental health & psychiatry",
+      "tagged_amount": 2608757497
+    },
+    {
+      "fy": 2015,
+      "topic": "Drug discovery & pharmacology",
+      "tagged_amount": 2331247883
+    },
+    {
+      "fy": 2015,
+      "topic": "Regenerative medicine",
+      "tagged_amount": 1612164851
+    },
+    {
+      "fy": 2015,
+      "topic": "Climate & sustainability",
+      "tagged_amount": 1298298383
+    },
+    {
+      "fy": 2015,
+      "topic": "Education research",
+      "tagged_amount": 1294742786
+    },
+    {
+      "fy": 2015,
+      "topic": "Renewable energy",
+      "tagged_amount": 790184181
+    },
+    {
+      "fy": 2015,
+      "topic": "Nanotechnology",
+      "tagged_amount": 669201102
+    },
+    {
+      "fy": 2015,
+      "topic": "Materials science",
+      "tagged_amount": 657426791
+    },
+    {
+      "fy": 2015,
+      "topic": "Artificial intelligence & ML",
+      "tagged_amount": 466911391
+    },
+    {
+      "fy": 2015,
+      "topic": "Agriculture & food",
+      "tagged_amount": 385620999
+    },
+    {
+      "fy": 2015,
+      "topic": "Social & behavioral science",
+      "tagged_amount": 309855508
+    },
+    {
+      "fy": 2015,
+      "topic": "Astrophysics & cosmology",
+      "tagged_amount": 206084083
+    },
+    {
+      "fy": 2015,
+      "topic": "Water resources",
+      "tagged_amount": 186523325
+    },
+    {
+      "fy": 2015,
+      "topic": "Bioengineering & synthetic biology",
+      "tagged_amount": 185687317
+    },
+    {
+      "fy": 2015,
+      "topic": "Robotics & autonomy",
+      "tagged_amount": 172692951
+    },
+    {
+      "fy": 2015,
+      "topic": "Energy storage & batteries",
+      "tagged_amount": 164219237
+    },
+    {
+      "fy": 2015,
+      "topic": "Cybersecurity",
+      "tagged_amount": 136664022
+    },
+    {
+      "fy": 2015,
+      "topic": "Earth observation",
+      "tagged_amount": 92222689
+    },
+    {
+      "fy": 2015,
+      "topic": "Natural language processing",
+      "tagged_amount": 86407142
+    },
+    {
+      "fy": 2015,
+      "topic": "Quantum information",
+      "tagged_amount": 77325401
+    },
+    {
+      "fy": 2015,
+      "topic": "Computer vision",
+      "tagged_amount": 68064475
+    },
+    {
+      "fy": 2016,
+      "topic": "Genomics & genetics",
+      "tagged_amount": 11642689872
+    },
+    {
+      "fy": 2016,
+      "topic": "Public health & epidemiology",
+      "tagged_amount": 8733417499
+    },
+    {
+      "fy": 2016,
+      "topic": "Cancer research",
+      "tagged_amount": 7117230229
+    },
+    {
+      "fy": 2016,
+      "topic": "Neuroscience & brain",
+      "tagged_amount": 6525182597
+    },
+    {
+      "fy": 2016,
+      "topic": "Infectious disease & vaccines",
+      "tagged_amount": 6230945701
+    },
+    {
+      "fy": 2016,
+      "topic": "Immunology",
+      "tagged_amount": 5152495348
+    },
+    {
+      "fy": 2016,
+      "topic": "Diabetes & metabolic",
+      "tagged_amount": 4633222499
+    },
+    {
+      "fy": 2016,
+      "topic": "Cardiovascular",
+      "tagged_amount": 4125095913
+    },
+    {
+      "fy": 2016,
+      "topic": "Aging & longevity",
+      "tagged_amount": 3858851963
+    },
+    {
+      "fy": 2016,
+      "topic": "Mental health & psychiatry",
+      "tagged_amount": 2810366939
+    },
+    {
+      "fy": 2016,
+      "topic": "Drug discovery & pharmacology",
+      "tagged_amount": 2625955757
+    },
+    {
+      "fy": 2016,
+      "topic": "Education research",
+      "tagged_amount": 1910859081
+    },
+    {
+      "fy": 2016,
+      "topic": "Regenerative medicine",
+      "tagged_amount": 1760380809
+    },
+    {
+      "fy": 2016,
+      "topic": "Climate & sustainability",
+      "tagged_amount": 1399062049
+    },
+    {
+      "fy": 2016,
+      "topic": "Nanotechnology",
+      "tagged_amount": 630902812
+    },
+    {
+      "fy": 2016,
+      "topic": "Artificial intelligence & ML",
+      "tagged_amount": 567928270
+    },
+    {
+      "fy": 2016,
+      "topic": "Materials science",
+      "tagged_amount": 542648273
+    },
+    {
+      "fy": 2016,
+      "topic": "Agriculture & food",
+      "tagged_amount": 454672386
+    },
+    {
+      "fy": 2016,
+      "topic": "Renewable energy",
+      "tagged_amount": 420424785
+    },
+    {
+      "fy": 2016,
+      "topic": "Astrophysics & cosmology",
+      "tagged_amount": 389147670
+    },
+    {
+      "fy": 2016,
+      "topic": "Earth observation",
+      "tagged_amount": 305956588
+    },
+    {
+      "fy": 2016,
+      "topic": "Social & behavioral science",
+      "tagged_amount": 301880598
+    },
+    {
+      "fy": 2016,
+      "topic": "Bioengineering & synthetic biology",
+      "tagged_amount": 233442781
+    },
+    {
+      "fy": 2016,
+      "topic": "Robotics & autonomy",
+      "tagged_amount": 198112032
+    },
+    {
+      "fy": 2016,
+      "topic": "Water resources",
+      "tagged_amount": 159706442
+    },
+    {
+      "fy": 2016,
+      "topic": "Cybersecurity",
+      "tagged_amount": 158745478
+    },
+    {
+      "fy": 2016,
+      "topic": "Energy storage & batteries",
+      "tagged_amount": 115868165
+    },
+    {
+      "fy": 2016,
+      "topic": "Natural language processing",
+      "tagged_amount": 95875204
+    },
+    {
+      "fy": 2016,
+      "topic": "Computer vision",
+      "tagged_amount": 73169880
+    },
+    {
+      "fy": 2016,
+      "topic": "Quantum information",
+      "tagged_amount": 46938050
+    },
+    {
+      "fy": 2017,
+      "topic": "Public health & epidemiology",
+      "tagged_amount": 15086232331
+    },
+    {
+      "fy": 2017,
+      "topic": "Genomics & genetics",
+      "tagged_amount": 12802231629
+    },
+    {
+      "fy": 2017,
+      "topic": "Cancer research",
+      "tagged_amount": 7750364665
+    },
+    {
+      "fy": 2017,
+      "topic": "Neuroscience & brain",
+      "tagged_amount": 7291010388
+    },
+    {
+      "fy": 2017,
+      "topic": "Infectious disease & vaccines",
+      "tagged_amount": 6618754294
+    },
+    {
+      "fy": 2017,
+      "topic": "Immunology",
+      "tagged_amount": 5666109654
+    },
+    {
+      "fy": 2017,
+      "topic": "Diabetes & metabolic",
+      "tagged_amount": 4967369525
+    },
+    {
+      "fy": 2017,
+      "topic": "Aging & longevity",
+      "tagged_amount": 4484360997
+    },
+    {
+      "fy": 2017,
+      "topic": "Cardiovascular",
+      "tagged_amount": 4365991483
+    },
+    {
+      "fy": 2017,
+      "topic": "Mental health & psychiatry",
+      "tagged_amount": 2996217344
+    },
+    {
+      "fy": 2017,
+      "topic": "Education research",
+      "tagged_amount": 2872818099
+    },
+    {
+      "fy": 2017,
+      "topic": "Drug discovery & pharmacology",
+      "tagged_amount": 2739386686
+    },
+    {
+      "fy": 2017,
+      "topic": "Climate & sustainability",
+      "tagged_amount": 2329155802
+    },
+    {
+      "fy": 2017,
+      "topic": "Regenerative medicine",
+      "tagged_amount": 1880112054
+    },
+    {
+      "fy": 2017,
+      "topic": "Astrophysics & cosmology",
+      "tagged_amount": 1131319878
+    },
+    {
+      "fy": 2017,
+      "topic": "Nanotechnology",
+      "tagged_amount": 763194203
+    },
+    {
+      "fy": 2017,
+      "topic": "Artificial intelligence & ML",
+      "tagged_amount": 761572496
+    },
+    {
+      "fy": 2017,
+      "topic": "Materials science",
+      "tagged_amount": 611885119
+    },
+    {
+      "fy": 2017,
+      "topic": "Renewable energy",
+      "tagged_amount": 524369226
+    },
+    {
+      "fy": 2017,
+      "topic": "Agriculture & food",
+      "tagged_amount": 383028363
+    },
+    {
+      "fy": 2017,
+      "topic": "Social & behavioral science",
+      "tagged_amount": 314011996
+    },
+    {
+      "fy": 2017,
+      "topic": "Bioengineering & synthetic biology",
+      "tagged_amount": 266435523
+    },
+    {
+      "fy": 2017,
+      "topic": "Robotics & autonomy",
+      "tagged_amount": 228012391
+    },
+    {
+      "fy": 2017,
+      "topic": "Cybersecurity",
+      "tagged_amount": 162804079
+    },
+    {
+      "fy": 2017,
+      "topic": "Energy storage & batteries",
+      "tagged_amount": 159011588
+    },
+    {
+      "fy": 2017,
+      "topic": "Water resources",
+      "tagged_amount": 158880359
+    },
+    {
+      "fy": 2017,
+      "topic": "Earth observation",
+      "tagged_amount": 114472586
+    },
+    {
+      "fy": 2017,
+      "topic": "Natural language processing",
+      "tagged_amount": 110410847
+    },
+    {
+      "fy": 2017,
+      "topic": "Computer vision",
+      "tagged_amount": 77458241
+    },
+    {
+      "fy": 2017,
+      "topic": "Quantum information",
+      "tagged_amount": 68957622
+    },
+    {
+      "fy": 2018,
+      "topic": "Genomics & genetics",
+      "tagged_amount": 5517801965
+    },
+    {
+      "fy": 2018,
+      "topic": "Cancer research",
+      "tagged_amount": 4514075495
+    },
+    {
+      "fy": 2018,
+      "topic": "Neuroscience & brain",
+      "tagged_amount": 4155375397
+    },
+    {
+      "fy": 2018,
+      "topic": "Infectious disease & vaccines",
+      "tagged_amount": 3147825940
+    },
+    {
+      "fy": 2018,
+      "topic": "Aging & longevity",
+      "tagged_amount": 2741421017
+    },
+    {
+      "fy": 2018,
+      "topic": "Public health & epidemiology",
+      "tagged_amount": 2581495894
+    },
+    {
+      "fy": 2018,
+      "topic": "Immunology",
+      "tagged_amount": 2420165892
+    },
+    {
+      "fy": 2018,
+      "topic": "Diabetes & metabolic",
+      "tagged_amount": 2303958394
+    },
+    {
+      "fy": 2018,
+      "topic": "Cardiovascular",
+      "tagged_amount": 2061987433
+    },
+    {
+      "fy": 2018,
+      "topic": "Mental health & psychiatry",
+      "tagged_amount": 1421014596
+    },
+    {
+      "fy": 2018,
+      "topic": "Education research",
+      "tagged_amount": 1379804287
+    },
+    {
+      "fy": 2018,
+      "topic": "Climate & sustainability",
+      "tagged_amount": 904782066
+    },
+    {
+      "fy": 2018,
+      "topic": "Regenerative medicine",
+      "tagged_amount": 869937454
+    },
+    {
+      "fy": 2018,
+      "topic": "Artificial intelligence & ML",
+      "tagged_amount": 812877227
+    },
+    {
+      "fy": 2018,
+      "topic": "Drug discovery & pharmacology",
+      "tagged_amount": 810096803
+    },
+    {
+      "fy": 2018,
+      "topic": "Materials science",
+      "tagged_amount": 675802473
+    },
+    {
+      "fy": 2018,
+      "topic": "Earth observation",
+      "tagged_amount": 499049865
+    },
+    {
+      "fy": 2018,
+      "topic": "Nanotechnology",
+      "tagged_amount": 494979185
+    },
+    {
+      "fy": 2018,
+      "topic": "Renewable energy",
+      "tagged_amount": 444285079
+    },
+    {
+      "fy": 2018,
+      "topic": "Energy storage & batteries",
+      "tagged_amount": 314171064
+    },
+    {
+      "fy": 2018,
+      "topic": "Agriculture & food",
+      "tagged_amount": 264951227
+    },
+    {
+      "fy": 2018,
+      "topic": "Robotics & autonomy",
+      "tagged_amount": 238831811
+    },
+    {
+      "fy": 2018,
+      "topic": "Astrophysics & cosmology",
+      "tagged_amount": 168395918
+    },
+    {
+      "fy": 2018,
+      "topic": "Social & behavioral science",
+      "tagged_amount": 154964708
+    },
+    {
+      "fy": 2018,
+      "topic": "Cybersecurity",
+      "tagged_amount": 143052915
+    },
+    {
+      "fy": 2018,
+      "topic": "Quantum information",
+      "tagged_amount": 130752761
+    },
+    {
+      "fy": 2018,
+      "topic": "Bioengineering & synthetic biology",
+      "tagged_amount": 120771884
+    },
+    {
+      "fy": 2018,
+      "topic": "Water resources",
+      "tagged_amount": 109773629
+    },
+    {
+      "fy": 2018,
+      "topic": "Natural language processing",
+      "tagged_amount": 85025155
+    },
+    {
+      "fy": 2018,
+      "topic": "Computer vision",
+      "tagged_amount": 73520129
+    },
+    {
+      "fy": 2019,
+      "topic": "Genomics & genetics",
+      "tagged_amount": 14544402855
+    },
+    {
+      "fy": 2019,
+      "topic": "Public health & epidemiology",
+      "tagged_amount": 11043134568
+    },
+    {
+      "fy": 2019,
+      "topic": "Neuroscience & brain",
+      "tagged_amount": 8898384765
+    },
+    {
+      "fy": 2019,
+      "topic": "Cancer research",
+      "tagged_amount": 8418733383
+    },
+    {
+      "fy": 2019,
+      "topic": "Infectious disease & vaccines",
+      "tagged_amount": 7396833175
+    },
+    {
+      "fy": 2019,
+      "topic": "Immunology",
+      "tagged_amount": 6724751819
+    },
+    {
+      "fy": 2019,
+      "topic": "Aging & longevity",
+      "tagged_amount": 5853165761
+    },
+    {
+      "fy": 2019,
+      "topic": "Diabetes & metabolic",
+      "tagged_amount": 5720921668
+    },
+    {
+      "fy": 2019,
+      "topic": "Cardiovascular",
+      "tagged_amount": 4724499333
+    },
+    {
+      "fy": 2019,
+      "topic": "Mental health & psychiatry",
+      "tagged_amount": 4095343792
+    },
+    {
+      "fy": 2019,
+      "topic": "Climate & sustainability",
+      "tagged_amount": 2702791168
+    },
+    {
+      "fy": 2019,
+      "topic": "Drug discovery & pharmacology",
+      "tagged_amount": 2537024251
+    },
+    {
+      "fy": 2019,
+      "topic": "Regenerative medicine",
+      "tagged_amount": 2213350691
+    },
+    {
+      "fy": 2019,
+      "topic": "Artificial intelligence & ML",
+      "tagged_amount": 1892386803
+    },
+    {
+      "fy": 2019,
+      "topic": "Education research",
+      "tagged_amount": 1774873238
+    },
+    {
+      "fy": 2019,
+      "topic": "Nanotechnology",
+      "tagged_amount": 796083312
+    },
+    {
+      "fy": 2019,
+      "topic": "Materials science",
+      "tagged_amount": 542079223
+    },
+    {
+      "fy": 2019,
+      "topic": "Astrophysics & cosmology",
+      "tagged_amount": 539044123
+    },
+    {
+      "fy": 2019,
+      "topic": "Agriculture & food",
+      "tagged_amount": 509749615
+    },
+    {
+      "fy": 2019,
+      "topic": "Renewable energy",
+      "tagged_amount": 437358416
+    },
+    {
+      "fy": 2019,
+      "topic": "Robotics & autonomy",
+      "tagged_amount": 406017966
+    },
+    {
+      "fy": 2019,
+      "topic": "Social & behavioral science",
+      "tagged_amount": 383603628
+    },
+    {
+      "fy": 2019,
+      "topic": "Bioengineering & synthetic biology",
+      "tagged_amount": 276410066
+    },
+    {
+      "fy": 2019,
+      "topic": "Water resources",
+      "tagged_amount": 226313610
+    },
+    {
+      "fy": 2019,
+      "topic": "Natural language processing",
+      "tagged_amount": 178935826
+    },
+    {
+      "fy": 2019,
+      "topic": "Earth observation",
+      "tagged_amount": 156779184
+    },
+    {
+      "fy": 2019,
+      "topic": "Quantum information",
+      "tagged_amount": 149771950
+    },
+    {
+      "fy": 2019,
+      "topic": "Cybersecurity",
+      "tagged_amount": 146361037
+    },
+    {
+      "fy": 2019,
+      "topic": "Energy storage & batteries",
+      "tagged_amount": 127024658
+    },
+    {
+      "fy": 2019,
+      "topic": "Computer vision",
+      "tagged_amount": 115562103
+    },
+    {
+      "fy": 2020,
+      "topic": "Genomics & genetics",
+      "tagged_amount": 15794447078
+    },
+    {
+      "fy": 2020,
+      "topic": "Infectious disease & vaccines",
+      "tagged_amount": 10019634407
+    },
+    {
+      "fy": 2020,
+      "topic": "Neuroscience & brain",
+      "tagged_amount": 9748384231
+    },
+    {
+      "fy": 2020,
+      "topic": "Public health & epidemiology",
+      "tagged_amount": 9505259305
+    },
+    {
+      "fy": 2020,
+      "topic": "Cancer research",
+      "tagged_amount": 9137681010
+    },
+    {
+      "fy": 2020,
+      "topic": "Immunology",
+      "tagged_amount": 7990646186
+    },
+    {
+      "fy": 2020,
+      "topic": "Aging & longevity",
+      "tagged_amount": 6609177776
+    },
+    {
+      "fy": 2020,
+      "topic": "Diabetes & metabolic",
+      "tagged_amount": 6063339737
+    },
+    {
+      "fy": 2020,
+      "topic": "Cardiovascular",
+      "tagged_amount": 5426027064
+    },
+    {
+      "fy": 2020,
+      "topic": "Mental health & psychiatry",
+      "tagged_amount": 4159358883
+    },
+    {
+      "fy": 2020,
+      "topic": "Artificial intelligence & ML",
+      "tagged_amount": 2838277057
+    },
+    {
+      "fy": 2020,
+      "topic": "Drug discovery & pharmacology",
+      "tagged_amount": 2788371148
+    },
+    {
+      "fy": 2020,
+      "topic": "Regenerative medicine",
+      "tagged_amount": 2387400415
+    },
+    {
+      "fy": 2020,
+      "topic": "Education research",
+      "tagged_amount": 2098736385
+    },
+    {
+      "fy": 2020,
+      "topic": "Climate & sustainability",
+      "tagged_amount": 1955563047
+    },
+    {
+      "fy": 2020,
+      "topic": "Nanotechnology",
+      "tagged_amount": 900871183
+    },
+    {
+      "fy": 2020,
+      "topic": "Materials science",
+      "tagged_amount": 857017994
+    },
+    {
+      "fy": 2020,
+      "topic": "Agriculture & food",
+      "tagged_amount": 541444856
+    },
+    {
+      "fy": 2020,
+      "topic": "Renewable energy",
+      "tagged_amount": 512088516
+    },
+    {
+      "fy": 2020,
+      "topic": "Bioengineering & synthetic biology",
+      "tagged_amount": 494525555
+    },
+    {
+      "fy": 2020,
+      "topic": "Robotics & autonomy",
+      "tagged_amount": 432897065
+    },
+    {
+      "fy": 2020,
+      "topic": "Social & behavioral science",
+      "tagged_amount": 412778642
+    },
+    {
+      "fy": 2020,
+      "topic": "Quantum information",
+      "tagged_amount": 405387442
+    },
+    {
+      "fy": 2020,
+      "topic": "Astrophysics & cosmology",
+      "tagged_amount": 384810562
+    },
+    {
+      "fy": 2020,
+      "topic": "Natural language processing",
+      "tagged_amount": 224376763
+    },
+    {
+      "fy": 2020,
+      "topic": "Water resources",
+      "tagged_amount": 212685141
+    },
+    {
+      "fy": 2020,
+      "topic": "Cybersecurity",
+      "tagged_amount": 203240689
+    },
+    {
+      "fy": 2020,
+      "topic": "Earth observation",
+      "tagged_amount": 158295873
+    },
+    {
+      "fy": 2020,
+      "topic": "Energy storage & batteries",
+      "tagged_amount": 147812994
+    },
+    {
+      "fy": 2020,
+      "topic": "Computer vision",
+      "tagged_amount": 136692096
+    },
+    {
+      "fy": 2021,
+      "topic": "Genomics & genetics",
+      "tagged_amount": 15866328434
+    },
+    {
+      "fy": 2021,
+      "topic": "Infectious disease & vaccines",
+      "tagged_amount": 10303033539
+    },
+    {
+      "fy": 2021,
+      "topic": "Neuroscience & brain",
+      "tagged_amount": 10027721431
+    },
+    {
+      "fy": 2021,
+      "topic": "Cancer research",
+      "tagged_amount": 9094478987
+    },
+    {
+      "fy": 2021,
+      "topic": "Immunology",
+      "tagged_amount": 8854258031
+    },
+    {
+      "fy": 2021,
+      "topic": "Public health & epidemiology",
+      "tagged_amount": 8366454722
+    },
+    {
+      "fy": 2021,
+      "topic": "Aging & longevity",
+      "tagged_amount": 7235971803
+    },
+    {
+      "fy": 2021,
+      "topic": "Diabetes & metabolic",
+      "tagged_amount": 6272453612
+    },
+    {
+      "fy": 2021,
+      "topic": "Cardiovascular",
+      "tagged_amount": 5302639180
+    },
+    {
+      "fy": 2021,
+      "topic": "Mental health & psychiatry",
+      "tagged_amount": 4571907319
+    },
+    {
+      "fy": 2021,
+      "topic": "Artificial intelligence & ML",
+      "tagged_amount": 3094009365
+    },
+    {
+      "fy": 2021,
+      "topic": "Drug discovery & pharmacology",
+      "tagged_amount": 2709125702
+    },
+    {
+      "fy": 2021,
+      "topic": "Education research",
+      "tagged_amount": 2640791046
+    },
+    {
+      "fy": 2021,
+      "topic": "Regenerative medicine",
+      "tagged_amount": 2579543577
+    },
+    {
+      "fy": 2021,
+      "topic": "Climate & sustainability",
+      "tagged_amount": 2203184484
+    },
+    {
+      "fy": 2021,
+      "topic": "Nanotechnology",
+      "tagged_amount": 915565637
+    },
+    {
+      "fy": 2021,
+      "topic": "Materials science",
+      "tagged_amount": 657523524
+    },
+    {
+      "fy": 2021,
+      "topic": "Robotics & autonomy",
+      "tagged_amount": 474601225
+    },
+    {
+      "fy": 2021,
+      "topic": "Renewable energy",
+      "tagged_amount": 471022403
+    },
+    {
+      "fy": 2021,
+      "topic": "Agriculture & food",
+      "tagged_amount": 467720626
+    },
+    {
+      "fy": 2021,
+      "topic": "Social & behavioral science",
+      "tagged_amount": 447917966
+    },
+    {
+      "fy": 2021,
+      "topic": "Bioengineering & synthetic biology",
+      "tagged_amount": 444665864
+    },
+    {
+      "fy": 2021,
+      "topic": "Water resources",
+      "tagged_amount": 244817001
+    },
+    {
+      "fy": 2021,
+      "topic": "Astrophysics & cosmology",
+      "tagged_amount": 231599205
+    },
+    {
+      "fy": 2021,
+      "topic": "Quantum information",
+      "tagged_amount": 231012388
+    },
+    {
+      "fy": 2021,
+      "topic": "Energy storage & batteries",
+      "tagged_amount": 227157227
+    },
+    {
+      "fy": 2021,
+      "topic": "Natural language processing",
+      "tagged_amount": 225479181
+    },
+    {
+      "fy": 2021,
+      "topic": "Cybersecurity",
+      "tagged_amount": 179832355
+    },
+    {
+      "fy": 2021,
+      "topic": "Earth observation",
+      "tagged_amount": 171903900
+    },
+    {
+      "fy": 2021,
+      "topic": "Computer vision",
+      "tagged_amount": 151739576
+    },
+    {
+      "fy": 2022,
+      "topic": "Genomics & genetics",
+      "tagged_amount": 16837668066
+    },
+    {
+      "fy": 2022,
+      "topic": "Infectious disease & vaccines",
+      "tagged_amount": 10984370702
+    },
+    {
+      "fy": 2022,
+      "topic": "Neuroscience & brain",
+      "tagged_amount": 10647496146
+    },
+    {
+      "fy": 2022,
+      "topic": "Cancer research",
+      "tagged_amount": 9523202404
+    },
+    {
+      "fy": 2022,
+      "topic": "Immunology",
+      "tagged_amount": 8985087179
+    },
+    {
+      "fy": 2022,
+      "topic": "Public health & epidemiology",
+      "tagged_amount": 8699300556
+    },
+    {
+      "fy": 2022,
+      "topic": "Aging & longevity",
+      "tagged_amount": 7665844284
+    },
+    {
+      "fy": 2022,
+      "topic": "Diabetes & metabolic",
+      "tagged_amount": 6711205510
+    },
+    {
+      "fy": 2022,
+      "topic": "Cardiovascular",
+      "tagged_amount": 5743232256
+    },
+    {
+      "fy": 2022,
+      "topic": "Mental health & psychiatry",
+      "tagged_amount": 4738304453
+    },
+    {
+      "fy": 2022,
+      "topic": "Artificial intelligence & ML",
+      "tagged_amount": 4039770113
+    },
+    {
+      "fy": 2022,
+      "topic": "Drug discovery & pharmacology",
+      "tagged_amount": 3256547604
+    },
+    {
+      "fy": 2022,
+      "topic": "Climate & sustainability",
+      "tagged_amount": 2661737150
+    },
+    {
+      "fy": 2022,
+      "topic": "Regenerative medicine",
+      "tagged_amount": 2659595810
+    },
+    {
+      "fy": 2022,
+      "topic": "Education research",
+      "tagged_amount": 2433636658
+    },
+    {
+      "fy": 2022,
+      "topic": "Nanotechnology",
+      "tagged_amount": 923716323
+    },
+    {
+      "fy": 2022,
+      "topic": "Materials science",
+      "tagged_amount": 627236544
+    },
+    {
+      "fy": 2022,
+      "topic": "Agriculture & food",
+      "tagged_amount": 600517209
+    },
+    {
+      "fy": 2022,
+      "topic": "Social & behavioral science",
+      "tagged_amount": 529215997
+    },
+    {
+      "fy": 2022,
+      "topic": "Renewable energy",
+      "tagged_amount": 512881049
+    },
+    {
+      "fy": 2022,
+      "topic": "Robotics & autonomy",
+      "tagged_amount": 466953708
+    },
+    {
+      "fy": 2022,
+      "topic": "Bioengineering & synthetic biology",
+      "tagged_amount": 342278150
+    },
+    {
+      "fy": 2022,
+      "topic": "Natural language processing",
+      "tagged_amount": 332495595
+    },
+    {
+      "fy": 2022,
+      "topic": "Water resources",
+      "tagged_amount": 297454415
+    },
+    {
+      "fy": 2022,
+      "topic": "Astrophysics & cosmology",
+      "tagged_amount": 287610196
+    },
+    {
+      "fy": 2022,
+      "topic": "Cybersecurity",
+      "tagged_amount": 277287246
+    },
+    {
+      "fy": 2022,
+      "topic": "Computer vision",
+      "tagged_amount": 256354960
+    },
+    {
+      "fy": 2022,
+      "topic": "Energy storage & batteries",
+      "tagged_amount": 191142657
+    },
+    {
+      "fy": 2022,
+      "topic": "Earth observation",
+      "tagged_amount": 188700135
+    },
+    {
+      "fy": 2022,
+      "topic": "Quantum information",
+      "tagged_amount": 153195403
+    },
+    {
+      "fy": 2023,
+      "topic": "Genomics & genetics",
+      "tagged_amount": 16916296717
+    },
+    {
+      "fy": 2023,
+      "topic": "Neuroscience & brain",
+      "tagged_amount": 11253012652
+    },
+    {
+      "fy": 2023,
+      "topic": "Infectious disease & vaccines",
+      "tagged_amount": 10897187938
+    },
+    {
+      "fy": 2023,
+      "topic": "Cancer research",
+      "tagged_amount": 9699907482
+    },
+    {
+      "fy": 2023,
+      "topic": "Public health & epidemiology",
+      "tagged_amount": 8965267638
+    },
+    {
+      "fy": 2023,
+      "topic": "Immunology",
+      "tagged_amount": 8698339958
+    },
+    {
+      "fy": 2023,
+      "topic": "Aging & longevity",
+      "tagged_amount": 7970659487
+    },
+    {
+      "fy": 2023,
+      "topic": "Diabetes & metabolic",
+      "tagged_amount": 6980017512
+    },
+    {
+      "fy": 2023,
+      "topic": "Cardiovascular",
+      "tagged_amount": 6142299199
+    },
+    {
+      "fy": 2023,
+      "topic": "Mental health & psychiatry",
+      "tagged_amount": 5008836853
+    },
+    {
+      "fy": 2023,
+      "topic": "Artificial intelligence & ML",
+      "tagged_amount": 4456084438
+    },
+    {
+      "fy": 2023,
+      "topic": "Regenerative medicine",
+      "tagged_amount": 2748121212
+    },
+    {
+      "fy": 2023,
+      "topic": "Drug discovery & pharmacology",
+      "tagged_amount": 2735288656
+    },
+    {
+      "fy": 2023,
+      "topic": "Climate & sustainability",
+      "tagged_amount": 2648843659
+    },
+    {
+      "fy": 2023,
+      "topic": "Education research",
+      "tagged_amount": 1978341372
+    },
+    {
+      "fy": 2023,
+      "topic": "Nanotechnology",
+      "tagged_amount": 925184749
+    },
+    {
+      "fy": 2023,
+      "topic": "Materials science",
+      "tagged_amount": 851350178
+    },
+    {
+      "fy": 2023,
+      "topic": "Agriculture & food",
+      "tagged_amount": 562829008
+    },
+    {
+      "fy": 2023,
+      "topic": "Social & behavioral science",
+      "tagged_amount": 556254201
+    },
+    {
+      "fy": 2023,
+      "topic": "Renewable energy",
+      "tagged_amount": 421656855
+    },
+    {
+      "fy": 2023,
+      "topic": "Bioengineering & synthetic biology",
+      "tagged_amount": 405521815
+    },
+    {
+      "fy": 2023,
+      "topic": "Robotics & autonomy",
+      "tagged_amount": 392660643
+    },
+    {
+      "fy": 2023,
+      "topic": "Natural language processing",
+      "tagged_amount": 352044236
+    },
+    {
+      "fy": 2023,
+      "topic": "Water resources",
+      "tagged_amount": 264630117
+    },
+    {
+      "fy": 2023,
+      "topic": "Cybersecurity",
+      "tagged_amount": 247333961
+    },
+    {
+      "fy": 2023,
+      "topic": "Quantum information",
+      "tagged_amount": 239285801
+    },
+    {
+      "fy": 2023,
+      "topic": "Astrophysics & cosmology",
+      "tagged_amount": 221961657
+    },
+    {
+      "fy": 2023,
+      "topic": "Computer vision",
+      "tagged_amount": 177739266
+    },
+    {
+      "fy": 2023,
+      "topic": "Energy storage & batteries",
+      "tagged_amount": 174947779
+    },
+    {
+      "fy": 2023,
+      "topic": "Earth observation",
+      "tagged_amount": 151326412
+    },
     {
       "fy": 2024,
       "topic": "Genomics & genetics",
@@ -64,13 +2914,783 @@
       "fy": 2024,
       "topic": "Artificial intelligence & ML",
       "tagged_amount": 5352977725
+    },
+    {
+      "fy": 2024,
+      "topic": "Mental health & psychiatry",
+      "tagged_amount": 4995797644
+    },
+    {
+      "fy": 2024,
+      "topic": "Regenerative medicine",
+      "tagged_amount": 2842232747
+    },
+    {
+      "fy": 2024,
+      "topic": "Climate & sustainability",
+      "tagged_amount": 2787826687
+    },
+    {
+      "fy": 2024,
+      "topic": "Drug discovery & pharmacology",
+      "tagged_amount": 2639488079
+    },
+    {
+      "fy": 2024,
+      "topic": "Education research",
+      "tagged_amount": 2064942187
+    },
+    {
+      "fy": 2024,
+      "topic": "Nanotechnology",
+      "tagged_amount": 1046599877
+    },
+    {
+      "fy": 2024,
+      "topic": "Materials science",
+      "tagged_amount": 792880490
+    },
+    {
+      "fy": 2024,
+      "topic": "Agriculture & food",
+      "tagged_amount": 606859538
+    },
+    {
+      "fy": 2024,
+      "topic": "Social & behavioral science",
+      "tagged_amount": 490586423
+    },
+    {
+      "fy": 2024,
+      "topic": "Renewable energy",
+      "tagged_amount": 481040914
+    },
+    {
+      "fy": 2024,
+      "topic": "Bioengineering & synthetic biology",
+      "tagged_amount": 435536698
+    },
+    {
+      "fy": 2024,
+      "topic": "Earth observation",
+      "tagged_amount": 432325213
+    },
+    {
+      "fy": 2024,
+      "topic": "Natural language processing",
+      "tagged_amount": 425485255
+    },
+    {
+      "fy": 2024,
+      "topic": "Robotics & autonomy",
+      "tagged_amount": 375707343
+    },
+    {
+      "fy": 2024,
+      "topic": "Astrophysics & cosmology",
+      "tagged_amount": 283073047
+    },
+    {
+      "fy": 2024,
+      "topic": "Water resources",
+      "tagged_amount": 266038065
+    },
+    {
+      "fy": 2024,
+      "topic": "Energy storage & batteries",
+      "tagged_amount": 254894726
+    },
+    {
+      "fy": 2024,
+      "topic": "Cybersecurity",
+      "tagged_amount": 244373653
+    },
+    {
+      "fy": 2024,
+      "topic": "Quantum information",
+      "tagged_amount": 216701522
+    },
+    {
+      "fy": 2024,
+      "topic": "Computer vision",
+      "tagged_amount": 182816150
     }
   ],
-  "agencies": [
+  "agencies_by_fy": [
+    {
+      "fy": 2005,
+      "agency_bucket": "HHS",
+      "amount_nominal": 16284921000
+    },
+    {
+      "fy": 2005,
+      "agency_bucket": "NSF",
+      "amount_nominal": 3527995000
+    },
+    {
+      "fy": 2005,
+      "agency_bucket": "Other",
+      "amount_nominal": 2897708000
+    },
+    {
+      "fy": 2005,
+      "agency_bucket": "DOD",
+      "amount_nominal": 2612005000
+    },
+    {
+      "fy": 2005,
+      "agency_bucket": "NASA",
+      "amount_nominal": 1130939000
+    },
+    {
+      "fy": 2005,
+      "agency_bucket": "DOE",
+      "amount_nominal": 1055359000
+    },
+    {
+      "fy": 2005,
+      "agency_bucket": "USDA",
+      "amount_nominal": 814039000
+    },
+    {
+      "fy": 2006,
+      "agency_bucket": "HHS",
+      "amount_nominal": 17079112000
+    },
+    {
+      "fy": 2006,
+      "agency_bucket": "NSF",
+      "amount_nominal": 3572869000
+    },
+    {
+      "fy": 2006,
+      "agency_bucket": "Other",
+      "amount_nominal": 2906762000
+    },
+    {
+      "fy": 2006,
+      "agency_bucket": "DOD",
+      "amount_nominal": 2759739000
+    },
+    {
+      "fy": 2006,
+      "agency_bucket": "DOE",
+      "amount_nominal": 1122623000
+    },
+    {
+      "fy": 2006,
+      "agency_bucket": "NASA",
+      "amount_nominal": 1067613000
+    },
+    {
+      "fy": 2006,
+      "agency_bucket": "USDA",
+      "amount_nominal": 871974000
+    },
+    {
+      "fy": 2007,
+      "agency_bucket": "HHS",
+      "amount_nominal": 17081457000
+    },
+    {
+      "fy": 2007,
+      "agency_bucket": "NSF",
+      "amount_nominal": 3574293000
+    },
+    {
+      "fy": 2007,
+      "agency_bucket": "Other",
+      "amount_nominal": 2855072000
+    },
+    {
+      "fy": 2007,
+      "agency_bucket": "DOD",
+      "amount_nominal": 2783161000
+    },
+    {
+      "fy": 2007,
+      "agency_bucket": "DOE",
+      "amount_nominal": 1121067000
+    },
+    {
+      "fy": 2007,
+      "agency_bucket": "NASA",
+      "amount_nominal": 1054717000
+    },
+    {
+      "fy": 2007,
+      "agency_bucket": "USDA",
+      "amount_nominal": 912259000
+    },
+    {
+      "fy": 2008,
+      "agency_bucket": "HHS",
+      "amount_nominal": 17509312000
+    },
+    {
+      "fy": 2008,
+      "agency_bucket": "NSF",
+      "amount_nominal": 3773456000
+    },
+    {
+      "fy": 2008,
+      "agency_bucket": "DOD",
+      "amount_nominal": 3064378000
+    },
+    {
+      "fy": 2008,
+      "agency_bucket": "Other",
+      "amount_nominal": 2886090000
+    },
+    {
+      "fy": 2008,
+      "agency_bucket": "DOE",
+      "amount_nominal": 1134060000
+    },
+    {
+      "fy": 2008,
+      "agency_bucket": "NASA",
+      "amount_nominal": 1060770000
+    },
+    {
+      "fy": 2008,
+      "agency_bucket": "USDA",
+      "amount_nominal": 893118000
+    },
+    {
+      "fy": 2009,
+      "agency_bucket": "HHS",
+      "amount_nominal": 18053008000
+    },
+    {
+      "fy": 2009,
+      "agency_bucket": "NSF",
+      "amount_nominal": 3946097000
+    },
+    {
+      "fy": 2009,
+      "agency_bucket": "DOD",
+      "amount_nominal": 3372325000
+    },
+    {
+      "fy": 2009,
+      "agency_bucket": "Other",
+      "amount_nominal": 2933745000
+    },
+    {
+      "fy": 2009,
+      "agency_bucket": "DOE",
+      "amount_nominal": 1234337000
+    },
+    {
+      "fy": 2009,
+      "agency_bucket": "NASA",
+      "amount_nominal": 1103935000
+    },
+    {
+      "fy": 2009,
+      "agency_bucket": "USDA",
+      "amount_nominal": 899606000
+    },
+    {
+      "fy": 2010,
+      "agency_bucket": "HHS",
+      "amount_nominal": 21093576000
+    },
+    {
+      "fy": 2010,
+      "agency_bucket": "NSF",
+      "amount_nominal": 4735570000
+    },
+    {
+      "fy": 2010,
+      "agency_bucket": "DOD",
+      "amount_nominal": 4491862000
+    },
+    {
+      "fy": 2010,
+      "agency_bucket": "Other",
+      "amount_nominal": 3171406000
+    },
+    {
+      "fy": 2010,
+      "agency_bucket": "DOE",
+      "amount_nominal": 1554477000
+    },
+    {
+      "fy": 2010,
+      "agency_bucket": "NASA",
+      "amount_nominal": 1474013000
+    },
+    {
+      "fy": 2010,
+      "agency_bucket": "USDA",
+      "amount_nominal": 956678000
+    },
+    {
+      "fy": 2011,
+      "agency_bucket": "HHS",
+      "amount_nominal": 22994504000
+    },
+    {
+      "fy": 2011,
+      "agency_bucket": "NSF",
+      "amount_nominal": 5139918000
+    },
+    {
+      "fy": 2011,
+      "agency_bucket": "DOD",
+      "amount_nominal": 4814240000
+    },
+    {
+      "fy": 2011,
+      "agency_bucket": "Other",
+      "amount_nominal": 3523841000
+    },
+    {
+      "fy": 2011,
+      "agency_bucket": "DOE",
+      "amount_nominal": 1866334000
+    },
+    {
+      "fy": 2011,
+      "agency_bucket": "NASA",
+      "amount_nominal": 1422980000
+    },
+    {
+      "fy": 2011,
+      "agency_bucket": "USDA",
+      "amount_nominal": 1006434000
+    },
+    {
+      "fy": 2012,
+      "agency_bucket": "HHS",
+      "amount_nominal": 21915841000
+    },
+    {
+      "fy": 2012,
+      "agency_bucket": "NSF",
+      "amount_nominal": 5275809000
+    },
+    {
+      "fy": 2012,
+      "agency_bucket": "DOD",
+      "amount_nominal": 4907810000
+    },
+    {
+      "fy": 2012,
+      "agency_bucket": "Other",
+      "amount_nominal": 3662466000
+    },
+    {
+      "fy": 2012,
+      "agency_bucket": "DOE",
+      "amount_nominal": 1954759000
+    },
+    {
+      "fy": 2012,
+      "agency_bucket": "NASA",
+      "amount_nominal": 1331138000
+    },
+    {
+      "fy": 2012,
+      "agency_bucket": "USDA",
+      "amount_nominal": 1093853000
+    },
+    {
+      "fy": 2013,
+      "agency_bucket": "HHS",
+      "amount_nominal": 21211157000
+    },
+    {
+      "fy": 2013,
+      "agency_bucket": "NSF",
+      "amount_nominal": 5392396000
+    },
+    {
+      "fy": 2013,
+      "agency_bucket": "DOD",
+      "amount_nominal": 5022873000
+    },
+    {
+      "fy": 2013,
+      "agency_bucket": "Other",
+      "amount_nominal": 3518515000
+    },
+    {
+      "fy": 2013,
+      "agency_bucket": "DOE",
+      "amount_nominal": 1876271000
+    },
+    {
+      "fy": 2013,
+      "agency_bucket": "NASA",
+      "amount_nominal": 1332406000
+    },
+    {
+      "fy": 2013,
+      "agency_bucket": "USDA",
+      "amount_nominal": 1091796000
+    },
+    {
+      "fy": 2014,
+      "agency_bucket": "HHS",
+      "amount_nominal": 20297568000
+    },
+    {
+      "fy": 2014,
+      "agency_bucket": "NSF",
+      "amount_nominal": 5126919000
+    },
+    {
+      "fy": 2014,
+      "agency_bucket": "DOD",
+      "amount_nominal": 4926774000
+    },
+    {
+      "fy": 2014,
+      "agency_bucket": "Other",
+      "amount_nominal": 3413817000
+    },
+    {
+      "fy": 2014,
+      "agency_bucket": "DOE",
+      "amount_nominal": 1805428000
+    },
+    {
+      "fy": 2014,
+      "agency_bucket": "NASA",
+      "amount_nominal": 1328991000
+    },
+    {
+      "fy": 2014,
+      "agency_bucket": "USDA",
+      "amount_nominal": 1061621000
+    },
+    {
+      "fy": 2015,
+      "agency_bucket": "HHS",
+      "amount_nominal": 19993601000
+    },
+    {
+      "fy": 2015,
+      "agency_bucket": "NSF",
+      "amount_nominal": 5119483000
+    },
+    {
+      "fy": 2015,
+      "agency_bucket": "DOD",
+      "amount_nominal": 5089728000
+    },
+    {
+      "fy": 2015,
+      "agency_bucket": "Other",
+      "amount_nominal": 3396659000
+    },
+    {
+      "fy": 2015,
+      "agency_bucket": "DOE",
+      "amount_nominal": 1710082000
+    },
+    {
+      "fy": 2015,
+      "agency_bucket": "NASA",
+      "amount_nominal": 1417672000
+    },
+    {
+      "fy": 2015,
+      "agency_bucket": "USDA",
+      "amount_nominal": 1119140000
+    },
+    {
+      "fy": 2016,
+      "agency_bucket": "HHS",
+      "amount_nominal": 20663057000
+    },
+    {
+      "fy": 2016,
+      "agency_bucket": "DOD",
+      "amount_nominal": 5312808000
+    },
+    {
+      "fy": 2016,
+      "agency_bucket": "NSF",
+      "amount_nominal": 5114175000
+    },
+    {
+      "fy": 2016,
+      "agency_bucket": "Other",
+      "amount_nominal": 3225617000
+    },
+    {
+      "fy": 2016,
+      "agency_bucket": "DOE",
+      "amount_nominal": 1772065000
+    },
+    {
+      "fy": 2016,
+      "agency_bucket": "NASA",
+      "amount_nominal": 1491331000
+    },
+    {
+      "fy": 2016,
+      "agency_bucket": "USDA",
+      "amount_nominal": 1208929000
+    },
+    {
+      "fy": 2017,
+      "agency_bucket": "HHS",
+      "amount_nominal": 21626734000
+    },
+    {
+      "fy": 2017,
+      "agency_bucket": "DOD",
+      "amount_nominal": 5634348000
+    },
+    {
+      "fy": 2017,
+      "agency_bucket": "NSF",
+      "amount_nominal": 5206238000
+    },
+    {
+      "fy": 2017,
+      "agency_bucket": "Other",
+      "amount_nominal": 3330331000
+    },
+    {
+      "fy": 2017,
+      "agency_bucket": "DOE",
+      "amount_nominal": 1821113000
+    },
+    {
+      "fy": 2017,
+      "agency_bucket": "NASA",
+      "amount_nominal": 1405698000
+    },
+    {
+      "fy": 2017,
+      "agency_bucket": "USDA",
+      "amount_nominal": 1223126000
+    },
+    {
+      "fy": 2018,
+      "agency_bucket": "HHS",
+      "amount_nominal": 22836721000
+    },
+    {
+      "fy": 2018,
+      "agency_bucket": "DOD",
+      "amount_nominal": 5892081000
+    },
+    {
+      "fy": 2018,
+      "agency_bucket": "NSF",
+      "amount_nominal": 5270854000
+    },
+    {
+      "fy": 2018,
+      "agency_bucket": "Other",
+      "amount_nominal": 3339273000
+    },
+    {
+      "fy": 2018,
+      "agency_bucket": "DOE",
+      "amount_nominal": 1819270000
+    },
+    {
+      "fy": 2018,
+      "agency_bucket": "NASA",
+      "amount_nominal": 1515904000
+    },
+    {
+      "fy": 2018,
+      "agency_bucket": "USDA",
+      "amount_nominal": 1185831000
+    },
+    {
+      "fy": 2019,
+      "agency_bucket": "HHS",
+      "amount_nominal": 24406719000
+    },
+    {
+      "fy": 2019,
+      "agency_bucket": "DOD",
+      "amount_nominal": 6652010000
+    },
+    {
+      "fy": 2019,
+      "agency_bucket": "NSF",
+      "amount_nominal": 5332942000
+    },
+    {
+      "fy": 2019,
+      "agency_bucket": "Other",
+      "amount_nominal": 3260075000
+    },
+    {
+      "fy": 2019,
+      "agency_bucket": "DOE",
+      "amount_nominal": 1940272000
+    },
+    {
+      "fy": 2019,
+      "agency_bucket": "NASA",
+      "amount_nominal": 1644364000
+    },
+    {
+      "fy": 2019,
+      "agency_bucket": "USDA",
+      "amount_nominal": 1223979000
+    },
+    {
+      "fy": 2020,
+      "agency_bucket": "HHS",
+      "amount_nominal": 25364719000
+    },
+    {
+      "fy": 2020,
+      "agency_bucket": "DOD",
+      "amount_nominal": 7078339000
+    },
+    {
+      "fy": 2020,
+      "agency_bucket": "NSF",
+      "amount_nominal": 5414089000
+    },
+    {
+      "fy": 2020,
+      "agency_bucket": "Other",
+      "amount_nominal": 3205884000
+    },
+    {
+      "fy": 2020,
+      "agency_bucket": "DOE",
+      "amount_nominal": 2037677000
+    },
+    {
+      "fy": 2020,
+      "agency_bucket": "NASA",
+      "amount_nominal": 1758117000
+    },
+    {
+      "fy": 2020,
+      "agency_bucket": "USDA",
+      "amount_nominal": 1249947000
+    },
+    {
+      "fy": 2021,
+      "agency_bucket": "HHS",
+      "amount_nominal": 27521245000
+    },
+    {
+      "fy": 2021,
+      "agency_bucket": "DOD",
+      "amount_nominal": 7362982000
+    },
+    {
+      "fy": 2021,
+      "agency_bucket": "NSF",
+      "amount_nominal": 5408459000
+    },
+    {
+      "fy": 2021,
+      "agency_bucket": "Other",
+      "amount_nominal": 3538115000
+    },
+    {
+      "fy": 2021,
+      "agency_bucket": "DOE",
+      "amount_nominal": 2217619000
+    },
+    {
+      "fy": 2021,
+      "agency_bucket": "NASA",
+      "amount_nominal": 1768330000
+    },
+    {
+      "fy": 2021,
+      "agency_bucket": "USDA",
+      "amount_nominal": 1304405000
+    },
+    {
+      "fy": 2022,
+      "agency_bucket": "HHS",
+      "amount_nominal": 30272926000
+    },
+    {
+      "fy": 2022,
+      "agency_bucket": "DOD",
+      "amount_nominal": 7978780000
+    },
+    {
+      "fy": 2022,
+      "agency_bucket": "NSF",
+      "amount_nominal": 6036601000
+    },
+    {
+      "fy": 2022,
+      "agency_bucket": "Other",
+      "amount_nominal": 3641285000
+    },
+    {
+      "fy": 2022,
+      "agency_bucket": "DOE",
+      "amount_nominal": 2487981000
+    },
+    {
+      "fy": 2022,
+      "agency_bucket": "NASA",
+      "amount_nominal": 2044554000
+    },
+    {
+      "fy": 2022,
+      "agency_bucket": "USDA",
+      "amount_nominal": 1512854000
+    },
+    {
+      "fy": 2023,
+      "agency_bucket": "HHS",
+      "amount_nominal": 33103576000
+    },
+    {
+      "fy": 2023,
+      "agency_bucket": "DOD",
+      "amount_nominal": 9046063000
+    },
+    {
+      "fy": 2023,
+      "agency_bucket": "NSF",
+      "amount_nominal": 6700315000
+    },
+    {
+      "fy": 2023,
+      "agency_bucket": "Other",
+      "amount_nominal": 4092676000
+    },
+    {
+      "fy": 2023,
+      "agency_bucket": "DOE",
+      "amount_nominal": 2670652000
+    },
+    {
+      "fy": 2023,
+      "agency_bucket": "NASA",
+      "amount_nominal": 2295655000
+    },
+    {
+      "fy": 2023,
+      "agency_bucket": "USDA",
+      "amount_nominal": 1701069000
+    },
     {
       "fy": 2024,
       "agency_bucket": "HHS",
       "amount_nominal": 35500073000
+    },
+    {
+      "fy": 2024,
+      "agency_bucket": "DOD",
+      "amount_nominal": 10173898000
     },
     {
       "fy": 2024,
@@ -79,8 +3699,8 @@
     },
     {
       "fy": 2024,
-      "agency_bucket": "DOD",
-      "amount_nominal": 10173898000
+      "agency_bucket": "Other",
+      "amount_nominal": 4505710000
     },
     {
       "fy": 2024,
@@ -96,90 +3716,1808 @@
       "fy": 2024,
       "agency_bucket": "USDA",
       "amount_nominal": 1976398000
+    }
+  ],
+  "sources_by_fy": [
+    {
+      "fy": 2005,
+      "source_category": "federal",
+      "total": 29186542000
+    },
+    {
+      "fy": 2005,
+      "source_category": "institutional",
+      "total": 8264837000
+    },
+    {
+      "fy": 2005,
+      "source_category": "other",
+      "total": 3092177000
+    },
+    {
+      "fy": 2005,
+      "source_category": "state",
+      "total": 2939725000
+    },
+    {
+      "fy": 2005,
+      "source_category": "industry",
+      "total": 2290669000
+    },
+    {
+      "fy": 2006,
+      "source_category": "federal",
+      "total": 30131579000
+    },
+    {
+      "fy": 2006,
+      "source_category": "institutional",
+      "total": 9062193000
+    },
+    {
+      "fy": 2006,
+      "source_category": "other",
+      "total": 3198407000
+    },
+    {
+      "fy": 2006,
+      "source_category": "state",
+      "total": 2965814000
+    },
+    {
+      "fy": 2006,
+      "source_category": "industry",
+      "total": 2400707000
+    },
+    {
+      "fy": 2007,
+      "source_category": "federal",
+      "total": 30430176000
+    },
+    {
+      "fy": 2007,
+      "source_category": "institutional",
+      "total": 9717654000
+    },
+    {
+      "fy": 2007,
+      "source_category": "other",
+      "total": 3521256000
+    },
+    {
+      "fy": 2007,
+      "source_category": "state",
+      "total": 3151223000
+    },
+    {
+      "fy": 2007,
+      "source_category": "industry",
+      "total": 2674604000
+    },
+    {
+      "fy": 2008,
+      "source_category": "federal",
+      "total": 31271643000
+    },
+    {
+      "fy": 2008,
+      "source_category": "institutional",
+      "total": 10377247000
+    },
+    {
+      "fy": 2008,
+      "source_category": "other",
+      "total": 3916223000
+    },
+    {
+      "fy": 2008,
+      "source_category": "state",
+      "total": 3437568000
+    },
+    {
+      "fy": 2008,
+      "source_category": "industry",
+      "total": 2868504000
+    },
+    {
+      "fy": 2009,
+      "source_category": "federal",
+      "total": 32576140000
+    },
+    {
+      "fy": 2009,
+      "source_category": "institutional",
+      "total": 11147900000
+    },
+    {
+      "fy": 2009,
+      "source_category": "other",
+      "total": 4294234000
+    },
+    {
+      "fy": 2009,
+      "source_category": "state",
+      "total": 3647483000
+    },
+    {
+      "fy": 2009,
+      "source_category": "industry",
+      "total": 3196756000
+    },
+    {
+      "fy": 2010,
+      "source_category": "federal",
+      "total": 37477582000
+    },
+    {
+      "fy": 2010,
+      "source_category": "institutional",
+      "total": 11941850000
+    },
+    {
+      "fy": 2010,
+      "source_category": "state",
+      "total": 3886838000
+    },
+    {
+      "fy": 2010,
+      "source_category": "nonprofit",
+      "total": 3729655000
+    },
+    {
+      "fy": 2010,
+      "source_category": "industry",
+      "total": 3201904000
+    },
+    {
+      "fy": 2010,
+      "source_category": "other",
+      "total": 1047831000
+    },
+    {
+      "fy": 2011,
+      "source_category": "federal",
+      "total": 40768251000
+    },
+    {
+      "fy": 2011,
+      "source_category": "institutional",
+      "total": 12578678000
+    },
+    {
+      "fy": 2011,
+      "source_category": "nonprofit",
+      "total": 3853039000
+    },
+    {
+      "fy": 2011,
+      "source_category": "state",
+      "total": 3851323000
+    },
+    {
+      "fy": 2011,
+      "source_category": "industry",
+      "total": 3182661000
+    },
+    {
+      "fy": 2011,
+      "source_category": "other",
+      "total": 1037878000
+    },
+    {
+      "fy": 2012,
+      "source_category": "federal",
+      "total": 40213146000
+    },
+    {
+      "fy": 2012,
+      "source_category": "institutional",
+      "total": 13623637000
+    },
+    {
+      "fy": 2012,
+      "source_category": "nonprofit",
+      "total": 4035997000
+    },
+    {
+      "fy": 2012,
+      "source_category": "state",
+      "total": 3743531000
+    },
+    {
+      "fy": 2012,
+      "source_category": "industry",
+      "total": 3278929000
+    },
+    {
+      "fy": 2012,
+      "source_category": "other",
+      "total": 970624000
+    },
+    {
+      "fy": 2013,
+      "source_category": "federal",
+      "total": 39506179000
+    },
+    {
+      "fy": 2013,
+      "source_category": "institutional",
+      "total": 14935997000
+    },
+    {
+      "fy": 2013,
+      "source_category": "nonprofit",
+      "total": 3901558000
+    },
+    {
+      "fy": 2013,
+      "source_category": "state",
+      "total": 3703920000
+    },
+    {
+      "fy": 2013,
+      "source_category": "industry",
+      "total": 3514692000
+    },
+    {
+      "fy": 2013,
+      "source_category": "other",
+      "total": 1537515000
+    },
+    {
+      "fy": 2014,
+      "source_category": "federal",
+      "total": 38027338000
+    },
+    {
+      "fy": 2014,
+      "source_category": "institutional",
+      "total": 15738311000
+    },
+    {
+      "fy": 2014,
+      "source_category": "nonprofit",
+      "total": 3976614000
+    },
+    {
+      "fy": 2014,
+      "source_category": "state",
+      "total": 3913821000
+    },
+    {
+      "fy": 2014,
+      "source_category": "industry",
+      "total": 3733606000
+    },
+    {
+      "fy": 2014,
+      "source_category": "other",
+      "total": 1911118000
+    },
+    {
+      "fy": 2015,
+      "source_category": "federal",
+      "total": 37905734000
+    },
+    {
+      "fy": 2015,
+      "source_category": "institutional",
+      "total": 16602261000
+    },
+    {
+      "fy": 2015,
+      "source_category": "nonprofit",
+      "total": 4234665000
+    },
+    {
+      "fy": 2015,
+      "source_category": "industry",
+      "total": 4008425000
+    },
+    {
+      "fy": 2015,
+      "source_category": "state",
+      "total": 3861816000
+    },
+    {
+      "fy": 2015,
+      "source_category": "other",
+      "total": 2037006000
+    },
+    {
+      "fy": 2016,
+      "source_category": "federal",
+      "total": 38849785000
+    },
+    {
+      "fy": 2016,
+      "source_category": "institutional",
+      "total": 17905379000
+    },
+    {
+      "fy": 2016,
+      "source_category": "nonprofit",
+      "total": 4631152000
+    },
+    {
+      "fy": 2016,
+      "source_category": "industry",
+      "total": 4219911000
+    },
+    {
+      "fy": 2016,
+      "source_category": "state",
+      "total": 4051608000
+    },
+    {
+      "fy": 2016,
+      "source_category": "other",
+      "total": 2203705000
+    },
+    {
+      "fy": 2017,
+      "source_category": "federal",
+      "total": 40311288000
+    },
+    {
+      "fy": 2017,
+      "source_category": "institutional",
+      "total": 18880392000
+    },
+    {
+      "fy": 2017,
+      "source_category": "nonprofit",
+      "total": 5155460000
+    },
+    {
+      "fy": 2017,
+      "source_category": "industry",
+      "total": 4439488000
+    },
+    {
+      "fy": 2017,
+      "source_category": "state",
+      "total": 4183419000
+    },
+    {
+      "fy": 2017,
+      "source_category": "other",
+      "total": 2302189000
+    },
+    {
+      "fy": 2018,
+      "source_category": "federal",
+      "total": 41923681000
+    },
+    {
+      "fy": 2018,
+      "source_category": "institutional",
+      "total": 20213609000
+    },
+    {
+      "fy": 2018,
+      "source_category": "nonprofit",
+      "total": 5454130000
+    },
+    {
+      "fy": 2018,
+      "source_category": "industry",
+      "total": 4726281000
+    },
+    {
+      "fy": 2018,
+      "source_category": "state",
+      "total": 4323396000
+    },
+    {
+      "fy": 2018,
+      "source_category": "other",
+      "total": 2510585000
+    },
+    {
+      "fy": 2019,
+      "source_category": "federal",
+      "total": 44527464000
+    },
+    {
+      "fy": 2019,
+      "source_category": "institutional",
+      "total": 21108059000
+    },
+    {
+      "fy": 2019,
+      "source_category": "nonprofit",
+      "total": 5698706000
+    },
+    {
+      "fy": 2019,
+      "source_category": "industry",
+      "total": 5065505000
+    },
+    {
+      "fy": 2019,
+      "source_category": "state",
+      "total": 4518046000
+    },
+    {
+      "fy": 2019,
+      "source_category": "other",
+      "total": 2701153000
+    },
+    {
+      "fy": 2020,
+      "source_category": "federal",
+      "total": 46172958000
+    },
+    {
+      "fy": 2020,
+      "source_category": "institutional",
+      "total": 22016844000
+    },
+    {
+      "fy": 2020,
+      "source_category": "nonprofit",
+      "total": 5749832000
+    },
+    {
+      "fy": 2020,
+      "source_category": "industry",
+      "total": 5189249000
+    },
+    {
+      "fy": 2020,
+      "source_category": "state",
+      "total": 4601027000
+    },
+    {
+      "fy": 2020,
+      "source_category": "other",
+      "total": 2687692000
+    },
+    {
+      "fy": 2021,
+      "source_category": "federal",
+      "total": 49184922000
+    },
+    {
+      "fy": 2021,
+      "source_category": "institutional",
+      "total": 22473521000
+    },
+    {
+      "fy": 2021,
+      "source_category": "nonprofit",
+      "total": 5595476000
+    },
+    {
+      "fy": 2021,
+      "source_category": "industry",
+      "total": 5122398000
+    },
+    {
+      "fy": 2021,
+      "source_category": "state",
+      "total": 4751079000
+    },
+    {
+      "fy": 2021,
+      "source_category": "other",
+      "total": 2688285000
+    },
+    {
+      "fy": 2022,
+      "source_category": "federal",
+      "total": 54043043000
+    },
+    {
+      "fy": 2022,
+      "source_category": "institutional",
+      "total": 24531700000
+    },
+    {
+      "fy": 2022,
+      "source_category": "nonprofit",
+      "total": 5965932000
+    },
+    {
+      "fy": 2022,
+      "source_category": "industry",
+      "total": 5705440000
+    },
+    {
+      "fy": 2022,
+      "source_category": "state",
+      "total": 4916130000
+    },
+    {
+      "fy": 2022,
+      "source_category": "other",
+      "total": 2645141000
+    },
+    {
+      "fy": 2023,
+      "source_category": "federal",
+      "total": 59669807000
+    },
+    {
+      "fy": 2023,
+      "source_category": "institutional",
+      "total": 27673835000
+    },
+    {
+      "fy": 2023,
+      "source_category": "nonprofit",
+      "total": 6671421000
+    },
+    {
+      "fy": 2023,
+      "source_category": "industry",
+      "total": 6228975000
+    },
+    {
+      "fy": 2023,
+      "source_category": "state",
+      "total": 5449972000
+    },
+    {
+      "fy": 2023,
+      "source_category": "other",
+      "total": 3124400000
     },
     {
       "fy": 2024,
-      "agency_bucket": "Other",
-      "amount_nominal": 4505710000
-    }
-  ],
-  "source_totals": [
-    {
       "source_category": "federal",
-      "total": 826875606000
+      "total": 64698348000
     },
     {
+      "fy": 2024,
       "source_category": "institutional",
-      "total": 338974735000
+      "total": 30180831000
     },
     {
-      "source_category": "state",
-      "total": 81980262000
-    },
-    {
-      "source_category": "industry",
-      "total": 81409327000
-    },
-    {
+      "fy": 2024,
       "source_category": "nonprofit",
-      "total": 75340142000
+      "total": 6686505000
     },
     {
+      "fy": 2024,
+      "source_category": "industry",
+      "total": 6360623000
+    },
+    {
+      "fy": 2024,
+      "source_category": "state",
+      "total": 6082523000
+    },
+    {
+      "fy": 2024,
       "source_category": "other",
-      "total": 51079747000
+      "total": 3652328000
     }
   ],
-  "states": [
+  "states_by_fy": [
     {
+      "fy": 2005,
+      "state_code": "CA",
+      "total": 3971049000,
+      "n_institutions": 54
+    },
+    {
+      "fy": 2005,
+      "state_code": "NY",
+      "total": 2385565000,
+      "n_institutions": 64
+    },
+    {
+      "fy": 2005,
+      "state_code": "MD",
+      "total": 1767353000,
+      "n_institutions": 15
+    },
+    {
+      "fy": 2005,
+      "state_code": "TX",
+      "total": 1759005000,
+      "n_institutions": 44
+    },
+    {
+      "fy": 2005,
+      "state_code": "PA",
+      "total": 1674423000,
+      "n_institutions": 35
+    },
+    {
+      "fy": 2005,
+      "state_code": "MA",
+      "total": 1631033000,
+      "n_institutions": 27
+    },
+    {
+      "fy": 2005,
+      "state_code": "IL",
+      "total": 1122801000,
+      "n_institutions": 25
+    },
+    {
+      "fy": 2005,
+      "state_code": "NC",
+      "total": 1014418000,
+      "n_institutions": 19
+    },
+    {
+      "fy": 2005,
+      "state_code": "OH",
+      "total": 892845000,
+      "n_institutions": 23
+    },
+    {
+      "fy": 2005,
+      "state_code": "MI",
+      "total": 880320000,
+      "n_institutions": 18
+    },
+    {
+      "fy": 2006,
+      "state_code": "CA",
+      "total": 3992484000,
+      "n_institutions": 54
+    },
+    {
+      "fy": 2006,
+      "state_code": "NY",
+      "total": 2472131000,
+      "n_institutions": 66
+    },
+    {
+      "fy": 2006,
+      "state_code": "MD",
+      "total": 1860957000,
+      "n_institutions": 15
+    },
+    {
+      "fy": 2006,
+      "state_code": "TX",
+      "total": 1814073000,
+      "n_institutions": 44
+    },
+    {
+      "fy": 2006,
+      "state_code": "PA",
+      "total": 1707692000,
+      "n_institutions": 39
+    },
+    {
+      "fy": 2006,
+      "state_code": "MA",
+      "total": 1681815000,
+      "n_institutions": 27
+    },
+    {
+      "fy": 2006,
+      "state_code": "IL",
+      "total": 1117244000,
+      "n_institutions": 25
+    },
+    {
+      "fy": 2006,
+      "state_code": "NC",
+      "total": 1082984000,
+      "n_institutions": 20
+    },
+    {
+      "fy": 2006,
+      "state_code": "OH",
+      "total": 1006945000,
+      "n_institutions": 23
+    },
+    {
+      "fy": 2006,
+      "state_code": "MI",
+      "total": 901341000,
+      "n_institutions": 18
+    },
+    {
+      "fy": 2007,
+      "state_code": "CA",
+      "total": 4040342000,
+      "n_institutions": 55
+    },
+    {
+      "fy": 2007,
+      "state_code": "NY",
+      "total": 2448033000,
+      "n_institutions": 68
+    },
+    {
+      "fy": 2007,
+      "state_code": "MD",
+      "total": 1901086000,
+      "n_institutions": 16
+    },
+    {
+      "fy": 2007,
+      "state_code": "TX",
+      "total": 1842301000,
+      "n_institutions": 45
+    },
+    {
+      "fy": 2007,
+      "state_code": "PA",
+      "total": 1690554000,
+      "n_institutions": 38
+    },
+    {
+      "fy": 2007,
+      "state_code": "MA",
+      "total": 1672238000,
+      "n_institutions": 26
+    },
+    {
+      "fy": 2007,
+      "state_code": "NC",
+      "total": 1150793000,
+      "n_institutions": 19
+    },
+    {
+      "fy": 2007,
+      "state_code": "IL",
+      "total": 1112792000,
+      "n_institutions": 25
+    },
+    {
+      "fy": 2007,
+      "state_code": "OH",
+      "total": 1026573000,
+      "n_institutions": 22
+    },
+    {
+      "fy": 2007,
+      "state_code": "MI",
+      "total": 915549000,
+      "n_institutions": 18
+    },
+    {
+      "fy": 2008,
+      "state_code": "CA",
+      "total": 4051032000,
+      "n_institutions": 58
+    },
+    {
+      "fy": 2008,
+      "state_code": "NY",
+      "total": 2461275000,
+      "n_institutions": 71
+    },
+    {
+      "fy": 2008,
+      "state_code": "MD",
+      "total": 2034972000,
+      "n_institutions": 15
+    },
+    {
+      "fy": 2008,
+      "state_code": "TX",
+      "total": 1950482000,
+      "n_institutions": 48
+    },
+    {
+      "fy": 2008,
+      "state_code": "PA",
+      "total": 1772592000,
+      "n_institutions": 39
+    },
+    {
+      "fy": 2008,
+      "state_code": "MA",
+      "total": 1722204000,
+      "n_institutions": 26
+    },
+    {
+      "fy": 2008,
+      "state_code": "NC",
+      "total": 1181610000,
+      "n_institutions": 19
+    },
+    {
+      "fy": 2008,
+      "state_code": "IL",
+      "total": 1148654000,
+      "n_institutions": 24
+    },
+    {
+      "fy": 2008,
+      "state_code": "OH",
+      "total": 1055644000,
+      "n_institutions": 23
+    },
+    {
+      "fy": 2008,
+      "state_code": "MI",
+      "total": 916706000,
+      "n_institutions": 17
+    },
+    {
+      "fy": 2009,
+      "state_code": "CA",
+      "total": 4229075000,
+      "n_institutions": 56
+    },
+    {
+      "fy": 2009,
+      "state_code": "NY",
+      "total": 2494224000,
+      "n_institutions": 74
+    },
+    {
+      "fy": 2009,
+      "state_code": "MD",
+      "total": 2243925000,
+      "n_institutions": 16
+    },
+    {
+      "fy": 2009,
+      "state_code": "TX",
+      "total": 2009402000,
+      "n_institutions": 50
+    },
+    {
+      "fy": 2009,
+      "state_code": "PA",
+      "total": 1832083000,
+      "n_institutions": 41
+    },
+    {
+      "fy": 2009,
+      "state_code": "MA",
+      "total": 1803520000,
+      "n_institutions": 27
+    },
+    {
+      "fy": 2009,
+      "state_code": "NC",
+      "total": 1234651000,
+      "n_institutions": 18
+    },
+    {
+      "fy": 2009,
+      "state_code": "IL",
+      "total": 1233180000,
+      "n_institutions": 25
+    },
+    {
+      "fy": 2009,
+      "state_code": "OH",
+      "total": 1088542000,
+      "n_institutions": 24
+    },
+    {
+      "fy": 2009,
+      "state_code": "MI",
+      "total": 971854000,
+      "n_institutions": 18
+    },
+    {
+      "fy": 2010,
+      "state_code": "CA",
+      "total": 4766385000,
+      "n_institutions": 57
+    },
+    {
+      "fy": 2010,
+      "state_code": "NY",
+      "total": 2969112000,
+      "n_institutions": 79
+    },
+    {
+      "fy": 2010,
+      "state_code": "MD",
+      "total": 2423394000,
+      "n_institutions": 16
+    },
+    {
+      "fy": 2010,
+      "state_code": "TX",
+      "total": 2238187000,
+      "n_institutions": 50
+    },
+    {
+      "fy": 2010,
+      "state_code": "PA",
+      "total": 2186695000,
+      "n_institutions": 45
+    },
+    {
+      "fy": 2010,
+      "state_code": "MA",
+      "total": 2010200000,
+      "n_institutions": 27
+    },
+    {
+      "fy": 2010,
+      "state_code": "NC",
+      "total": 1481320000,
+      "n_institutions": 18
+    },
+    {
+      "fy": 2010,
+      "state_code": "IL",
+      "total": 1427022000,
+      "n_institutions": 26
+    },
+    {
+      "fy": 2010,
+      "state_code": "OH",
+      "total": 1250335000,
+      "n_institutions": 24
+    },
+    {
+      "fy": 2010,
+      "state_code": "MI",
+      "total": 1178298000,
+      "n_institutions": 20
+    },
+    {
+      "fy": 2011,
+      "state_code": "CA",
+      "total": 5154257000,
+      "n_institutions": 73
+    },
+    {
+      "fy": 2011,
+      "state_code": "NY",
+      "total": 3277427000,
+      "n_institutions": 91
+    },
+    {
+      "fy": 2011,
+      "state_code": "MD",
+      "total": 2689675000,
+      "n_institutions": 20
+    },
+    {
+      "fy": 2011,
+      "state_code": "PA",
+      "total": 2368377000,
+      "n_institutions": 59
+    },
+    {
+      "fy": 2011,
+      "state_code": "TX",
+      "total": 2326317000,
+      "n_institutions": 54
+    },
+    {
+      "fy": 2011,
+      "state_code": "MA",
+      "total": 2196226000,
+      "n_institutions": 32
+    },
+    {
+      "fy": 2011,
+      "state_code": "NC",
+      "total": 1647961000,
+      "n_institutions": 20
+    },
+    {
+      "fy": 2011,
+      "state_code": "IL",
+      "total": 1533816000,
+      "n_institutions": 33
+    },
+    {
+      "fy": 2011,
+      "state_code": "OH",
+      "total": 1426334000,
+      "n_institutions": 27
+    },
+    {
+      "fy": 2011,
+      "state_code": "MI",
+      "total": 1286581000,
+      "n_institutions": 22
+    },
+    {
+      "fy": 2012,
+      "state_code": "CA",
+      "total": 5096775000,
+      "n_institutions": 69
+    },
+    {
+      "fy": 2012,
+      "state_code": "NY",
+      "total": 3219881000,
+      "n_institutions": 87
+    },
+    {
+      "fy": 2012,
+      "state_code": "MD",
+      "total": 2634842000,
+      "n_institutions": 20
+    },
+    {
+      "fy": 2012,
+      "state_code": "PA",
+      "total": 2361129000,
+      "n_institutions": 56
+    },
+    {
+      "fy": 2012,
+      "state_code": "MA",
+      "total": 2221079000,
+      "n_institutions": 33
+    },
+    {
+      "fy": 2012,
+      "state_code": "TX",
+      "total": 2174455000,
+      "n_institutions": 54
+    },
+    {
+      "fy": 2012,
+      "state_code": "NC",
+      "total": 1665445000,
+      "n_institutions": 20
+    },
+    {
+      "fy": 2012,
+      "state_code": "IL",
+      "total": 1518417000,
+      "n_institutions": 31
+    },
+    {
+      "fy": 2012,
+      "state_code": "OH",
+      "total": 1356456000,
+      "n_institutions": 26
+    },
+    {
+      "fy": 2012,
+      "state_code": "MI",
+      "total": 1270416000,
+      "n_institutions": 23
+    },
+    {
+      "fy": 2013,
+      "state_code": "CA",
+      "total": 4896232000,
+      "n_institutions": 71
+    },
+    {
+      "fy": 2013,
+      "state_code": "NY",
+      "total": 3134953000,
+      "n_institutions": 85
+    },
+    {
+      "fy": 2013,
+      "state_code": "MD",
+      "total": 2708213000,
+      "n_institutions": 19
+    },
+    {
+      "fy": 2013,
+      "state_code": "PA",
+      "total": 2356008000,
+      "n_institutions": 55
+    },
+    {
+      "fy": 2013,
+      "state_code": "MA",
+      "total": 2183463000,
+      "n_institutions": 33
+    },
+    {
+      "fy": 2013,
+      "state_code": "TX",
+      "total": 2174936000,
+      "n_institutions": 50
+    },
+    {
+      "fy": 2013,
+      "state_code": "NC",
+      "total": 1655863000,
+      "n_institutions": 21
+    },
+    {
+      "fy": 2013,
+      "state_code": "IL",
+      "total": 1568603000,
+      "n_institutions": 30
+    },
+    {
+      "fy": 2013,
+      "state_code": "OH",
+      "total": 1355841000,
+      "n_institutions": 26
+    },
+    {
+      "fy": 2013,
+      "state_code": "MI",
+      "total": 1267209000,
+      "n_institutions": 23
+    },
+    {
+      "fy": 2014,
+      "state_code": "CA",
+      "total": 4705584000,
+      "n_institutions": 69
+    },
+    {
+      "fy": 2014,
+      "state_code": "NY",
+      "total": 3045146000,
+      "n_institutions": 82
+    },
+    {
+      "fy": 2014,
+      "state_code": "MD",
+      "total": 2826598000,
+      "n_institutions": 16
+    },
+    {
+      "fy": 2014,
+      "state_code": "PA",
+      "total": 2236089000,
+      "n_institutions": 52
+    },
+    {
+      "fy": 2014,
+      "state_code": "MA",
+      "total": 2162813000,
+      "n_institutions": 33
+    },
+    {
+      "fy": 2014,
+      "state_code": "TX",
+      "total": 2030358000,
+      "n_institutions": 50
+    },
+    {
+      "fy": 2014,
+      "state_code": "NC",
+      "total": 1613017000,
+      "n_institutions": 21
+    },
+    {
+      "fy": 2014,
+      "state_code": "IL",
+      "total": 1386321000,
+      "n_institutions": 30
+    },
+    {
+      "fy": 2014,
+      "state_code": "OH",
+      "total": 1299381000,
+      "n_institutions": 25
+    },
+    {
+      "fy": 2014,
+      "state_code": "MI",
+      "total": 1185909000,
+      "n_institutions": 23
+    },
+    {
+      "fy": 2015,
+      "state_code": "CA",
+      "total": 4714443000,
+      "n_institutions": 67
+    },
+    {
+      "fy": 2015,
+      "state_code": "NY",
+      "total": 3032566000,
+      "n_institutions": 83
+    },
+    {
+      "fy": 2015,
+      "state_code": "MD",
+      "total": 2943858000,
+      "n_institutions": 17
+    },
+    {
+      "fy": 2015,
+      "state_code": "PA",
+      "total": 2185068000,
+      "n_institutions": 50
+    },
+    {
+      "fy": 2015,
+      "state_code": "MA",
+      "total": 2144765000,
+      "n_institutions": 34
+    },
+    {
+      "fy": 2015,
+      "state_code": "TX",
+      "total": 2016631000,
+      "n_institutions": 51
+    },
+    {
+      "fy": 2015,
+      "state_code": "NC",
+      "total": 1602931000,
+      "n_institutions": 22
+    },
+    {
+      "fy": 2015,
+      "state_code": "IL",
+      "total": 1381506000,
+      "n_institutions": 29
+    },
+    {
+      "fy": 2015,
+      "state_code": "OH",
+      "total": 1270188000,
+      "n_institutions": 24
+    },
+    {
+      "fy": 2015,
+      "state_code": "GA",
+      "total": 1211526000,
+      "n_institutions": 20
+    },
+    {
+      "fy": 2016,
+      "state_code": "CA",
+      "total": 4747343000,
+      "n_institutions": 69
+    },
+    {
+      "fy": 2016,
+      "state_code": "NY",
+      "total": 3116624000,
+      "n_institutions": 83
+    },
+    {
+      "fy": 2016,
+      "state_code": "MD",
+      "total": 2963431000,
+      "n_institutions": 17
+    },
+    {
+      "fy": 2016,
+      "state_code": "PA",
+      "total": 2286892000,
+      "n_institutions": 52
+    },
+    {
+      "fy": 2016,
+      "state_code": "MA",
+      "total": 2167444000,
+      "n_institutions": 36
+    },
+    {
+      "fy": 2016,
+      "state_code": "TX",
+      "total": 2052130000,
+      "n_institutions": 51
+    },
+    {
+      "fy": 2016,
+      "state_code": "NC",
+      "total": 1663179000,
+      "n_institutions": 22
+    },
+    {
+      "fy": 2016,
+      "state_code": "IL",
+      "total": 1409927000,
+      "n_institutions": 28
+    },
+    {
+      "fy": 2016,
+      "state_code": "OH",
+      "total": 1316597000,
+      "n_institutions": 23
+    },
+    {
+      "fy": 2016,
+      "state_code": "MI",
+      "total": 1287586000,
+      "n_institutions": 24
+    },
+    {
+      "fy": 2017,
+      "state_code": "CA",
+      "total": 4841150000,
+      "n_institutions": 69
+    },
+    {
+      "fy": 2017,
+      "state_code": "NY",
+      "total": 3247765000,
+      "n_institutions": 79
+    },
+    {
+      "fy": 2017,
+      "state_code": "MD",
+      "total": 3085204000,
+      "n_institutions": 17
+    },
+    {
+      "fy": 2017,
+      "state_code": "PA",
+      "total": 2361227000,
+      "n_institutions": 50
+    },
+    {
+      "fy": 2017,
+      "state_code": "MA",
+      "total": 2198130000,
+      "n_institutions": 38
+    },
+    {
+      "fy": 2017,
+      "state_code": "TX",
+      "total": 2180405000,
+      "n_institutions": 52
+    },
+    {
+      "fy": 2017,
+      "state_code": "NC",
+      "total": 1772206000,
+      "n_institutions": 21
+    },
+    {
+      "fy": 2017,
+      "state_code": "IL",
+      "total": 1471092000,
+      "n_institutions": 29
+    },
+    {
+      "fy": 2017,
+      "state_code": "OH",
+      "total": 1367406000,
+      "n_institutions": 24
+    },
+    {
+      "fy": 2017,
+      "state_code": "MI",
+      "total": 1361685000,
+      "n_institutions": 24
+    },
+    {
+      "fy": 2018,
+      "state_code": "CA",
+      "total": 5084792000,
+      "n_institutions": 69
+    },
+    {
+      "fy": 2018,
+      "state_code": "NY",
+      "total": 3450249000,
+      "n_institutions": 79
+    },
+    {
+      "fy": 2018,
+      "state_code": "MD",
+      "total": 3211717000,
+      "n_institutions": 18
+    },
+    {
+      "fy": 2018,
+      "state_code": "PA",
+      "total": 2447373000,
+      "n_institutions": 51
+    },
+    {
+      "fy": 2018,
+      "state_code": "MA",
+      "total": 2254972000,
+      "n_institutions": 39
+    },
+    {
+      "fy": 2018,
+      "state_code": "TX",
+      "total": 2243500000,
+      "n_institutions": 53
+    },
+    {
+      "fy": 2018,
+      "state_code": "NC",
+      "total": 1829025000,
+      "n_institutions": 21
+    },
+    {
+      "fy": 2018,
+      "state_code": "IL",
+      "total": 1495665000,
+      "n_institutions": 29
+    },
+    {
+      "fy": 2018,
+      "state_code": "OH",
+      "total": 1427501000,
+      "n_institutions": 26
+    },
+    {
+      "fy": 2018,
+      "state_code": "GA",
+      "total": 1384607000,
+      "n_institutions": 20
+    },
+    {
+      "fy": 2019,
+      "state_code": "CA",
+      "total": 5339628000,
+      "n_institutions": 68
+    },
+    {
+      "fy": 2019,
+      "state_code": "NY",
+      "total": 3664755000,
+      "n_institutions": 79
+    },
+    {
+      "fy": 2019,
+      "state_code": "MD",
+      "total": 3599602000,
+      "n_institutions": 16
+    },
+    {
+      "fy": 2019,
+      "state_code": "PA",
+      "total": 2578040000,
+      "n_institutions": 51
+    },
+    {
+      "fy": 2019,
+      "state_code": "MA",
+      "total": 2390205000,
+      "n_institutions": 39
+    },
+    {
+      "fy": 2019,
+      "state_code": "TX",
+      "total": 2351471000,
+      "n_institutions": 54
+    },
+    {
+      "fy": 2019,
+      "state_code": "NC",
+      "total": 1946309000,
+      "n_institutions": 21
+    },
+    {
+      "fy": 2019,
+      "state_code": "IL",
+      "total": 1607214000,
+      "n_institutions": 29
+    },
+    {
+      "fy": 2019,
+      "state_code": "GA",
+      "total": 1492320000,
+      "n_institutions": 20
+    },
+    {
+      "fy": 2019,
+      "state_code": "OH",
+      "total": 1479767000,
+      "n_institutions": 26
+    },
+    {
+      "fy": 2020,
+      "state_code": "CA",
+      "total": 5518039000,
+      "n_institutions": 66
+    },
+    {
+      "fy": 2020,
+      "state_code": "NY",
+      "total": 3735722000,
+      "n_institutions": 81
+    },
+    {
+      "fy": 2020,
+      "state_code": "MD",
+      "total": 3735577000,
+      "n_institutions": 16
+    },
+    {
+      "fy": 2020,
+      "state_code": "TX",
+      "total": 2683788000,
+      "n_institutions": 53
+    },
+    {
+      "fy": 2020,
+      "state_code": "PA",
+      "total": 2641082000,
+      "n_institutions": 49
+    },
+    {
+      "fy": 2020,
+      "state_code": "MA",
+      "total": 2416401000,
+      "n_institutions": 39
+    },
+    {
+      "fy": 2020,
+      "state_code": "NC",
+      "total": 1939943000,
+      "n_institutions": 21
+    },
+    {
+      "fy": 2020,
+      "state_code": "IL",
+      "total": 1667429000,
+      "n_institutions": 26
+    },
+    {
+      "fy": 2020,
+      "state_code": "GA",
+      "total": 1627298000,
+      "n_institutions": 21
+    },
+    {
+      "fy": 2020,
+      "state_code": "OH",
+      "total": 1555194000,
+      "n_institutions": 25
+    },
+    {
+      "fy": 2021,
+      "state_code": "CA",
+      "total": 5764771000,
+      "n_institutions": 66
+    },
+    {
+      "fy": 2021,
+      "state_code": "NY",
+      "total": 4068566000,
+      "n_institutions": 81
+    },
+    {
+      "fy": 2021,
+      "state_code": "MD",
+      "total": 3891421000,
+      "n_institutions": 16
+    },
+    {
+      "fy": 2021,
+      "state_code": "TX",
+      "total": 2874396000,
+      "n_institutions": 54
+    },
+    {
+      "fy": 2021,
+      "state_code": "PA",
+      "total": 2799513000,
+      "n_institutions": 48
+    },
+    {
+      "fy": 2021,
+      "state_code": "MA",
+      "total": 2611734000,
+      "n_institutions": 37
+    },
+    {
+      "fy": 2021,
+      "state_code": "NC",
+      "total": 2088327000,
+      "n_institutions": 21
+    },
+    {
+      "fy": 2021,
+      "state_code": "IL",
+      "total": 1800873000,
+      "n_institutions": 26
+    },
+    {
+      "fy": 2021,
+      "state_code": "GA",
+      "total": 1784495000,
+      "n_institutions": 21
+    },
+    {
+      "fy": 2021,
+      "state_code": "OH",
+      "total": 1598058000,
+      "n_institutions": 26
+    },
+    {
+      "fy": 2022,
+      "state_code": "CA",
+      "total": 6592883000,
+      "n_institutions": 65
+    },
+    {
+      "fy": 2022,
+      "state_code": "NY",
+      "total": 4450365000,
+      "n_institutions": 81
+    },
+    {
+      "fy": 2022,
+      "state_code": "MD",
+      "total": 4056486000,
+      "n_institutions": 15
+    },
+    {
+      "fy": 2022,
+      "state_code": "TX",
+      "total": 3160367000,
+      "n_institutions": 54
+    },
+    {
+      "fy": 2022,
+      "state_code": "PA",
+      "total": 3070065000,
+      "n_institutions": 47
+    },
+    {
+      "fy": 2022,
+      "state_code": "MA",
+      "total": 2709397000,
+      "n_institutions": 36
+    },
+    {
+      "fy": 2022,
+      "state_code": "NC",
+      "total": 2320247000,
+      "n_institutions": 22
+    },
+    {
+      "fy": 2022,
+      "state_code": "GA",
+      "total": 1970736000,
+      "n_institutions": 21
+    },
+    {
+      "fy": 2022,
+      "state_code": "IL",
+      "total": 1943783000,
+      "n_institutions": 27
+    },
+    {
+      "fy": 2022,
+      "state_code": "OH",
+      "total": 1802860000,
+      "n_institutions": 26
+    },
+    {
+      "fy": 2023,
+      "state_code": "CA",
+      "total": 7229783000,
+      "n_institutions": 64
+    },
+    {
+      "fy": 2023,
+      "state_code": "NY",
+      "total": 4930311000,
+      "n_institutions": 83
+    },
+    {
+      "fy": 2023,
+      "state_code": "MD",
+      "total": 4722882000,
+      "n_institutions": 15
+    },
+    {
+      "fy": 2023,
+      "state_code": "TX",
+      "total": 3562370000,
+      "n_institutions": 55
+    },
+    {
+      "fy": 2023,
+      "state_code": "PA",
+      "total": 3384686000,
+      "n_institutions": 47
+    },
+    {
+      "fy": 2023,
+      "state_code": "MA",
+      "total": 2806317000,
+      "n_institutions": 36
+    },
+    {
+      "fy": 2023,
+      "state_code": "NC",
+      "total": 2551528000,
+      "n_institutions": 21
+    },
+    {
+      "fy": 2023,
+      "state_code": "GA",
+      "total": 2237287000,
+      "n_institutions": 21
+    },
+    {
+      "fy": 2023,
+      "state_code": "IL",
+      "total": 2116698000,
+      "n_institutions": 27
+    },
+    {
+      "fy": 2023,
+      "state_code": "OH",
+      "total": 1984902000,
+      "n_institutions": 25
+    },
+    {
+      "fy": 2024,
       "state_code": "CA",
       "total": 7812049000,
       "n_institutions": 66
     },
     {
+      "fy": 2024,
       "state_code": "NY",
       "total": 5275041000,
       "n_institutions": 85
     },
     {
+      "fy": 2024,
       "state_code": "MD",
       "total": 5209433000,
       "n_institutions": 16
     },
     {
+      "fy": 2024,
       "state_code": "TX",
       "total": 3911765000,
       "n_institutions": 55
     },
     {
+      "fy": 2024,
       "state_code": "PA",
       "total": 3613467000,
       "n_institutions": 47
     },
     {
+      "fy": 2024,
       "state_code": "MA",
       "total": 2980267000,
       "n_institutions": 37
     },
     {
+      "fy": 2024,
       "state_code": "NC",
       "total": 2736658000,
       "n_institutions": 21
     },
     {
+      "fy": 2024,
       "state_code": "GA",
       "total": 2501165000,
       "n_institutions": 21
     },
     {
+      "fy": 2024,
       "state_code": "IL",
       "total": 2306459000,
       "n_institutions": 29
     },
     {
+      "fy": 2024,
       "state_code": "OH",
       "total": 2146462000,
       "n_institutions": 25
     }
+  ],
+  "available_years": [
+    2005,
+    2006,
+    2007,
+    2008,
+    2009,
+    2010,
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024
   ],
   "top10_universities": [
     {

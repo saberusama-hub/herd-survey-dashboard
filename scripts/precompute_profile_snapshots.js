@@ -31,7 +31,6 @@ const SOURCES = [
   'agg_uni_concentration',
   'agg_uni_state_context',
   'agg_uni_peers',
-  'agg_uni_patents',
   'agg_uni_nih_ic',
   'agg_uni_specialization',
 ];
@@ -83,9 +82,9 @@ async function main() {
       concentration: [],
       stateContext: [],
       peers: [],
-      patents: [],
       nihIcs: [],
       specialization: [],
+      ranks: [],
     });
   }
 
@@ -188,17 +187,40 @@ async function main() {
     FROM agg_uni_peers ORDER BY uni_sk, peer_rank
   `);
   bucket(peers, 'peers', toJsonSafe);
-  bucket(
-    await db.all(`SELECT institution_sk, fiscal_year, award_count, patent_count, patents_per_award
-                  FROM agg_uni_patents ORDER BY institution_sk, fiscal_year`),
-    'patents',
-    toJsonSafe,
-  );
 
   bucket(
     await db.all(`SELECT institution_sk, fiscal_year, ic_code, ic_full_name, amount_nominal, project_count
                   FROM agg_uni_nih_ic ORDER BY institution_sk, fiscal_year, amount_nominal DESC`),
     'nihIcs',
+    toJsonSafe,
+  );
+
+  // National rank per FY × institution. Window function over agg_uni_total_rd
+  // ranks every institution with non-null total_rd_nominal that year, then we
+  // attach the rank + the size of the ranked universe to each profile.
+  // Eliminates the runtime getUniversityRank() DuckDB query in Section1Hero.
+  bucket(
+    await db.all(`
+      WITH ranked AS (
+        SELECT
+          institution_sk,
+          fiscal_year,
+          ROW_NUMBER() OVER (PARTITION BY fiscal_year ORDER BY total_rd_nominal DESC) AS national_rank
+        FROM agg_uni_total_rd
+        WHERE total_rd_nominal IS NOT NULL
+      ),
+      universe AS (
+        SELECT fiscal_year, COUNT(*) AS total_ranked
+        FROM agg_uni_total_rd
+        WHERE total_rd_nominal IS NOT NULL
+        GROUP BY fiscal_year
+      )
+      SELECT r.institution_sk, r.fiscal_year, r.national_rank, u.total_ranked
+      FROM ranked r
+      JOIN universe u USING (fiscal_year)
+      ORDER BY r.institution_sk, r.fiscal_year
+    `),
+    'ranks',
     toJsonSafe,
   );
 

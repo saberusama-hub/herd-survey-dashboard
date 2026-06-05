@@ -10,6 +10,7 @@ import { AxisBottom, AxisLeft } from '@visx/axis';
 import { Group } from '@visx/group';
 import { scaleBand, scaleLinear } from '@visx/scale';
 import Link from 'next/link';
+import { useId, useMemo, useState } from 'react';
 
 // ───────── Color tokens used across the home charts ─────────
 const SOURCE_ORDER = ['federal', 'state', 'industry', 'institutional', 'nonprofit', 'other'] as const;
@@ -53,6 +54,19 @@ const AGENCY_LABEL: Record<string, string> = {
   Other: 'Other federal',
 };
 
+// Spelled-out full names for the KPI hint + source notes. Short acronyms in
+// the headline, full department names in the secondary text so a reader who
+// doesn't know "HHS" still understands what they're looking at.
+const AGENCY_FULL_NAME: Record<string, string> = {
+  HHS: 'U.S. Department of Health & Human Services (includes the NIH)',
+  NSF: 'National Science Foundation',
+  DOD: 'U.S. Department of Defense',
+  DOE: 'U.S. Department of Energy',
+  NASA: 'National Aeronautics & Space Administration',
+  USDA: 'U.S. Department of Agriculture',
+  Other: 'Other federal agencies (combined)',
+};
+
 /**
  * Homepage is rendered from a precomputed snapshot at apps/web/public/data/
  * home-snapshot.json. The snapshot is built by scripts/precompute_home_snapshot.js
@@ -70,10 +84,16 @@ export default function HomePage() {
   const kpis = snapshot.kpis;
   const topAgency = snapshot.top_agency;
   const top10 = snapshot.top10_universities;
-  const topics = snapshot.topics;
-  const agencies = snapshot.agencies;
-  const sourceTotals = snapshot.source_totals;
-  const states = snapshot.states;
+
+  // Available fiscal years (ascending). Per-chart pickers default to latest.
+  const years = snapshot.available_years;
+  const latestYear = years[years.length - 1];
+
+  // Independent year state per chart — change one without touching the others.
+  const [topicsFy, setTopicsFy] = useState<number>(latestYear);
+  const [agenciesFy, setAgenciesFy] = useState<number>(latestYear);
+  const [sourcesFy, setSourcesFy] = useState<number>(latestYear);
+  const [statesFy, setStatesFy] = useState<number>(latestYear);
 
   // ───────── Derived figures for KPI strip ─────────
   const fy24FederalPct = kpis?.fy24_total && kpis?.fy24_federal ? kpis.fy24_federal / kpis.fy24_total : null;
@@ -129,45 +149,69 @@ export default function HomePage() {
       value: topAgency ? `${AGENCY_LABEL[topAgency.agency_bucket] ?? topAgency.agency_bucket}` : '—',
       hint: topAgency ? (
         <span className="text-text-tertiary text-[11px]">
+          {AGENCY_FULL_NAME[topAgency.agency_bucket] ?? topAgency.agency_bucket} ·{' '}
           {formatDollars(topAgency.amount_nominal)} · {formatPercent(topAgency.pct_of_federal)} of federal R&D
         </span>
       ) : undefined,
-      sources: [{ id: 'ncses_herd', subset: 'Q09 Federal R&D by Agency, largest bucket in latest FY' }],
+      sources: [
+        {
+          id: 'ncses_herd',
+          subset: `Q09 Federal R&D by Agency, largest bucket in latest FY. HHS = ${AGENCY_FULL_NAME.HHS}.`,
+        },
+      ],
     },
   ];
 
-  // ───────── Chart-ready slices (static — no React state to derive from) ─────────
-  const topicBars = topics.map((t) => ({
-    label: t.topic,
-    amount: Number(t.tagged_amount) || 0,
-  }));
+  // ───────── Chart-ready slices, derived from per-FY state ─────────
+  // Each picker drives one useMemo; year-change re-pivots in <1ms over the
+  // entire 20-year snapshot (a few hundred rows per section).
 
-  const totalAgency = agencies.reduce((s, r) => s + (Number(r.amount_nominal) || 0), 0);
-  const agencyBars = agencies.map((r) => ({
-    label: AGENCY_LABEL[r.agency_bucket] ?? r.agency_bucket,
-    bucket: r.agency_bucket,
-    amount: Number(r.amount_nominal) || 0,
-    share: totalAgency > 0 ? Number(r.amount_nominal) / totalAgency : 0,
-    color: AGENCY_COLOR[r.agency_bucket] ?? 'hsl(var(--agency-other))',
-  }));
+  const topicBars = useMemo(
+    () =>
+      snapshot.topics_by_fy
+        .filter((r) => r.fy === topicsFy)
+        .slice(0, 10)
+        .map((t) => ({ label: t.topic, amount: Number(t.tagged_amount) || 0 })),
+    [topicsFy],
+  );
 
-  const agencyFy = agencies[0]?.fy ?? null;
+  const agencyBars = useMemo(() => {
+    const rows = snapshot.agencies_by_fy.filter((r) => r.fy === agenciesFy);
+    const total = rows.reduce((s, r) => s + (Number(r.amount_nominal) || 0), 0);
+    return rows.map((r) => ({
+      label: AGENCY_LABEL[r.agency_bucket] ?? r.agency_bucket,
+      bucket: r.agency_bucket,
+      amount: Number(r.amount_nominal) || 0,
+      share: total > 0 ? Number(r.amount_nominal) / total : 0,
+      color: AGENCY_COLOR[r.agency_bucket] ?? 'hsl(var(--agency-other))',
+    }));
+  }, [agenciesFy]);
 
-  const sourceBars = SOURCE_ORDER.map((k) => {
-    const row = sourceTotals.find((r) => r.source_category === k);
-    return {
-      label: SOURCE_LABEL[k],
-      key: k,
-      amount: row ? Number(row.total) || 0 : 0,
-      color: SOURCE_COLOR[k],
-    };
-  }).sort((a, b) => b.amount - a.amount);
+  const sourceBars = useMemo(() => {
+    const rows = snapshot.sources_by_fy.filter((r) => r.fy === sourcesFy);
+    return SOURCE_ORDER.map((k) => {
+      const row = rows.find((r) => r.source_category === k);
+      return {
+        label: SOURCE_LABEL[k],
+        key: k,
+        amount: row ? Number(row.total) || 0 : 0,
+        color: SOURCE_COLOR[k],
+      };
+    }).sort((a, b) => b.amount - a.amount);
+  }, [sourcesFy]);
 
-  const stateBars = states.map((r) => ({
-    label: r.state_code,
-    amount: Number(r.total) || 0,
-    nInstitutions: Number(r.n_institutions) || 0,
-  }));
+  const stateBars = useMemo(
+    () =>
+      snapshot.states_by_fy
+        .filter((r) => r.fy === statesFy)
+        .slice(0, 10)
+        .map((r) => ({
+          label: r.state_code,
+          amount: Number(r.total) || 0,
+          nInstitutions: Number(r.n_institutions) || 0,
+        })),
+    [statesFy],
+  );
 
   return (
     <div className="container-wide pt-12 pb-20 md:pt-20 md:pb-28 space-y-16 md:space-y-24">
@@ -274,30 +318,29 @@ export default function HomePage() {
       {/* ─── Four bottom panels: topics, agencies, sources, states ─── */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-10">
         <ChartFrame
-          eyebrow={topics[0]?.fy ? `FY${topics[0].fy} ranking` : 'Latest FY ranking'}
+          eyebrow={`FY${topicsFy} ranking`}
           title="Top 10 research topics by federal $"
-          dek="The biggest concrete research areas across NSF + NIH grants — the topics where most federal money landed."
+          dek="The biggest concrete research areas across NSF + NIH grants in the chosen fiscal year — change the year to re-rank."
           sources={[
             {
               id: 'nsf_awards',
-              subset:
-                'Award titles + abstracts regex-matched against 30-topic taxonomy, $ summed per topic for latest FY',
+              subset: `Award titles + abstracts regex-matched against 30-topic taxonomy, $ summed per topic for FY${topicsFy}`,
             },
             {
               id: 'nih_exporter',
-              subset:
-                'Project titles + terms regex-matched against 30-topic taxonomy, $ summed per topic for latest FY',
+              subset: `Project titles + terms regex-matched against 30-topic taxonomy, $ summed per topic for FY${topicsFy}`,
             },
           ]}
           methodology={{
-            what: 'A ranking of the ten research topics that attracted the most federal grant dollars in the most recent year — concrete subject areas like Cancer, AI/ML, Climate.',
-            how: 'Every NSF and NIH grant is scanned against a hand-tuned 30-topic regex taxonomy (titles + NSF abstracts + NIH project terms). We sum the tagged dollars per topic for the latest FY and take the top 10.',
+            what: 'A ranking of the ten research topics that attracted the most federal grant dollars in the selected year — concrete subject areas like Cancer, AI/ML, Climate.',
+            how: 'Every NSF and NIH grant is scanned against a hand-tuned 30-topic regex taxonomy (titles + NSF abstracts + NIH project terms). We sum the tagged dollars per topic for the chosen FY and take the top 10.',
             caveats:
               'Topics are NOT mutually exclusive — one grant can match several (e.g., "Cancer" + "AI/ML"). Dollar totals across topics can exceed the federal total because of this overlap.',
           }}
         >
+          <ChartYearPicker value={topicsFy} onChange={setTopicsFy} years={years} />
           {topicBars.length === 0 ? (
-            <p className="text-sm text-text-tertiary">Loading…</p>
+            <p className="text-sm text-text-tertiary">No topic data for FY{topicsFy}.</p>
           ) : (
             <ResponsiveSvg height={Math.max(260, topicBars.length * 24 + 40)}>
               {(w, h) => (
@@ -320,25 +363,25 @@ export default function HomePage() {
         </ChartFrame>
 
         <ChartFrame
-          eyebrow={agencyFy ? `FY${agencyFy} share` : 'Latest FY share'}
+          eyebrow={`FY${agenciesFy} share`}
           title="Federal funding agencies by share"
-          dek="Which federal departments paid the most to U.S. universities in the most recent reported year."
+          dek={`Which federal departments paid the most to U.S. universities in FY${agenciesFy}. HHS = ${AGENCY_FULL_NAME.HHS}.`}
           sources={[
             {
               id: 'ncses_herd',
-              subset:
-                'Q09 (Federal R&D by Agency) summed across HERD-tracked institutions per FY × agency bucket, latest reported FY',
+              subset: `Q09 (Federal R&D by Agency) summed across HERD-tracked institutions for FY${agenciesFy} × agency bucket`,
             },
           ]}
           methodology={{
-            what: 'How federal research dollars split across the major funding agencies in the most recent year — HHS (NIH), NSF, DOD, DOE, NASA, USDA, and "Other".',
-            how: 'We take HERD Q09 ("Federal R&D by agency") for the latest reported FY and sum across all universities into the seven canonical buckets. Each bar shows total dollars and share of federal R&D.',
+            what: 'How federal research dollars split across the major funding agencies in the selected year — HHS (NIH), NSF, DOD, DOE, NASA, USDA, and "Other".',
+            how: 'We take HERD Q09 ("Federal R&D by agency") for the chosen FY and sum across all universities into the seven canonical buckets. Each bar shows total dollars and share of federal R&D.',
             caveats:
-              'HERD Q09 lags Q01 by about one year, so this view may report one year behind the source-of-funds chart on the same page. Sub-agencies (NIH institutes, DOD sub-commands) are rolled to parent.',
+              'HERD Q09 lags Q01 by about one year, so a recent-year view may report one year behind the source-of-funds chart on the same page. Sub-agencies (NIH institutes, DOD sub-commands) are rolled to parent.',
           }}
         >
+          <ChartYearPicker value={agenciesFy} onChange={setAgenciesFy} years={years} />
           {agencyBars.length === 0 ? (
-            <p className="text-sm text-text-tertiary">Loading…</p>
+            <p className="text-sm text-text-tertiary">No agency data for FY{agenciesFy}.</p>
           ) : (
             <ResponsiveSvg height={Math.max(220, agencyBars.length * 36 + 40)}>
               {(w, h) => (
@@ -360,24 +403,25 @@ export default function HomePage() {
         </ChartFrame>
 
         <ChartFrame
-          eyebrow="FY2005–latest cumulative"
-          title="20-year R&D by source"
-          dek="How much each funding source has contributed across two decades — the absolute magnitude of federal, institutional, state, industry, nonprofit, and other."
+          eyebrow={`FY${sourcesFy} source mix`}
+          title="R&D by funding source"
+          dek="How that year's R&D dollars split across federal, state, industry, institutional, nonprofit, and other sources."
           sources={[
             {
               id: 'ncses_herd',
-              subset: 'Q01 (Sources of Funds) summed across all HERD-tracked institutions, cumulative FY2005–FY2024',
+              subset: `Q01 (Sources of Funds) summed across all HERD-tracked institutions for FY${sourcesFy}`,
             },
           ]}
           methodology={{
-            what: 'A horizontal bar showing the total dollars each funding source has put into U.S. university research over the full 20-year window.',
-            how: 'We sum HERD Q01 reported amounts across all institutions and all fiscal years, grouped by source category (federal, state, industry, institutional, nonprofit, other). Bars are sorted by total contribution.',
+            what: 'A horizontal bar showing how many dollars each funding source contributed to U.S. university research in the selected year.',
+            how: 'We sum HERD Q01 reported amounts across all HERD-tracked institutions for the chosen FY, grouped by source category (federal, state, industry, institutional, nonprofit, other). Bars are sorted by total contribution.',
             caveats:
               'Nominal dollars (not inflation-adjusted). "Nonprofit" is conservative for FY2005–FY2009 because HERD did not collect that category in that window (ARDES non-response).',
           }}
         >
+          <ChartYearPicker value={sourcesFy} onChange={setSourcesFy} years={years} />
           {sourceBars.length === 0 ? (
-            <p className="text-sm text-text-tertiary">Loading…</p>
+            <p className="text-sm text-text-tertiary">No source data for FY{sourcesFy}.</p>
           ) : (
             <ResponsiveSvg height={Math.max(220, sourceBars.length * 36 + 40)}>
               {(w, h) => (
@@ -393,25 +437,26 @@ export default function HomePage() {
         </ChartFrame>
 
         <ChartFrame
-          eyebrow="Latest reported FY"
+          eyebrow={`FY${statesFy} ranking`}
           title="Top 10 states by federal R&D"
-          dek="Where federal research money lands geographically — the ten states that received the largest share in the most recent year."
+          dek="Where federal research money landed geographically in the selected fiscal year."
           sources={[
             {
               id: 'ncses_herd',
-              subset: 'Q01 federal-source dollars per institution, latest FY',
+              subset: `Q01 federal-source dollars per institution for FY${statesFy}`,
             },
             { id: 'ipeds', subset: 'HD directory: STABBR (state) for each institution_sk' },
           ]}
           methodology={{
-            what: 'A ranking of the ten U.S. states whose universities received the most federal research funding in the most recent year.',
-            how: 'For the latest fiscal year we join `agg_uni_source_split` (federal-source rows) to `dim_institution.state_code`, sum federal dollars per state, and take the top 10.',
+            what: 'A ranking of the ten U.S. states whose universities received the most federal research funding in the selected year.',
+            how: 'For the chosen fiscal year we join `agg_uni_source_split` (federal-source rows) to `dim_institution.state_code`, sum federal dollars per state, and take the top 10.',
             caveats:
               'Each university is counted in its headquarters state — branch-campus spending in other states is not reattributed. Hospitals and FFRDCs are excluded (the join is HERD-only).',
           }}
         >
+          <ChartYearPicker value={statesFy} onChange={setStatesFy} years={years} />
           {stateBars.length === 0 ? (
-            <p className="text-sm text-text-tertiary">Loading…</p>
+            <p className="text-sm text-text-tertiary">No state data for FY{statesFy}.</p>
           ) : (
             <ResponsiveSvg height={Math.max(260, stateBars.length * 28 + 40)}>
               {(w, h) => (
@@ -466,6 +511,41 @@ function CtaCard({ href, eyebrow, title }: { href: string; eyebrow: string; titl
         </span>
       </p>
     </Link>
+  );
+}
+
+/* ───────────── ChartYearPicker — compact per-chart FY selector ───────────── */
+
+function ChartYearPicker({
+  value,
+  onChange,
+  years,
+}: {
+  value: number;
+  onChange: (next: number) => void;
+  years: readonly number[];
+}) {
+  const id = useId();
+  return (
+    <div className="-mt-2 mb-3 flex items-center gap-2">
+      <label htmlFor={id} className="text-[11px] uppercase tracking-wider text-text-tertiary">
+        Year
+      </label>
+      <select
+        id={id}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="h-7 rounded-md border border-rule bg-surface-elevated px-2 text-xs tnum focus:outline-none focus:ring-2 focus:ring-ring"
+      >
+        {[...years]
+          .sort((a, b) => b - a)
+          .map((y) => (
+            <option key={y} value={y}>
+              FY{y}
+            </option>
+          ))}
+      </select>
+    </div>
   );
 }
 

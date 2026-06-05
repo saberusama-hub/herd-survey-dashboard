@@ -634,11 +634,13 @@ export interface UniversityProfile extends Row {
   concentration: Array<{ fiscal_year: number; hhi: number; shannon_entropy: number; cov_5yr: number | null }>;
   stateContext: Array<{ fiscal_year: number; uni_total: number; state_total: number; share_of_state: number }>;
   peers: Array<{ peer_sk: string; peer_rank: number }>;
-  patents: Array<{
+  // Per-FY national rank. Precomputed into the profile JSON to keep
+  // Section1Hero out of DuckDB-WASM. Empty array if this institution was not
+  // ranked (no total_rd_nominal) in any FY — Section1Hero shows "—".
+  ranks: Array<{
     fiscal_year: number;
-    award_count: number;
-    patent_count: number | null;
-    patents_per_award: number | null;
+    national_rank: number;
+    total_ranked: number;
   }>;
 }
 
@@ -659,7 +661,6 @@ export async function getUniversityProfile(sk: string): Promise<UniversityProfil
     concentration,
     stateContext,
     peers,
-    patents,
   ] = await Promise.all([
     query<{ canonical_name: string; state_code: string }>(
       `SELECT canonical_name, state_code FROM dim_institution WHERE institution_sk = '${safe}'`,
@@ -710,9 +711,6 @@ export async function getUniversityProfile(sk: string): Promise<UniversityProfil
     query<UniversityProfile['peers'][number]>(
       `SELECT peer_sk, peer_rank FROM agg_uni_peers WHERE uni_sk = '${safe}' ORDER BY peer_rank`,
     ),
-    query<UniversityProfile['patents'][number]>(
-      `SELECT fiscal_year, award_count, patent_count, patents_per_award FROM agg_uni_patents WHERE institution_sk = '${safe}' ORDER BY fiscal_year`,
-    ),
   ]);
 
   if (name.length === 0) throw new Error(`Institution ${sk} not found`);
@@ -734,7 +732,9 @@ export async function getUniversityProfile(sk: string): Promise<UniversityProfil
     concentration,
     stateContext,
     peers,
-    patents,
+    // Rank lives in the precomputed profile snapshot, not in this query
+    // (which is unused at runtime). Snapshot-based codepath populates it.
+    ranks: [],
   };
 }
 

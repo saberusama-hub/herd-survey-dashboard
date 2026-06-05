@@ -6,10 +6,8 @@ import { Section1Hero } from '@/components/profile/Section1Hero';
 import { Section2TotalRD } from '@/components/profile/Section2TotalRD';
 import { Section3Sources } from '@/components/profile/Section3Sources';
 import { Section4Agencies } from '@/components/profile/Section4Agencies';
-import { Section5Reconciliation } from '@/components/profile/Section5Reconciliation';
 import { Section6PIs } from '@/components/profile/Section6PIs';
 import { Section7Disciplines } from '@/components/profile/Section7Disciplines';
-import { Section8Concentration } from '@/components/profile/Section8Concentration';
 import { Section9StateContext } from '@/components/profile/Section9StateContext';
 import type { NihIcRow, SpecializationRow, UniversityProfile } from '@/lib/queries';
 
@@ -85,10 +83,8 @@ export function ProfileBody({ sk, fallbackName, state }: Props) {
       <Section2TotalRD profile={profile} />
       <Section3Sources profile={profile} />
       <Section4Agencies profile={profile} icRows={snapshot.nihIcs} />
-      <Section5Reconciliation profile={profile} />
       <Section6PIs profile={profile} />
       <Section7Disciplines profile={profile} specialization={snapshot.specialization} />
-      <Section8Concentration profile={profile} />
       <Section9StateContext profile={profile} />
 
       <footer className="mt-16 border-t border-rule pt-8 space-y-3">

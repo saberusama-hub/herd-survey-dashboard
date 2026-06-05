@@ -45,7 +45,6 @@ const PARQUET_FILES = [
   'agg_uni_concentration',
   'agg_uni_state_context',
   'agg_uni_peers',
-  'agg_uni_patents',
   'agg_national_overview',
   'agg_national_agency_trend',
   'agg_national_concentration',
