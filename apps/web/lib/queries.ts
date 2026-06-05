@@ -1588,7 +1588,14 @@ export interface TopicSummary extends Row {
   fy24_share: number;
   fy24_count_share: number;
   fy24_grant_count: number;
+  /**
+   * Adaptive trailing CAGR (cap = 5 yr). Picks the oldest prior year in
+   * [FY-5, FY-1] with tagged_amount > 0 and computes CAGR over that span.
+   * Null when no positive-prior year exists in the trailing window.
+   */
   cagr_5yr_pct: number | null;
+  /** Years actually used (1-5). Null when CAGR is null. */
+  cagr_window_yr: number | null;
   top_uni_name: string | null;
 }
 

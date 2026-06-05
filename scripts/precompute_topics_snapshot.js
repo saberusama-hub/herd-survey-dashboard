@@ -44,16 +44,41 @@ async function main() {
         FROM agg_uni_specialization
       ) WHERE rn = 1
     ),
-    cagr AS (
+    -- Adaptive trailing CAGR (cap = 5 yr). For each (FY, topic) we pick
+    -- the OLDEST prior row within [FY-5, FY-1] that has tagged_amount > 0
+    -- and compute the CAGR over that window. Falls back to 1-4 yr windows
+    -- for FY2006–FY2009 (no pre-FY2005 data) and for topics that had
+    -- zero $ in earlier years (e.g., late-emerging AI/ML).
+    cagr_priors AS (
       SELECT
-        cur.fiscal_year,
+        cur.fiscal_year AS cur_fy,
         cur.topic,
-        CASE WHEN prior.tagged_amount > 0
-          THEN (POW(cur.tagged_amount / prior.tagged_amount, 1.0 / 5.0) - 1) * 100
-          ELSE NULL END AS cagr_5yr_pct
+        cur.tagged_amount AS cur_amt,
+        prior.fiscal_year AS prior_fy,
+        prior.tagged_amount AS prior_amt,
+        ROW_NUMBER() OVER (
+          PARTITION BY cur.fiscal_year, cur.topic
+          ORDER BY prior.fiscal_year ASC NULLS LAST
+        ) AS rn
       FROM agg_national_topic cur
       LEFT JOIN agg_national_topic prior
-        ON prior.topic = cur.topic AND prior.fiscal_year = cur.fiscal_year - 5
+        ON prior.topic = cur.topic
+        AND prior.fiscal_year >= cur.fiscal_year - 5
+        AND prior.fiscal_year < cur.fiscal_year
+        AND prior.tagged_amount > 0
+    ),
+    cagr AS (
+      SELECT
+        cur_fy AS fiscal_year,
+        topic,
+        CASE
+          WHEN prior_amt IS NOT NULL AND prior_amt > 0 AND cur_amt > 0 AND prior_fy IS NOT NULL
+            THEN (POW(cur_amt / prior_amt, 1.0 / NULLIF(cur_fy - prior_fy, 0)) - 1) * 100
+          ELSE NULL
+        END AS cagr_5yr_pct,
+        CASE WHEN prior_fy IS NOT NULL THEN cur_fy - prior_fy ELSE NULL END AS cagr_window_yr
+      FROM cagr_priors
+      WHERE rn = 1
     )
     SELECT
       t.fiscal_year,
@@ -63,6 +88,7 @@ async function main() {
       t.grant_count * 100.0 / NULLIF(gt.t_gc, 0) AS fy24_count_share,
       t.grant_count::DOUBLE AS fy24_grant_count,
       c.cagr_5yr_pct,
+      c.cagr_window_yr,
       di.canonical_name AS top_uni_name
     FROM agg_national_topic t
     LEFT JOIN grant_totals gt USING (fiscal_year)

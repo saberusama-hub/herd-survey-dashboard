@@ -252,6 +252,7 @@ function SummaryTable({
               onSort={requestSort}
               align="right"
               className="py-2 px-3 whitespace-nowrap"
+              title="Trailing CAGR ending in the selected FY, capped at a 5-year window. Falls back to a shorter window when 5 years of history isn't available (e.g. FY2006-FY2009 use 1-4 yr windows). Hover a value to see the exact window used."
             >
               5y CAGR
             </SortableTh>
@@ -273,6 +274,12 @@ function SummaryTable({
                   : r.cagr_5yr_pct < -5
                     ? 'text-negative'
                     : 'text-text-secondary';
+            const cagrTitle =
+              r.cagr_5yr_pct == null
+                ? 'No prior-year tagged $ in the trailing 5-year window — cannot compute a CAGR.'
+                : typeof r.cagr_window_yr === 'number' && r.cagr_window_yr > 0
+                  ? `${r.cagr_window_yr}-year window: FY${year - r.cagr_window_yr} → FY${year}`
+                  : undefined;
             return (
               <tr
                 key={r.topic}
@@ -297,7 +304,9 @@ function SummaryTable({
                 <td className="py-1.5 px-3 text-right tnum text-text-secondary">
                   {formatPercent(r.fy24_count_share, { source: 'percent' })}
                 </td>
-                <td className={`py-1.5 px-3 text-right tnum ${cagrColor}`}>{cagrStr}</td>
+                <td className={`py-1.5 px-3 text-right tnum ${cagrColor}`} title={cagrTitle}>
+                  {cagrStr}
+                </td>
                 <td className="py-1.5 pl-3 text-text-secondary text-xs">{r.top_uni_name ?? '—'}</td>
               </tr>
             );
