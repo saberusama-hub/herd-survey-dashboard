@@ -51,29 +51,74 @@ export default function UniversitiesPage() {
   }, []);
 
   // Pivot the columnar snapshot to UniversityIndexRow[] for the selected
-  // FY. Computes trailing 5y CAGR and long-run CAGR (FY2005→year) in JS.
-  // Was a multi-CTE DuckDB query (~2 s); now ~5 ms.
+  // FY. Both CAGR columns are now ADAPTIVE: rather than insisting on the
+  // strict "FY2005 → selected year" and "selected year-5 → selected year"
+  // windows (which left ~30% of rows blank for institutions that joined the
+  // panel after FY2005), we pick the longest available window per row:
+  //   - cagr_long_run: earliest non-null FY → selected FY (1+ year window).
+  //   - cagr_5yr: longest trailing window ending at selected FY, capped at
+  //     5 years. Falls back to 4/3/2/1 yr when an institution has less
+  //     history. Per-row window length is surfaced in the cell tooltip so
+  //     readers can see when a value is short-window noise vs. a real
+  //     20-yr trend.
   const rows = useMemo<UniversityIndexRow[] | null>(() => {
     if (!snapshot) return null;
     const yi = snapshot.years.indexOf(year);
     if (yi < 0) return [];
-    const yi5 = snapshot.years.indexOf(year - 5);
-    const yiFirst = 0; // FY2005 always present per precompute coverage
-    const fiscalYearGap = year - snapshot.years[yiFirst];
     return snapshot.institutions
       .map((inst, i) => {
-        const total = snapshot.total_rd[i][yi];
+        const series = snapshot.total_rd[i];
+        const total = series[yi];
         if (total === null) return null;
-        const t5 = yi5 >= 0 ? snapshot.total_rd[i][yi5] : null;
-        const tFirst = snapshot.total_rd[i][yiFirst];
+
+        // Earliest year with reported R&D > 0 for this institution. The
+        // adaptive long-run CAGR uses (earliest → selected) as its window.
+        let earliestIdx = -1;
+        for (let yy = 0; yy < series.length; yy++) {
+          const v = series[yy];
+          if (v !== null && v > 0) {
+            earliestIdx = yy;
+            break;
+          }
+        }
+        let cagrLongRun: number | null = null;
+        let cagrLongRunWindow: number | null = null;
+        if (earliestIdx >= 0 && earliestIdx < yi) {
+          const tFirst = series[earliestIdx];
+          const span = snapshot.years[yi] - snapshot.years[earliestIdx];
+          if (tFirst !== null && tFirst > 0 && span > 0) {
+            cagrLongRun = (total / tFirst) ** (1 / span) - 1;
+            cagrLongRunWindow = span;
+          }
+        }
+
+        // Trailing CAGR with an adaptive window capped at 5 years. Walks
+        // back from (year - 5) up to (year - 1), picks the oldest non-null
+        // year, computes CAGR over that span.
+        let cagr5: number | null = null;
+        let cagr5Window: number | null = null;
+        const trailStart = Math.max(0, yi - 5);
+        for (let yy = trailStart; yy < yi; yy++) {
+          const tStart = series[yy];
+          if (tStart !== null && tStart > 0) {
+            const span = snapshot.years[yi] - snapshot.years[yy];
+            if (span > 0) {
+              cagr5 = (total / tStart) ** (1 / span) - 1;
+              cagr5Window = span;
+            }
+            break;
+          }
+        }
+
         return {
           institution_sk: inst.sk,
           name: inst.name,
           state: inst.state ?? '',
           total_rd: total,
-          cagr_5yr: yi5 >= 0 && t5 !== null && t5 > 0 ? (total / t5) ** (1 / 5) - 1 : null,
-          cagr_long_run:
-            fiscalYearGap > 0 && tFirst !== null && tFirst > 0 ? (total / tFirst) ** (1 / fiscalYearGap) - 1 : null,
+          cagr_5yr: cagr5,
+          cagr_5yr_window: cagr5Window,
+          cagr_long_run: cagrLongRun,
+          cagr_long_run_window: cagrLongRunWindow,
           federal_share: snapshot.federal_share[i][yi],
           pi_count: snapshot.pi_count[i][yi] ?? 0,
           stem_share: snapshot.stem_share[i][yi],
@@ -108,8 +153,9 @@ export default function UniversitiesPage() {
           ))}
         </select>
         <span className="text-[11px] italic text-text-tertiary">
-          Re-ranks the table for the selected year. Trailing 5y CAGR is blank for FY{FY_MIN}–FY{FY_MIN + 4} (window
-          starts before FY{FY_MIN}); long-run CAGR is blank at FY{FY_MIN}.
+          Re-ranks the table for the selected year. CAGR columns adapt per institution: long-run CAGR uses the
+          institution's earliest reported FY (not strictly FY{FY_MIN}); 5y CAGR uses the longest available trailing
+          window up to five years. Hover any CAGR cell to see the exact window used.
         </span>
       </div>
 

@@ -18,6 +18,9 @@ interface ColumnDef {
   defaultDir: SortDir;
   /** Cell formatter. Receives the row value (may be null). */
   fmt?: (v: UniversityIndexRow[SortKey]) => string;
+  /** Optional per-cell tooltip — surfaces row-specific context (e.g.
+   *  the actual CAGR window used for an institution). */
+  cellTitle?: (row: UniversityIndexRow) => string | undefined;
 }
 
 function buildColumns(year: number): ColumnDef[] {
@@ -37,16 +40,26 @@ function buildColumns(year: number): ColumnDef[] {
       label: '5y CAGR',
       align: 'right',
       defaultDir: 'desc',
-      title: `Trailing 5-year CAGR ending FY${year}. Blank for years before FY2010 (window starts before FY2005).`,
+      title: `Trailing CAGR ending FY${year}, capped at 5 years. Falls back to a shorter window (1-4 yr) when an institution has less history. Hover a cell to see the exact window used.`,
       fmt: (v) => (typeof v === 'number' ? formatPercent(v) : '—'),
+      cellTitle: (row) => {
+        const w = row.cagr_5yr_window;
+        if (typeof w !== 'number' || w <= 0) return 'No prior-year R&D reported — cannot compute a trailing CAGR.';
+        return `${w}-year window: FY${year - w} → FY${year}`;
+      },
     },
     {
       key: 'cagr_long_run',
       label: 'Long-run CAGR',
       align: 'right',
       defaultDir: 'desc',
-      title: `Cumulative compound-annual-growth-rate FY2005 → FY${year}.`,
+      title: `Adaptive long-run compound-annual-growth-rate ending FY${year}. Uses the institution's earliest reported FY as the start of the window. Hover a cell to see the exact window used.`,
       fmt: (v) => (typeof v === 'number' ? formatPercent(v) : '—'),
+      cellTitle: (row) => {
+        const w = row.cagr_long_run_window;
+        if (typeof w !== 'number' || w <= 0) return 'Only one year of R&D on record — cannot compute a long-run CAGR.';
+        return `${w}-year window: FY${year - w} → FY${year}`;
+      },
     },
     {
       key: 'federal_share',
@@ -218,6 +231,7 @@ export function UniversityTable({ rows, year }: Props) {
                 {cols.slice(2).map((c) => (
                   <td
                     key={c.key}
+                    title={c.cellTitle?.(r)}
                     className={`py-1.5 px-3 whitespace-nowrap ${c.align === 'right' ? 'text-right tnum' : 'text-left'}`}
                   >
                     {c.fmt ? c.fmt(r[c.key]) : String(r[c.key] ?? '—')}

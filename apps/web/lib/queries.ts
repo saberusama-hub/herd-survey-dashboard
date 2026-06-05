@@ -955,10 +955,21 @@ export interface UniversityIndexRow extends Row {
   state: string;
   /** HERD-reported total R&D in the selected FY (nominal $). */
   total_rd: number;
-  /** Cumulative CAGR FY2005 → selected FY. Null when year ≤ 2005. */
+  /**
+   * Adaptive long-run CAGR: earliest reported FY (with total_rd > 0) →
+   * selected FY. Null only when the institution has no prior history.
+   */
   cagr_long_run: number | null;
-  /** Trailing 5-year CAGR ending at the selected FY. Null when year < 2010. */
+  /** Number of years used for the long-run CAGR window (1+). Null when CAGR is null. */
+  cagr_long_run_window: number | null;
+  /**
+   * Adaptive trailing CAGR up to a 5-year window: longest available
+   * trailing window ending at the selected FY, capped at 5 years.
+   * Null only when the institution has no prior-year history.
+   */
   cagr_5yr: number | null;
+  /** Years actually used (1-5). Null when CAGR is null. */
+  cagr_5yr_window: number | null;
   /** Federal share of total R&D in the selected FY (fraction 0–1). */
   federal_share: number | null;
   /** Distinct PI count in the selected FY (federal grants). */
