@@ -296,13 +296,123 @@ const METRICS: MetricDef[] = [
         (r) => Boolean(r.is_stem),
       ).map((x) => ({ fiscal_year: x.fy, value: x.den > 0 ? x.num / x.den : 0 })),
   },
+  // Per-source PI metrics. Each source has different roster semantics:
+  // NSF publishes only the lead PI per award; NIH publishes the full PI bridge
+  // (lead + co-PIs). Per-PI ratios use scope-matched dollar amounts (only $
+  // from awards/projects where PI attribution exists) so the ratio is
+  // internally consistent.
+  {
+    key: 'nsfLeadPiCount',
+    label: '# of NSF lead PIs',
+    description:
+      'Distinct NSF lead principal investigators per fiscal year. NSF only ' +
+      'records the lead PI on each award (no public co-PI bridge); co-PIs are ' +
+      'reflected in the n_pi count but not as individual rosters. FY2005 masked.',
+    format: 'count',
+    source: 'agg_uni_pi_universe.nsf_lead_pi_count',
+    sources: [{ id: 'nsf_awards', subset: 'COUNT(DISTINCT pi_sk) lead PI per award × FY' }],
+    maskFy05: true,
+    series: (p) =>
+      p.piMetrics.map((r) => ({
+        fiscal_year: r.fiscal_year,
+        value: PI_MASK_FYS.has(r.fiscal_year) ? null : Number(r.nsf_lead_pi_count) || 0,
+      })),
+  },
+  {
+    key: 'nihPiCount',
+    label: '# of NIH PIs',
+    description:
+      'Distinct NIH principal investigators per fiscal year — includes lead ' +
+      'and all named co-PIs via the NIH PI bridge file. FY2005 masked.',
+    format: 'count',
+    source: 'agg_uni_pi_universe.nih_pi_count',
+    sources: [{ id: 'nih_exporter', subset: 'COUNT(DISTINCT pi_sk) from PI bridge × FY' }],
+    maskFy05: true,
+    series: (p) =>
+      p.piMetrics.map((r) => ({
+        fiscal_year: r.fiscal_year,
+        value: PI_MASK_FYS.has(r.fiscal_year) ? null : Number(r.nih_pi_count) || 0,
+      })),
+  },
+  {
+    key: 'nsfAmount',
+    label: 'NSF federal $',
+    description:
+      'Per-FY NSF obligations (fund_oblg_amt_nominal). Multi-year awards are ' +
+      'split across each year they obligate funds. Includes obligations from ' +
+      'awards without a recorded lead PI (~58% of NSF $ archive-wide).',
+    format: 'dollars',
+    source: 'agg_uni_pi_universe.federal_amount_nsf',
+    sources: [{ id: 'nsf_awards', subset: 'SUM(fund_oblg_amt_nominal) per institution × FY' }],
+    series: (p) =>
+      p.piMetrics.map((r) => ({
+        fiscal_year: r.fiscal_year,
+        value: Number(r.federal_amount_nsf) || 0,
+      })),
+  },
+  {
+    key: 'nihAmount',
+    label: 'NIH federal $',
+    description:
+      'Per-FY NIH project total_cost_nominal. Includes projects without PI ' +
+      'bridge entries (~10% of NIH $). For per-PI ratios we exclude those.',
+    format: 'dollars',
+    source: 'agg_uni_pi_universe.federal_amount_nih',
+    sources: [{ id: 'nih_exporter', subset: 'SUM(total_cost_nominal) per institution × FY' }],
+    series: (p) =>
+      p.piMetrics.map((r) => ({
+        fiscal_year: r.fiscal_year,
+        value: Number(r.federal_amount_nih) || 0,
+      })),
+  },
+  {
+    key: 'nsfAmountPerLeadPi',
+    label: 'NSF $ per lead PI',
+    description:
+      'NSF $ from PI-attributed awards ÷ distinct NSF lead PIs. Scope-matched: ' +
+      'numerator excludes obligations from awards without a recorded lead PI, ' +
+      'so it reflects only PI-creditable funding. FY2005 masked.',
+    format: 'dollars',
+    source: 'agg_uni_pi_universe.nsf_amount_per_lead_pi',
+    sources: [
+      {
+        id: 'nsf_awards',
+        subset: 'SUM(fund_oblg_amt_nominal WHERE pi_sk IS NOT NULL) ÷ COUNT(DISTINCT pi_sk)',
+      },
+    ],
+    maskFy05: true,
+    series: (p) =>
+      p.piMetrics.map((r) => ({
+        fiscal_year: r.fiscal_year,
+        value: PI_MASK_FYS.has(r.fiscal_year) ? null : Number(r.nsf_amount_per_lead_pi) || 0,
+      })),
+  },
+  {
+    key: 'nihAmountPerPi',
+    label: 'NIH $ per PI',
+    description: 'NIH $ from projects with PI bridge entries ÷ distinct NIH PIs. ' + 'Scope-matched. FY2005 masked.',
+    format: 'dollars',
+    source: 'agg_uni_pi_universe.nih_amount_per_pi',
+    sources: [
+      {
+        id: 'nih_exporter',
+        subset: 'SUM(total_cost_nominal WHERE bridge row exists) ÷ COUNT(DISTINCT pi_sk)',
+      },
+    ],
+    maskFy05: true,
+    series: (p) =>
+      p.piMetrics.map((r) => ({
+        fiscal_year: r.fiscal_year,
+        value: PI_MASK_FYS.has(r.fiscal_year) ? null : Number(r.nih_amount_per_pi) || 0,
+      })),
+  },
   {
     key: 'piCount',
-    label: '# of federal PIs',
+    label: '# of federal PIs (combined)',
     description:
-      'Distinct federally-funded PIs (NSF lead + NIH lead+co-PIs) per fiscal year. ' +
-      'FY2005 masked due to dim_institution entity-resolution discontinuity. ' +
-      'NSF contributes lead PI only (no public co-PI bridge) so this is a floor for NSF.',
+      'Distinct PIs counted across NSF (lead only) ∪ NIH (lead + co-PIs), ' +
+      'deduplicated by pi_sk. Methodology is mixed across sources — see the ' +
+      'per-source NSF and NIH PI counts above for apples-to-apples comparison.',
     format: 'count',
     source: 'agg_uni_pi_universe.distinct_pi_count',
     sources: [
@@ -318,8 +428,11 @@ const METRICS: MetricDef[] = [
   },
   {
     key: 'amountPerPi',
-    label: 'Federal $ per PI',
-    description: 'Total NSF + NIH dollars divided by distinct PI count. FY2005 masked.',
+    label: 'Federal $ per PI (combined)',
+    description:
+      'Combined NSF + NIH $ ÷ combined distinct PI count. Mixed methodology: ' +
+      'NSF contributes lead PI only, NIH contributes all named PIs. Use per-' +
+      'source ratios above for cleaner comparison. FY2005 masked.',
     format: 'dollars',
     source: 'agg_uni_pi_universe.amount_per_pi',
     sources: [

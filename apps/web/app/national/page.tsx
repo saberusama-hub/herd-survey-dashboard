@@ -118,7 +118,9 @@ const CONC_COLOR: Record<ConcBucket, string> = {
 const TREND_METRICS = [
   { key: 'total_rd_nominal', label: 'Total R&D', kind: 'dollars' as const },
   { key: 'federal_share', label: 'Federal share', kind: 'percent' as const },
-  { key: 'pi_count', label: '# PIs', kind: 'count' as const },
+  { key: 'nsf_lead_pi_count', label: '# NSF lead PIs', kind: 'count' as const },
+  { key: 'nih_pi_count', label: '# NIH PIs (incl. co-PIs)', kind: 'count' as const },
+  { key: 'pi_count', label: '# PIs (combined)', kind: 'count' as const },
 ] as const;
 type TrendMetricKey = (typeof TREND_METRICS)[number]['key'];
 
@@ -377,6 +379,8 @@ export default function NationalPage() {
         // federal_share comes back as a 0..1 fraction; render as % (0..100).
         federal_share: (Number(r.federal_share) || 0) * 100,
         pi_count: Number(r.pi_count) || 0,
+        nsf_lead_pi_count: Number(r.nsf_lead_pi_count) || 0,
+        nih_pi_count: Number(r.nih_pi_count) || 0,
       })),
     [trends],
   );

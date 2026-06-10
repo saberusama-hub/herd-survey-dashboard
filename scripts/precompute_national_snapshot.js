@@ -92,7 +92,10 @@ async function main() {
       GROUP BY fiscal_year
     ),
     pi AS (
-      SELECT fiscal_year, SUM(distinct_pi_count)::DOUBLE AS pi_count
+      SELECT fiscal_year,
+             SUM(distinct_pi_count)::DOUBLE AS pi_count,
+             SUM(nsf_lead_pi_count)::DOUBLE AS nsf_lead_pi_count,
+             SUM(nih_pi_count)::DOUBLE AS nih_pi_count
       FROM agg_uni_pi_universe
       GROUP BY fiscal_year
     )
@@ -100,7 +103,9 @@ async function main() {
       t.fiscal_year,
       t.total_rd_nominal,
       f.federal_share,
-      COALESCE(pi.pi_count, 0) AS pi_count
+      COALESCE(pi.pi_count, 0) AS pi_count,
+      COALESCE(pi.nsf_lead_pi_count, 0) AS nsf_lead_pi_count,
+      COALESCE(pi.nih_pi_count, 0) AS nih_pi_count
     FROM tot t
     LEFT JOIN fed f USING (fiscal_year)
     LEFT JOIN pi USING (fiscal_year)

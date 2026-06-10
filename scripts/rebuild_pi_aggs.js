@@ -240,7 +240,15 @@ async function main() {
   `);
   await db.exec(`CREATE OR REPLACE VIEW sk_crosswalk AS SELECT * FROM crosswalk_new`);
 
-  console.log('Step 2: agg_uni_pi_universe (obligation-FY)');
+  console.log('Step 2: agg_uni_pi_universe (per-source split, obligation-FY)');
+  // Per-source PI semantics:
+  //   NSF nsf_lead_pi_count = COUNT(DISTINCT pi_sk) — NSF stores only the lead PI.
+  //   NIH nih_pi_count      = COUNT(DISTINCT pi_sk) — NIH bridge gives every named PI.
+  //   distinct_pi_count     = union of NSF leads + NIH all-PIs, dedup'd on pi_sk
+  //                           (pi_sk is shared across sources; ~2k overlap).
+  //   nsf_est_researchers_n_pi = SUM(n_pi) — diagnostic estimate of total NSF
+  //                              researcher headcount incl. co-PIs. Not deduped
+  //                              across awards; intended for tooltip only.
   await db.exec(`
     COPY (
       WITH nsf_pis AS (
@@ -258,45 +266,100 @@ async function main() {
         WHERE b.pi_sk IS NOT NULL AND p.institution_sk IS NOT NULL
           AND p.fy BETWEEN 2005 AND 2024
       ),
+      nsf_pi_counts AS (
+        SELECT institution_sk, fiscal_year, COUNT(DISTINCT pi_sk) AS nsf_lead_pi_count
+        FROM nsf_pis GROUP BY 1, 2
+      ),
+      nih_pi_counts AS (
+        SELECT institution_sk, fiscal_year, COUNT(DISTINCT pi_sk) AS nih_pi_count
+        FROM nih_pis GROUP BY 1, 2
+      ),
       all_pis AS (
         SELECT institution_sk, fiscal_year, pi_sk FROM nsf_pis
         UNION SELECT institution_sk, fiscal_year, pi_sk FROM nih_pis
       ),
-      pi_counts AS (
+      combined_pi_counts AS (
         SELECT institution_sk, fiscal_year, COUNT(DISTINCT pi_sk) AS distinct_pi_count
         FROM all_pis GROUP BY 1, 2
       ),
       nsf_amounts AS (
         SELECT COALESCE(cw.herd_sk, n.institution_sk) AS institution_sk,
-               n.fiscal_year, SUM(n.fy_amount) AS amount_nsf
+               n.fiscal_year,
+               SUM(n.fy_amount) AS amount_nsf,
+               -- Scope-matched: only $ from awards where lead PI is recorded.
+               -- Used in nsf_amount_per_lead_pi so denominator (PI count) and
+               -- numerator ($) come from the same set of awards. ~58% of NSF
+               -- obligations are not pi_sk-attributable; using total-NSF here
+               -- would inflate per-PI by ~2x.
+               SUM(CASE WHEN n.pi_sk IS NOT NULL THEN n.fy_amount ELSE 0 END)
+                 AS amount_nsf_with_pi,
+               SUM(COALESCE(NULLIF(TRY_CAST(n.n_pi AS INTEGER), 0), 1))
+                 AS nsf_est_researchers_n_pi,
+               AVG(COALESCE(NULLIF(TRY_CAST(n.n_pi AS INTEGER), 0), 1))
+                 AS nsf_avg_n_pi_per_award
         FROM nsf_fy n LEFT JOIN sk_crosswalk cw ON cw.fed_sk = n.institution_sk
         WHERE n.institution_sk IS NOT NULL AND n.fy_amount IS NOT NULL
         GROUP BY 1, 2
       ),
       nih_amounts AS (
         SELECT COALESCE(cw.herd_sk, p.institution_sk) AS institution_sk,
-               p.fy AS fiscal_year, SUM(p.total_cost_nominal) AS amount_nih
+               p.fy AS fiscal_year,
+               SUM(p.total_cost_nominal) AS amount_nih,
+               -- Scope-matched NIH: $ only from projects with at least one
+               -- bridge PI entry. ~10% of NIH $ lacks a bridge row.
+               SUM(CASE WHEN EXISTS (
+                 SELECT 1 FROM nih_pi_bridge b
+                 WHERE b.application_id = p.application_id AND b.pi_sk IS NOT NULL
+               ) THEN p.total_cost_nominal ELSE 0 END) AS amount_nih_with_pi
         FROM nih_raw p LEFT JOIN sk_crosswalk cw ON cw.fed_sk = p.institution_sk
         WHERE p.institution_sk IS NOT NULL AND p.fy BETWEEN 2005 AND 2024
           AND p.total_cost_nominal IS NOT NULL
         GROUP BY 1, 2
+      ),
+      universe AS (
+        SELECT institution_sk, fiscal_year FROM combined_pi_counts
+        UNION
+        SELECT institution_sk, fiscal_year FROM nsf_amounts
+        UNION
+        SELECT institution_sk, fiscal_year FROM nih_amounts
       )
       SELECT
-        pc.institution_sk, pc.fiscal_year, pc.distinct_pi_count,
+        u.institution_sk,
+        u.fiscal_year,
+        -- combined (kept for back-compat, de-emphasized in UI)
+        COALESCE(cpc.distinct_pi_count, 0) AS distinct_pi_count,
         COALESCE(na.amount_nsf, 0) AS federal_amount_nsf,
         COALESCE(nh.amount_nih, 0) AS federal_amount_nih,
         COALESCE(na.amount_nsf, 0) + COALESCE(nh.amount_nih, 0) AS federal_amount_total,
         (COALESCE(na.amount_nsf, 0) + COALESCE(nh.amount_nih, 0))
-          / NULLIF(pc.distinct_pi_count, 0) AS amount_per_pi,
+          / NULLIF(cpc.distinct_pi_count, 0) AS amount_per_pi,
+        -- new per-source columns. Per-PI ratios use scope-matched amounts
+        -- (only $ from awards with PI attribution) to avoid inflation.
+        COALESCE(npc.nsf_lead_pi_count, 0) AS nsf_lead_pi_count,
+        COALESCE(na.amount_nsf_with_pi, 0) AS federal_amount_nsf_attributed,
+        COALESCE(na.amount_nsf_with_pi, 0)
+          / NULLIF(npc.nsf_lead_pi_count, 0) AS nsf_amount_per_lead_pi,
+        COALESCE(nihc.nih_pi_count, 0) AS nih_pi_count,
+        COALESCE(nh.amount_nih_with_pi, 0) AS federal_amount_nih_attributed,
+        COALESCE(nh.amount_nih_with_pi, 0)
+          / NULLIF(nihc.nih_pi_count, 0) AS nih_amount_per_pi,
+        -- diagnostic (tooltip-only)
+        COALESCE(na.nsf_est_researchers_n_pi, 0) AS nsf_est_researchers_n_pi,
+        na.nsf_avg_n_pi_per_award,
         CASE
-          WHEN pc.fiscal_year = 2005 THEN 'fy05_entity_resolution_break'
-          WHEN pc.fiscal_year = 2016 THEN 'fy16_minor_break'
+          WHEN u.fiscal_year = 2005 THEN 'fy05_entity_resolution_break'
+          WHEN u.fiscal_year = 2016 THEN 'fy16_minor_break'
           ELSE 'clean'
         END AS data_quality
-      FROM pi_counts pc
+      FROM universe u
+      LEFT JOIN combined_pi_counts cpc USING (institution_sk, fiscal_year)
+      LEFT JOIN nsf_pi_counts npc USING (institution_sk, fiscal_year)
+      LEFT JOIN nih_pi_counts nihc USING (institution_sk, fiscal_year)
       LEFT JOIN nsf_amounts na USING (institution_sk, fiscal_year)
       LEFT JOIN nih_amounts nh USING (institution_sk, fiscal_year)
-      WHERE pc.distinct_pi_count > 0
+      WHERE COALESCE(cpc.distinct_pi_count, 0) > 0
+         OR COALESCE(na.amount_nsf, 0) > 0
+         OR COALESCE(nh.amount_nih, 0) > 0
     ) TO '${DASH}/agg_uni_pi_universe.parquet' (FORMAT 'parquet', COMPRESSION 'zstd')
   `);
 

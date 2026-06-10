@@ -603,11 +603,27 @@ export interface UniversityProfile extends Row {
   federalFunds: Array<{ fiscal_year: number; agency_bucket: string; amount_nominal: number; taxonomy_version: string }>;
   piMetrics: Array<{
     fiscal_year: number;
+    // Combined (back-compat, de-emphasized; methodology is mixed: NSF lead + NIH all-PIs)
     distinct_pi_count: number;
     federal_amount_nsf: number;
     federal_amount_nih: number;
     federal_amount_total: number;
     amount_per_pi: number;
+    // Per-source split. Each pair (count, $, $/count) is internally
+    // scope-matched: the per-PI ratio uses only $ from awards/projects
+    // where PI attribution exists (~58% of NSF $ and ~10% of NIH $ have
+    // no PI listed in the raw federal sources).
+    nsf_lead_pi_count: number;
+    federal_amount_nsf_attributed: number;
+    nsf_amount_per_lead_pi: number | null;
+    nih_pi_count: number;
+    federal_amount_nih_attributed: number;
+    nih_amount_per_pi: number | null;
+    // Diagnostic only (tooltip footnote): sum of NSF n_pi across awards.
+    // Estimates total researcher headcount including co-PIs, but is NOT
+    // deduped — a co-PI on 5 awards counts 5×. Display as "est." only.
+    nsf_est_researchers_n_pi: number;
+    nsf_avg_n_pi_per_award: number | null;
   }>;
   piDistribution: Array<{
     fiscal_year: number;
@@ -677,10 +693,13 @@ export async function getUniversityProfile(sk: string): Promise<UniversityProfil
     query<UniversityProfile['federalFunds'][number]>(
       `SELECT fiscal_year, agency_bucket, amount_nominal, taxonomy_version FROM agg_uni_federal_funds WHERE institution_sk = '${safe}' ORDER BY fiscal_year, agency_bucket`,
     ),
-    // Phase R: full federal-PI universe (was: top-1K-grants floor).
+    // Phase R: full federal-PI universe + per-source split (FY2026 methodology).
     query<UniversityProfile['piMetrics'][number]>(
       `SELECT fiscal_year, distinct_pi_count, federal_amount_nsf, federal_amount_nih,
-              federal_amount_total, amount_per_pi
+              federal_amount_total, amount_per_pi,
+              nsf_lead_pi_count, federal_amount_nsf_attributed, nsf_amount_per_lead_pi,
+              nih_pi_count, federal_amount_nih_attributed, nih_amount_per_pi,
+              nsf_est_researchers_n_pi, nsf_avg_n_pi_per_award
        FROM agg_uni_pi_universe WHERE institution_sk = '${safe}' ORDER BY fiscal_year`,
     ),
     query<UniversityProfile['piDistribution'][number]>(
@@ -910,7 +929,12 @@ export interface NationalTrendRow extends Row {
   fiscal_year: number;
   total_rd_nominal: number;
   federal_share: number;
+  /** Distinct PI count (NSF lead ∪ NIH all, deduped by pi_sk). */
   pi_count: number;
+  /** NSF lead PI count only — apples-to-apples NSF view. */
+  nsf_lead_pi_count: number;
+  /** NIH PI count only — apples-to-apples NIH view (includes co-PIs). */
+  nih_pi_count: number;
 }
 
 export async function getNationalTrends(): Promise<NationalTrendRow[]> {
@@ -931,7 +955,10 @@ export async function getNationalTrends(): Promise<NationalTrendRow[]> {
       GROUP BY fiscal_year
     ),
     pis AS (
-      SELECT fiscal_year, SUM(distinct_pi_count) AS pi_count
+      SELECT fiscal_year,
+             SUM(distinct_pi_count) AS pi_count,
+             SUM(nsf_lead_pi_count) AS nsf_lead_pi_count,
+             SUM(nih_pi_count) AS nih_pi_count
       FROM agg_uni_pi_universe
       WHERE distinct_pi_count IS NOT NULL
       GROUP BY fiscal_year
@@ -940,7 +967,9 @@ export async function getNationalTrends(): Promise<NationalTrendRow[]> {
       t.fiscal_year,
       t.total_rd_nominal,
       s.federal_share,
-      COALESCE(p.pi_count, 0) AS pi_count
+      COALESCE(p.pi_count, 0) AS pi_count,
+      COALESCE(p.nsf_lead_pi_count, 0) AS nsf_lead_pi_count,
+      COALESCE(p.nih_pi_count, 0) AS nih_pi_count
     FROM totals t
     LEFT JOIN sources s USING (fiscal_year)
     LEFT JOIN pis p USING (fiscal_year)
@@ -972,8 +1001,20 @@ export interface UniversityIndexRow extends Row {
   cagr_5yr_window: number | null;
   /** Federal share of total R&D in the selected FY (fraction 0–1). */
   federal_share: number | null;
-  /** Distinct PI count in the selected FY (federal grants). */
+  /** Distinct PI count in the selected FY (federal grants — NSF lead + NIH all, deduped). */
   pi_count: number;
+  /** NSF lead PI count (NSF only records the lead — co-PIs are NOT included). */
+  nsf_lead_pi_count: number;
+  /** NIH PI count (NIH PI bridge — includes lead + co-PIs). */
+  nih_pi_count: number;
+  /** Total NSF $ per-FY obligation (full, including awards without PI attribution). */
+  nsf_amount: number;
+  /** Total NIH $ per-FY (full project total_cost, including projects without PI bridge). */
+  nih_amount: number;
+  /** NSF $/lead-PI — scope-matched: only $ from awards with pi_sk in numerator. */
+  nsf_amount_per_lead_pi: number | null;
+  /** NIH $/PI — scope-matched: only $ from projects with PI bridge entries in numerator. */
+  nih_amount_per_pi: number | null;
   /** STEM share of total R&D in the selected FY (fraction 0–1). */
   stem_share: number | null;
 }
@@ -1014,7 +1055,14 @@ export async function getUniversityIndex(year = 2024): Promise<UniversityIndexRo
       GROUP BY institution_sk
     ),
     pi AS (
-      SELECT institution_sk, distinct_pi_count AS pi_count
+      SELECT institution_sk,
+             distinct_pi_count AS pi_count,
+             nsf_lead_pi_count,
+             nih_pi_count,
+             federal_amount_nsf AS nsf_amount,
+             federal_amount_nih AS nih_amount,
+             nsf_amount_per_lead_pi,
+             nih_amount_per_pi
       FROM agg_uni_pi_universe
       WHERE fiscal_year = ${year}
     ),
@@ -1043,6 +1091,12 @@ export async function getUniversityIndex(year = 2024): Promise<UniversityIndexRo
       END AS cagr_5yr,
       fed.federal_share,
       COALESCE(pi.pi_count, 0) AS pi_count,
+      COALESCE(pi.nsf_lead_pi_count, 0) AS nsf_lead_pi_count,
+      COALESCE(pi.nih_pi_count, 0) AS nih_pi_count,
+      COALESCE(pi.nsf_amount, 0) AS nsf_amount,
+      COALESCE(pi.nih_amount, 0) AS nih_amount,
+      pi.nsf_amount_per_lead_pi,
+      pi.nih_amount_per_pi,
       stem.stem_share
     FROM sel
     JOIN dim_institution i USING (institution_sk)

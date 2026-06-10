@@ -133,8 +133,12 @@ async function main() {
     toJsonSafe,
   );
   bucket(
-    await db.all(`SELECT institution_sk, fiscal_year, distinct_pi_count, federal_amount_nsf,
-                         federal_amount_nih, federal_amount_total, amount_per_pi
+    await db.all(`SELECT institution_sk, fiscal_year,
+                         distinct_pi_count, federal_amount_nsf,
+                         federal_amount_nih, federal_amount_total, amount_per_pi,
+                         nsf_lead_pi_count, federal_amount_nsf_attributed, nsf_amount_per_lead_pi,
+                         nih_pi_count, federal_amount_nih_attributed, nih_amount_per_pi,
+                         nsf_est_researchers_n_pi, nsf_avg_n_pi_per_award
                   FROM agg_uni_pi_universe ORDER BY institution_sk, fiscal_year`),
     'piMetrics',
     toJsonSafe,

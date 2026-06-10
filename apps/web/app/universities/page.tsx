@@ -17,6 +17,12 @@ interface UniversitiesSnapshot {
   total_rd: Array<Array<number | null>>;
   federal_share: Array<Array<number | null>>;
   pi_count: Array<Array<number | null>>;
+  nsf_lead_pi_count: Array<Array<number | null>>;
+  nih_pi_count: Array<Array<number | null>>;
+  nsf_amount: Array<Array<number | null>>;
+  nih_amount: Array<Array<number | null>>;
+  nsf_amount_per_lead_pi: Array<Array<number | null>>;
+  nih_amount_per_pi: Array<Array<number | null>>;
   stem_share: Array<Array<number | null>>;
 }
 
@@ -121,6 +127,12 @@ export default function UniversitiesPage() {
           cagr_long_run_window: cagrLongRunWindow,
           federal_share: snapshot.federal_share[i][yi],
           pi_count: snapshot.pi_count[i][yi] ?? 0,
+          nsf_lead_pi_count: snapshot.nsf_lead_pi_count?.[i]?.[yi] ?? 0,
+          nih_pi_count: snapshot.nih_pi_count?.[i]?.[yi] ?? 0,
+          nsf_amount: snapshot.nsf_amount?.[i]?.[yi] ?? 0,
+          nih_amount: snapshot.nih_amount?.[i]?.[yi] ?? 0,
+          nsf_amount_per_lead_pi: snapshot.nsf_amount_per_lead_pi?.[i]?.[yi] ?? null,
+          nih_amount_per_pi: snapshot.nih_amount_per_pi?.[i]?.[yi] ?? null,
           stem_share: snapshot.stem_share[i][yi],
         };
       })

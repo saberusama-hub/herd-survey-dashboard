@@ -59,9 +59,12 @@ export function Section6PIs({ profile }: Props) {
       return null;
     }
     const latestPi = piMetrics[piMetrics.length - 1];
+    // Two-series line: NSF lead PIs + NIH PIs (with co-PIs) per FY.
     const lineData = piMetrics.map((r) => ({
       fiscal_year: r.fiscal_year,
-      pi_count: Number(r.distinct_pi_count) || 0,
+      nsf_pi_count: Number(r.nsf_lead_pi_count) || 0,
+      nih_pi_count: Number(r.nih_pi_count) || 0,
+      combined_pi_count: Number(r.distinct_pi_count) || 0,
     }));
     const distLatestFy = latestPi.fiscal_year;
     const distRows = piDistribution
@@ -84,53 +87,89 @@ export function Section6PIs({ profile }: Props) {
     }).filter((r) => r.amount > 0);
     const teamTotal = teamBars.reduce((s, r) => s + r.amount, 0);
     const single = teamBars.find((r) => r.bucket === '1');
-    const multi = teamBars.filter((r) => r.bucket !== '1').reduce((s, r) => s + r.amount, 0);
-    const multiPiShare = teamTotal > 0 ? multi / teamTotal : null;
 
+    // Per-source PI tiles. Per-PI ratios are scope-matched at the data layer
+    // (only $ from awards with PI attribution counted in the numerator).
+    const nsfLead = Number(latestPi.nsf_lead_pi_count) || 0;
+    const nsfEst = Number(latestPi.nsf_est_researchers_n_pi) || 0;
+    const nsfAvgNpi = Number(latestPi.nsf_avg_n_pi_per_award) || null;
     const tiles: KpiTile[] = [
       {
-        label: `NSF + NIH PIs · FY${latestPi.fiscal_year}`,
-        value: formatCount(Number(latestPi.distinct_pi_count) || 0),
-        hint: <span className="text-text-tertiary">unique principal investigators with any NSF or NIH grant</span>,
-        sources: [
-          { id: 'nsf_awards', subset: 'Lead PI per award for this institution × FY' },
-          { id: 'nih_exporter', subset: 'PI bridge file (project × PI) for this institution × FY' },
-        ],
+        label: `NSF lead PIs · FY${latestPi.fiscal_year}`,
+        value: formatCount(nsfLead),
+        hint: (
+          <span className="text-text-tertiary">
+            distinct lead PIs on NSF awards.{' '}
+            {nsfEst > 0 && nsfAvgNpi !== null ? (
+              <>
+                Est. <strong>{formatCount(Math.round(nsfEst))}</strong> researchers including co-PIs (avg{' '}
+                {nsfAvgNpi.toFixed(2)} PIs/award, not deduped across awards).
+              </>
+            ) : null}
+          </span>
+        ),
+        sources: [{ id: 'nsf_awards', subset: 'COUNT(DISTINCT pi_sk) lead PI per award for this institution × FY' }],
       },
       {
-        label: `$ per NSF+NIH PI · FY${latestPi.fiscal_year}`,
-        value: formatDollars(Number(latestPi.amount_per_pi) || 0, {
-          decimals: 2,
-        }),
-        hint: <span className="text-text-tertiary">total NSF + NIH funding ÷ distinct NSF + NIH PI count</span>,
-        sources: [
-          { id: 'nsf_awards', subset: 'Total NSF $ for this institution × FY ÷ distinct PI count' },
-          { id: 'nih_exporter', subset: 'Total NIH $ for this institution × FY ÷ distinct PI count' },
-        ],
+        label: `NSF $ per lead PI · FY${latestPi.fiscal_year}`,
+        value: formatDollars(Number(latestPi.nsf_amount_per_lead_pi) || 0, { decimals: 2 }),
+        hint: (
+          <span className="text-text-tertiary">
+            scope-matched: NSF $ from awards with a recorded lead PI ÷ lead PI count.
+          </span>
+        ),
+        sources: [{ id: 'nsf_awards', subset: 'SUM(fy_amount WHERE pi_sk IS NOT NULL) ÷ COUNT(DISTINCT pi_sk)' }],
       },
       {
-        label: `Multi-PI team share · FY${effectiveTeamFy}`,
-        value: formatPercent(multiPiShare),
-        hint: <span className="text-text-tertiary">share of NSF + NIH $ to grants with 2+ PIs</span>,
+        label: `NIH PIs · FY${latestPi.fiscal_year}`,
+        value: formatCount(Number(latestPi.nih_pi_count) || 0),
+        hint: (
+          <span className="text-text-tertiary">
+            lead + co-PIs via the NIH PI bridge — every named investigator on every project.
+          </span>
+        ),
+        sources: [{ id: 'nih_exporter', subset: 'COUNT(DISTINCT pi_sk) from PI bridge for this institution × FY' }],
+      },
+      {
+        label: `NIH $ per PI · FY${latestPi.fiscal_year}`,
+        value: formatDollars(Number(latestPi.nih_amount_per_pi) || 0, { decimals: 2 }),
+        hint: (
+          <span className="text-text-tertiary">
+            scope-matched: NIH $ from projects with PI bridge entries ÷ NIH PI count.
+          </span>
+        ),
         sources: [
-          { id: 'nsf_awards', subset: 'n_pi field per award; bucketed' },
-          { id: 'nih_exporter', subset: 'PI bridge count per project; bucketed' },
+          {
+            id: 'nih_exporter',
+            subset: 'SUM(total_cost_nominal WHERE bridge row exists) ÷ COUNT(DISTINCT pi_sk)',
+          },
         ],
       },
     ];
 
-    // Peak-PI heuristic footnote.
+    // Peak-PI heuristic footnote — uses combined union count.
     let peakFy = lineData[0].fiscal_year;
-    let peakCount = lineData[0].pi_count;
+    let peakCount = lineData[0].combined_pi_count;
     for (const r of lineData) {
-      if (r.pi_count > peakCount) {
-        peakCount = r.pi_count;
+      if (r.combined_pi_count > peakCount) {
+        peakCount = r.combined_pi_count;
         peakFy = r.fiscal_year;
       }
     }
     const peakPiNote =
       peakCount > 0
-        ? `PI headcount peaked at ${formatCount(peakCount)} in FY${peakFy}. Counts include co-PIs via the NIH PI bridge plus NSF lead PIs.`
+        ? `Combined PI headcount peaked at ${formatCount(peakCount)} in FY${peakFy}. Combined = NSF lead PIs ∪ NIH PIs, deduplicated by pi_sk (mixed methodology — see per-source counts above).`
+        : null;
+
+    // Combined footer — back-compat methodology, de-emphasized.
+    const combinedPi = Number(latestPi.distinct_pi_count) || 0;
+    const combinedPerPi = Number(latestPi.amount_per_pi) || 0;
+    const combinedNote =
+      combinedPi > 0
+        ? `Combined view (mixed methodology): ${formatCount(combinedPi)} distinct PIs across NSF lead + NIH all-PIs (deduped), ${formatDollars(
+            combinedPerPi,
+            { decimals: 2 },
+          )} per PI.`
         : null;
 
     return {
@@ -142,6 +181,7 @@ export function Section6PIs({ profile }: Props) {
       effectiveTeamFy,
       teamBars,
       peakPiNote,
+      combinedNote,
       single,
     };
   }, [piMetrics, piDistribution, teamSize, teamFy]);
@@ -159,7 +199,7 @@ export function Section6PIs({ profile }: Props) {
     );
   }
 
-  const { tiles, lineData, distLatestFy, distRows, effectiveTeamFy, teamBars, peakPiNote, single } = view;
+  const { tiles, lineData, distLatestFy, distRows, effectiveTeamFy, teamBars, peakPiNote, combinedNote, single } = view;
 
   return (
     <section aria-labelledby="profile-section-6">
@@ -171,39 +211,45 @@ export function Section6PIs({ profile }: Props) {
       />
 
       <p className="mb-4 text-[11px] italic leading-relaxed text-text-tertiary">
-        Data note: principal-investigator counts on this page cover NSF Awards (lead PI) and NIH RePORTER (lead +
-        co-PIs) only. Other federal agencies (DOD, DOE, USDA, NASA, and the rest of "Federal Funds") report aggregate
-        dollar totals but do not publish PI rosters, so they cannot be included in any per-PI metric.
+        Data note: NSF publishes only the lead PI on each award (no public co-PI roster); NIH publishes the full PI
+        bridge (lead + co-PIs). To keep per-PI ratios honest, each source has its own apples-to-apples count and
+        dollars-per-PI tile below. Other federal agencies (DOD, DOE, USDA, NASA, and the rest of "Federal Funds") report
+        aggregate dollar totals but do not publish PI rosters, so they cannot be included in any per-PI metric.
       </p>
 
-      <KpiStrip tiles={tiles} cols={3} />
+      <KpiStrip tiles={tiles} cols={2} />
+
+      {combinedNote && <p className="mt-3 text-[11px] italic text-text-tertiary">{combinedNote}</p>}
 
       <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
         <ChartFrame
           eyebrow="PI count trajectory"
-          title="Distinct NSF + NIH PIs per fiscal year"
-          dek="Every unique researcher who held an NSF or NIH grant in the year — lead PIs plus co-PIs from multi-PI NIH projects."
+          title="Distinct NSF and NIH PIs per fiscal year"
+          dek="NSF lead PIs and NIH PIs (lead + co-PIs) plotted separately so methodology differences stay visible."
           sources={[
-            { id: 'nsf_awards', subset: 'Lead PI per award for this institution; distinct PIs counted per FY' },
+            { id: 'nsf_awards', subset: 'Lead PI per award for this institution; distinct lead PIs counted per FY' },
             {
               id: 'nih_exporter',
-              subset: 'PI bridge file (one row per project × PI) for this institution; distinct PIs counted per FY',
+              subset: 'PI bridge file (one row per project × PI); distinct PIs counted per FY',
             },
           ]}
           methodology={{
-            what: 'How many individual researchers at this university held a federal NSF or NIH grant in each year.',
-            how: 'For every fiscal year we count distinct PIs that appear in the raw NSF Awards file or the NIH RePORTER PI bridge. The two universes are unioned and deduplicated by name + institution.',
+            what: 'How many individual researchers at this university held a federal NSF or NIH grant in each year, broken out by source.',
+            how: 'NSF contributes the lead PI on each award (the only PI ID NSF publishes). NIH contributes every named PI via the PI bridge file. Both are counted as distinct pi_sk per fiscal year.',
             caveats:
-              'FY2005 is masked — upstream entity resolution lumped subunits (e.g., Harvard Medical School) into the parent in FY2005 only, affecting 81 institutions. NSF counts only the lead PI per award (the agency does not ship the full co-PI roster), so true team headcount is slightly higher than shown.',
+              'FY2005 is masked — upstream entity resolution lumped subunits (e.g., Harvard Medical School) into the parent in FY2005 only, affecting 81 institutions. NSF lead-only roster understates true researcher headcount — see the NSF tile above for an estimate including co-PIs.',
           }}
         >
           <LineChart
             data={lineData as unknown as Array<Record<string, unknown>>}
             xKey="fiscal_year"
-            series={[{ key: 'pi_count', label: 'PIs' }]}
+            series={[
+              { key: 'nsf_pi_count', label: 'NSF lead PIs' },
+              { key: 'nih_pi_count', label: 'NIH PIs (incl. co-PIs)' },
+            ]}
             yFormat={(v) => formatCount(v)}
             height={260}
-            showLegend={false}
+            showLegend
           />
         </ChartFrame>
 
