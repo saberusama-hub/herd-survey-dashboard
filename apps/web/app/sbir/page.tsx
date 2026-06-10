@@ -2,21 +2,13 @@
 
 import { useEffect, useId, useMemo, useState } from 'react';
 
-import { USStateMap } from '@/components/charts/USStateMap';
+import { SbirHubMap, type SbirHubPoint } from '@/components/charts/SbirHubMap';
 import { ChartFrame } from '@/components/editorial/ChartFrame';
 import { KpiStrip } from '@/components/editorial/KpiStrip';
 import { SortableTh, useTableSort } from '@/components/editorial/SortableTable';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { formatCount, formatPercent } from '@/lib/format';
-import type {
-  SbirAgency,
-  SbirDemographics,
-  SbirFirm,
-  SbirOverview,
-  SbirRiUni,
-  SbirState,
-  SbirYearStack,
-} from '@/lib/queries';
+import type { SbirAgency, SbirFirm, SbirOverview, SbirRiUni, SbirState, SbirYearStack } from '@/lib/queries';
 
 const FY_MIN = 2005;
 const FY_MAX = 2024;
@@ -35,14 +27,77 @@ interface SbirSnapshot {
   }>;
   ri_facts: Array<{ fiscal_year: number; ri_canonical_name: string; n_awards: number; amount_real_m: number }>;
   state_facts: Array<{ fiscal_year: number; firm_state: string; n_awards: number; amount_real_m: number }>;
-  demo_facts: Array<{
+  hub_facts: Array<{
     fiscal_year: number;
-    total_awards: number;
-    woman_owned: number;
-    hubzone: number;
-    disadvantaged: number;
+    firm_city: string;
+    firm_state: string;
+    awards: number;
+    amount_real_m: number;
+    top_topic: string | null;
+    top_topic_amount_m: number | null;
+    top_agency: string | null;
+    lat: number;
+    lon: number;
   }>;
 }
+
+// Map full state names to 2-letter abbreviations for the choropleth fill.
+// SBIR data uses full names ('California') while the USStateMap topojson
+// keys by abbreviation ('CA').
+const STATE_NAME_TO_ABBR: Record<string, string> = {
+  Alabama: 'AL',
+  Alaska: 'AK',
+  Arizona: 'AZ',
+  Arkansas: 'AR',
+  California: 'CA',
+  Colorado: 'CO',
+  Connecticut: 'CT',
+  Delaware: 'DE',
+  Florida: 'FL',
+  Georgia: 'GA',
+  Hawaii: 'HI',
+  Idaho: 'ID',
+  Illinois: 'IL',
+  Indiana: 'IN',
+  Iowa: 'IA',
+  Kansas: 'KS',
+  Kentucky: 'KY',
+  Louisiana: 'LA',
+  Maine: 'ME',
+  Maryland: 'MD',
+  Massachusetts: 'MA',
+  Michigan: 'MI',
+  Minnesota: 'MN',
+  Mississippi: 'MS',
+  Missouri: 'MO',
+  Montana: 'MT',
+  Nebraska: 'NE',
+  Nevada: 'NV',
+  'New Hampshire': 'NH',
+  'New Jersey': 'NJ',
+  'New Mexico': 'NM',
+  'New York': 'NY',
+  'North Carolina': 'NC',
+  'North Dakota': 'ND',
+  Ohio: 'OH',
+  Oklahoma: 'OK',
+  Oregon: 'OR',
+  Pennsylvania: 'PA',
+  'Rhode Island': 'RI',
+  'South Carolina': 'SC',
+  'South Dakota': 'SD',
+  Tennessee: 'TN',
+  Texas: 'TX',
+  Utah: 'UT',
+  Vermont: 'VT',
+  Virginia: 'VA',
+  Washington: 'WA',
+  'West Virginia': 'WV',
+  Wisconsin: 'WI',
+  Wyoming: 'WY',
+  'District of Columbia': 'DC',
+  'Puerto Rico': 'PR',
+};
 
 export default function SbirPage() {
   const [snapshot, setSnapshot] = useState<SbirSnapshot | null>(null);
@@ -138,31 +193,6 @@ export default function SbirPage() {
       .slice(0, 15);
   }, [snapshot, winLo, winHi]);
 
-  const demo = useMemo<SbirDemographics | null>(() => {
-    const f = snapshot?.demo_facts ?? [];
-    let total = 0;
-    let woman = 0;
-    let hub = 0;
-    let disadv = 0;
-    for (const r of f) {
-      if (r.fiscal_year < winLo || r.fiscal_year > winHi) continue;
-      total += r.total_awards;
-      woman += r.woman_owned;
-      hub += r.hubzone;
-      disadv += r.disadvantaged;
-    }
-    if (total === 0) return null;
-    return {
-      total_awards: total,
-      woman_owned: woman,
-      hubzone: hub,
-      disadvantaged: disadv,
-      woman_pct: (woman * 100) / total,
-      hubzone_pct: (hub * 100) / total,
-      disadvantaged_pct: (disadv * 100) / total,
-    };
-  }, [snapshot, winLo, winHi]);
-
   const states = useMemo<SbirState[]>(() => {
     const f = snapshot?.state_facts ?? [];
     return f
@@ -174,6 +204,35 @@ export default function SbirPage() {
       }))
       .sort((a, b) => b.amount_real_m - a.amount_real_m);
   }, [snapshot, stateYear]);
+
+  // City-level hubs for the selected FY. Each row carries lat/lon + top topic.
+  const hubs = useMemo<SbirHubPoint[]>(() => {
+    const f = snapshot?.hub_facts ?? [];
+    return f
+      .filter((r) => r.fiscal_year === stateYear)
+      .map((r) => ({
+        firm_city: r.firm_city,
+        firm_state: r.firm_state,
+        awards: r.awards,
+        amount_real_m: r.amount_real_m,
+        top_topic: r.top_topic,
+        top_agency: r.top_agency,
+        lat: r.lat,
+        lon: r.lon,
+      }))
+      .filter((r) => r.amount_real_m > 0)
+      .sort((a, b) => b.amount_real_m - a.amount_real_m);
+  }, [snapshot, stateYear]);
+
+  // State-level $ keyed by 2-letter abbr for the choropleth background.
+  const stateValuesByAbbr = useMemo<Record<string, number>>(() => {
+    const out: Record<string, number> = {};
+    for (const s of states) {
+      const abbr = STATE_NAME_TO_ABBR[s.firm_state];
+      if (abbr) out[abbr] = s.amount_real_m;
+    }
+    return out;
+  }, [states]);
 
   return (
     <div className="container-wide py-10 md:py-14 space-y-8">
@@ -330,31 +389,51 @@ export default function SbirPage() {
       {/* Single-FY selector for the geography panels */}
       <SingleYearPicker year={stateYear} onChange={setStateYear} />
 
-      {/* State geography */}
+      {/* Geography — state choropleth + city hub dots */}
       <ChartFrame
         eyebrow="Geography"
-        title={`SBIR / STTR award $ by firm state, FY${stateYear}`}
+        title={`SBIR / STTR hubs, FY${stateYear}`}
         sources={[
           {
             id: 'sbir_sttr',
-            subset: `Filter fiscal_year = ${stateYear}, group by firm_state, summed; choropleth fills by total real $`,
+            subset: `Filter fiscal_year = ${stateYear}; state choropleth from firm_state $, city dots from agg_sbir_hubs (top 200 firm_city by all-time real $) with top topic tagged via 30-topic regex on award_title.`,
           },
         ]}
         methodology={{
-          what: `Total FY${stateYear} award dollars by the firm headquarters state.`,
-          how: `sheet_06_sbir_sttr filtered to fiscal_year = ${stateYear}, grouped by firm_state.`,
+          what: `Where SBIR / STTR commercialization activity concentrates in FY${stateYear} — state shading shows total $; red dots mark the actual hub cities (Cambridge, San Diego, Austin, etc.). Dot area is proportional to award $.`,
+          how: 'Background state fill = SUM(award_amount_real_2024) by firm_state. City dots = same sum at the firm_city level, restricted to the 200 cities with the most all-time SBIR/STTR $ (~95% of activity). The top topic per city is derived by tagging award_title against the platform-wide 30-topic regex taxonomy.',
           caveats:
-            'CA + MA together routinely capture ~40% of the national total. Reflects firm HQ, not award performance location.',
+            'Reflects firm HQ city, not award performance location. Some firms have multiple offices; SBIR.gov stores the legal HQ. Cities outside the top-200 universe are still visible in the state choropleth but not as labelled hubs.',
         }}
       >
-        {states.length === 0 ? (
+        {hubs.length === 0 ? (
           <p className="text-sm text-text-tertiary">Loading…</p>
         ) : (
-          <USStateMap values={Object.fromEntries(states.map((s) => [s.firm_state, s.amount_real_m]))} height={400} />
+          <SbirHubMap stateValues={stateValuesByAbbr} hubs={hubs} height={460} labelTop={10} />
         )}
       </ChartFrame>
 
-      {/* State table */}
+      {/* Hub leaderboard — replaces former state-only table */}
+      <ChartFrame
+        eyebrow="Hub leaderboard"
+        title={`Top 15 SBIR / STTR cities, FY${stateYear}`}
+        sources={[
+          {
+            id: 'sbir_sttr',
+            subset: `Filter fiscal_year = ${stateYear}; group by firm_city + firm_state, summed and ranked. Top topic from 30-topic regex on award_title.`,
+          },
+        ]}
+        methodology={{
+          what: `The 15 cities pulling in the most SBIR / STTR award dollars in FY${stateYear}, with the dominant research topic at each.`,
+          how: 'Same hub aggregation as the map (top 200 cities by all-time $). Sorted by FY real $.',
+          caveats:
+            'Top topic is the topic that received the most $ at that city × FY. A city can switch topics year-to-year as award mix changes.',
+        }}
+      >
+        <HubTable rows={hubs.slice(0, 15)} />
+      </ChartFrame>
+
+      {/* Top 10 states (lightweight backup) */}
       <ChartFrame
         eyebrow="State leaderboard"
         title={`Top 10 states by SBIR / STTR award $, FY${stateYear}`}
@@ -366,37 +445,6 @@ export default function SbirPage() {
         ]}
       >
         <StateTable rows={states.slice(0, 10)} />
-      </ChartFrame>
-
-      {/* Demographics — uses cumulative window */}
-      <ChartFrame
-        eyebrow="Demographic set-asides"
-        title={`Set-aside program participation, ${winLabel}`}
-        sources={[
-          {
-            id: 'sbir_sttr',
-            subset: `Boolean flags is_woman_owned, is_hubzone, is_socially_economically_disadvantaged per award; share = flagged ÷ total awards FY${winLo}–FY${winHi}`,
-          },
-        ]}
-        methodology={{
-          what: 'Share of awards going to small businesses that self-certify as woman-owned, HUBZone, or socially/economically disadvantaged.',
-          how: `Boolean flags is_woman_owned, is_hubzone, is_socially_economically_disadvantaged on each award row, summed and divided by the ${winLabel} award total.`,
-          caveats:
-            'Categories overlap (a firm can certify multiple). Reflects firm self-certification at award time, not verified status.',
-        }}
-      >
-        {demo && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <DemoCard label="Woman-owned" count={demo.woman_owned} pct={demo.woman_pct} total={demo.total_awards} />
-            <DemoCard label="HUBZone" count={demo.hubzone} pct={demo.hubzone_pct} total={demo.total_awards} />
-            <DemoCard
-              label="Socially / economically disadvantaged"
-              count={demo.disadvantaged}
-              pct={demo.disadvantaged_pct}
-              total={demo.total_awards}
-            />
-          </div>
-        )}
       </ChartFrame>
     </div>
   );
@@ -828,24 +876,78 @@ function StateTable({ rows }: { rows: SbirState[] }) {
   );
 }
 
-function DemoCard({
-  label,
-  count,
-  pct,
-  total,
-}: {
-  label: string;
-  count: number;
-  pct: number;
-  total: number;
-}) {
+function titleCase(s: string): string {
+  return s
+    .toLowerCase()
+    .split(/\s+/)
+    .map((w) => (w.length > 0 ? w[0].toUpperCase() + w.slice(1) : w))
+    .join(' ');
+}
+
+function HubTable({ rows }: { rows: SbirHubPoint[] }) {
+  const accessors = {
+    firm_city: (r: SbirHubPoint) => r.firm_city,
+    firm_state: (r: SbirHubPoint) => r.firm_state,
+    awards: (r: SbirHubPoint) => r.awards,
+    amount_real_m: (r: SbirHubPoint) => r.amount_real_m,
+    top_topic: (r: SbirHubPoint) => r.top_topic ?? '',
+  };
+  const {
+    rows: sorted,
+    sort,
+    requestSort,
+  } = useTableSort(rows, {
+    initial: { key: 'amount_real_m', dir: 'desc' },
+    accessors,
+    defaultDir: { firm_city: 'asc', firm_state: 'asc', top_topic: 'asc' },
+  });
+  if (rows.length === 0) return null;
   return (
-    <div className="rounded border border-rule bg-surface p-4 space-y-2">
-      <p className="text-[11px] uppercase tracking-wider text-text-tertiary">{label}</p>
-      <p className="t-num text-text-primary text-2xl">{formatPercent(pct, { source: 'percent' })}</p>
-      <p className="text-xs text-text-secondary tnum">
-        {formatCount(count)} of {formatCount(total)} awards
-      </p>
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-rule text-left text-text-tertiary">
+            <SortableTh sortKey="firm_city" sort={sort} onSort={requestSort} className="py-2 pr-4">
+              City
+            </SortableTh>
+            <SortableTh sortKey="firm_state" sort={sort} onSort={requestSort} className="py-2 pr-4">
+              State
+            </SortableTh>
+            <SortableTh
+              sortKey="awards"
+              sort={sort}
+              onSort={requestSort}
+              align="right"
+              className="py-2 px-3 whitespace-nowrap"
+            >
+              Awards
+            </SortableTh>
+            <SortableTh
+              sortKey="amount_real_m"
+              sort={sort}
+              onSort={requestSort}
+              align="right"
+              className="py-2 px-3 whitespace-nowrap"
+            >
+              Real $
+            </SortableTh>
+            <SortableTh sortKey="top_topic" sort={sort} onSort={requestSort} className="py-2 pl-3">
+              Top topic
+            </SortableTh>
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map((r) => (
+            <tr key={`${r.firm_city}|${r.firm_state}`} className="border-b border-rule/60 hover:bg-mute-3/30">
+              <td className="py-1.5 pr-4 text-text-primary">{titleCase(r.firm_city)}</td>
+              <td className="py-1.5 pr-4 text-text-secondary">{r.firm_state}</td>
+              <td className="py-1.5 px-3 text-right tnum text-text-secondary">{formatCount(r.awards)}</td>
+              <td className="py-1.5 px-3 text-right tnum text-text-primary">${r.amount_real_m.toFixed(1)}M</td>
+              <td className="py-1.5 pl-3 text-text-secondary">{r.top_topic ?? '—'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

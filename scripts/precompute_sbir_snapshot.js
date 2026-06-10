@@ -17,6 +17,12 @@ async function main() {
   await db.exec(
     `CREATE OR REPLACE VIEW sbir AS SELECT * FROM read_parquet('${path.join(DATA_DIR, 'sheet_06_sbir_sttr.parquet')}')`,
   );
+  await db.exec(
+    `CREATE OR REPLACE VIEW hubs AS SELECT * FROM read_parquet('${path.join(DATA_DIR, 'agg_sbir_hubs.parquet')}')`,
+  );
+  // Lookup of [lat, lon] per UPPER_CITY|StateName. Static file shipped with
+  // the dashboard — top 200 SBIR hub cities geocoded once.
+  const cityCoords = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'sbir_city_coords.json'), 'utf-8'));
 
   // ─── Overview KPIs ───
   const overview = (
@@ -128,17 +134,18 @@ async function main() {
     ORDER BY fiscal_year, firm_state
   `);
 
-  // ─── Per-year demographic counts (client divides by window total awards) ───
-  const demoFacts = await db.all(`
+  // ─── Per-city hub facts: city × FY with top topic, top agency, $, awards. ───
+  // The client filters by FY range and overlays dots on the US state map.
+  // Coordinates are joined in JS (smaller payload than re-emitting per-row).
+  const hubFacts = await db.all(`
     SELECT
-      fiscal_year,
-      COUNT(*)::DOUBLE AS total_awards,
-      SUM(CASE WHEN is_woman_owned = 'True' THEN 1 ELSE 0 END)::DOUBLE AS woman_owned,
-      SUM(CASE WHEN is_hubzone = 'True' THEN 1 ELSE 0 END)::DOUBLE AS hubzone,
-      SUM(CASE WHEN is_socially_economically_disadvantaged = 'True' THEN 1 ELSE 0 END)::DOUBLE AS disadvantaged
-    FROM sbir
-    GROUP BY fiscal_year
-    ORDER BY fiscal_year
+      firm_city, firm_state, fiscal_year,
+      awards::DOUBLE AS awards,
+      amount_real / 1e6 AS amount_real_m,
+      top_topic, top_topic_amount / 1e6 AS top_topic_amount_m,
+      top_agency
+    FROM hubs
+    ORDER BY firm_state, firm_city, fiscal_year
   `);
 
   await db.close();
@@ -154,6 +161,28 @@ async function main() {
     return v;
   };
 
+  // Inline lat/lon onto each hub row. Skip rows whose city isn't in the
+  // coords lookup — those are tail-of-distribution and don't render anyway.
+  const hubFactsWithCoords = hubFacts
+    .map((r) => {
+      const key = `${r.firm_city}|${r.firm_state}`;
+      const coords = cityCoords[key];
+      if (!coords) return null;
+      return {
+        firm_city: r.firm_city,
+        firm_state: r.firm_state,
+        fiscal_year: r.fiscal_year,
+        awards: r.awards,
+        amount_real_m: r.amount_real_m,
+        top_topic: r.top_topic,
+        top_topic_amount_m: r.top_topic_amount_m,
+        top_agency: r.top_agency,
+        lat: coords[0],
+        lon: coords[1],
+      };
+    })
+    .filter((r) => r !== null);
+
   const snapshot = {
     generated_at: new Date().toISOString(),
     overview: toJsonSafe(overview),
@@ -162,7 +191,7 @@ async function main() {
     firm_facts: toJsonSafe(firmFacts),
     ri_facts: toJsonSafe(riFacts),
     state_facts: toJsonSafe(stateFacts),
-    demo_facts: toJsonSafe(demoFacts),
+    hub_facts: toJsonSafe(hubFactsWithCoords),
   };
 
   fs.writeFileSync(OUT_PATH, JSON.stringify(snapshot));
@@ -174,7 +203,7 @@ async function main() {
   console.log(`  firm_facts:     ${snapshot.firm_facts.length} rows`);
   console.log(`  ri_facts:       ${snapshot.ri_facts.length} rows`);
   console.log(`  state_facts:    ${snapshot.state_facts.length} rows`);
-  console.log(`  demo_facts:     ${snapshot.demo_facts.length} rows`);
+  console.log(`  hub_facts:      ${snapshot.hub_facts.length} rows`);
 }
 
 main().catch((e) => {

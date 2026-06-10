@@ -20,12 +20,10 @@ const PARQUETS = [
   'agg_national_agency_trend',
   'agg_national_topic',
   'agg_national_team_size',
-  'agg_national_nih_ic',
   'agg_national_concentration',
   'agg_uni_field_mix',
   'agg_uni_total_rd',
   'agg_uni_source_split',
-  'agg_uni_pi_distribution',
   'agg_uni_pi_universe',
   'agg_uni_growth',
   'agg_uni_specialization',
@@ -120,18 +118,6 @@ async function main() {
     ORDER BY fiscal_year, is_stem
   `);
 
-  // §7 PI distribution — per FY × decile (averaged across institutions)
-  const piDist = await db.all(`
-    SELECT
-      fiscal_year,
-      decile,
-      AVG(avg_amount) AS avg_amount
-    FROM agg_uni_pi_distribution
-    WHERE decile IS NOT NULL AND avg_amount IS NOT NULL
-    GROUP BY fiscal_year, decile
-    ORDER BY fiscal_year, decile
-  `);
-
   // §8 topics — per FY × topic
   const topics = await db.all(`
     SELECT fiscal_year, topic, tagged_amount, share_of_total, grant_count
@@ -144,13 +130,6 @@ async function main() {
     SELECT fiscal_year, team_size_bucket, total_amount, share_of_total, grant_count
     FROM agg_national_team_size
     ORDER BY fiscal_year, team_size_bucket
-  `);
-
-  // §S5.1 NIH ICs
-  const nihIcs = await db.all(`
-    SELECT fiscal_year, ic_code, ic_full_name, amount_nominal, pct_of_nih
-    FROM agg_national_nih_ic
-    ORDER BY fiscal_year, amount_nominal DESC
   `);
 
   // §S5.2 topic leaders: top 5 unis per topic per FY
@@ -247,10 +226,8 @@ async function main() {
     state_rollup: toJsonSafe(stateRollup),
     trends: toJsonSafe(trends),
     field_mix: toJsonSafe(fieldMix),
-    pi_distribution: toJsonSafe(piDist),
     topics: toJsonSafe(topics),
     team_size: toJsonSafe(teamSize),
-    nih_ics: toJsonSafe(nihIcs),
     topic_leaders: toJsonSafe(topicLeaders),
     state_topic_leaders: toJsonSafe(stateTopicLeaders),
     climbers: toJsonSafe(climbers),
@@ -265,7 +242,6 @@ async function main() {
   console.log(`  agencies rows:    ${snapshot.agencies.length}`);
   console.log(`  state_rollup:     ${snapshot.state_rollup.length}`);
   console.log(`  topics rows:      ${snapshot.topics.length}`);
-  console.log(`  nih_ics rows:     ${snapshot.nih_ics.length}`);
   console.log(`  topic_leaders:    ${snapshot.topic_leaders.length}`);
   console.log(`  state_topic_lead: ${snapshot.state_topic_leaders.length}`);
 }

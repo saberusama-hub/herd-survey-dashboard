@@ -5,7 +5,6 @@ import { Group } from '@visx/group';
 import { scaleBand, scaleLinear } from '@visx/scale';
 import { useEffect, useId, useMemo, useState } from 'react';
 
-import { DistributionPlot } from '@/components/charts/DistributionPlot';
 import { LineChart } from '@/components/charts/LineChart';
 import { ResponsiveSvg } from '@/components/charts/ResponsiveSvg';
 import { StackedBar } from '@/components/charts/StackedBar';
@@ -18,8 +17,6 @@ import { formatCount, formatDollars, formatPercent } from '@/lib/format';
 import type {
   GrowthRow,
   NationalFieldMixRow,
-  NationalNihIcRow,
-  NationalPiDistributionRow,
   NationalStateRollupRow,
   NationalTeamSizeRow,
   NationalTopicRow,
@@ -35,7 +32,6 @@ const ALL_YEARS = Array.from({ length: FY_MAX - FY_MIN + 1 }, (_, i) => FY_MAX -
 const SECTIONS = [
   { id: 'overview', label: 'Overview' },
   { id: 'agencies', label: 'Agencies' },
-  { id: 'nih-ics', label: 'NIH Institutes' },
   { id: 'concentration', label: 'Concentration' },
   { id: 'geography', label: 'Geography' },
   { id: 'trends', label: 'Trends' },
@@ -43,7 +39,6 @@ const SECTIONS = [
   { id: 'topics', label: 'Topics' },
   { id: 'state-specialization', label: 'State specialization' },
   { id: 'team-size', label: 'Team size' },
-  { id: 'pi-distribution', label: 'PI distribution' },
   { id: 'climbers-fallers', label: 'Climbers & fallers' },
 ];
 
@@ -149,10 +144,8 @@ interface NationalSnapshot {
   state_rollup: NationalStateRollupRow[];
   trends: NationalTrendRow[];
   field_mix: NationalFieldMixRow[];
-  pi_distribution: NationalPiDistributionRow[];
   topics: NationalTopicRow[];
   team_size: NationalTeamSizeRow[];
-  nih_ics: NationalNihIcRow[];
   topic_leaders: TopicLeaderRow[];
   state_topic_leaders: StateTopicRow[];
   climbers: GrowthRow[];
@@ -171,10 +164,8 @@ export default function NationalPage() {
   // the user can compare two different years side-by-side without leaving
   // the page. 20-year timelines are unaffected.
   const [geographyFy, setGeographyFy] = useState<number>(FY_MAX);
-  const [nihIcFy, setNihIcFy] = useState<number>(FY_MAX);
   const [topicsFy, setTopicsFy] = useState<number>(FY_MAX);
   const [teamSizeFy, setTeamSizeFy] = useState<number>(FY_MAX);
-  const [piDistFy, setPiDistFy] = useState<number>(FY_MAX);
 
   // Single static-JSON fetch replaces 14 runtime DuckDB-WASM queries +
   // multi-MB WASM bundle download. Snapshot is precomputed by
@@ -212,11 +203,9 @@ export default function NationalPage() {
   const agencies = snapshot?.agencies ?? [];
   const concentration = snapshot?.concentration ?? [];
   const fieldMix = snapshot?.field_mix ?? [];
-  const piDist = snapshot?.pi_distribution ?? [];
   const trends = snapshot?.trends ?? [];
   const teamSize = snapshot?.team_size ?? [];
   const topics = snapshot?.topics ?? [];
-  const nihIcs = snapshot?.nih_ics ?? [];
   const climbers = snapshot?.climbers ?? [];
   const fallers = snapshot?.fallers ?? [];
 
@@ -422,20 +411,6 @@ export default function NationalPage() {
     };
   }, [stemStackWide]);
 
-  /* ─── §7 PI distribution: decile averages at piDistFy ─── */
-  const piDistLatest = useMemo(() => {
-    if (piDist.length === 0) return { fy: null as number | null, rows: [] as { decile: number; avg_amount: number }[] };
-    const have = piDist.some((r) => r.fiscal_year === piDistFy);
-    const fy = have
-      ? piDistFy
-      : piDist.reduce((m, r) => (r.fiscal_year > m ? r.fiscal_year : m), piDist[0].fiscal_year);
-    const rows = piDist
-      .filter((r) => r.fiscal_year === fy)
-      .sort((a, b) => a.decile - b.decile)
-      .map((r) => ({ decile: r.decile, avg_amount: Number(r.avg_amount) || 0 }));
-    return { fy, rows };
-  }, [piDist, piDistFy]);
-
   /* ─── §8 Topics: ranking at topicsFy + 20-year share for the top 10 ─── */
   const topicsView = useMemo(() => {
     if (topics.length === 0) {
@@ -518,51 +493,6 @@ export default function NationalPage() {
       });
     return { latestFy, latestRows, trend };
   }, [teamSize, teamSizeFy]);
-
-  /* ─── §S5.1 NIH IC view: 27-IC ranking at selected FY + top-5 20yr trends ─── */
-  const nihIcView = useMemo(() => {
-    if (nihIcs.length === 0) {
-      return {
-        latestFy: null as number | null,
-        ranked: [] as Array<{ ic_code: string; ic_full_name: string; amount: number; pct: number }>,
-        top5: [] as string[],
-        trend: [] as Array<Record<string, number>>,
-      };
-    }
-    const have = nihIcs.some((r) => r.fiscal_year === nihIcFy);
-    const latestFy = have
-      ? nihIcFy
-      : nihIcs.reduce((m, r) => (r.fiscal_year > m ? r.fiscal_year : m), nihIcs[0].fiscal_year);
-    const ranked = nihIcs
-      .filter((r) => r.fiscal_year === latestFy)
-      .map((r) => ({
-        ic_code: r.ic_code,
-        ic_full_name: r.ic_full_name || r.ic_code,
-        amount: Number(r.amount_nominal) || 0,
-        pct: Number(r.pct_of_nih) || 0,
-      }))
-      .filter((r) => r.amount > 0)
-      .sort((a, b) => b.amount - a.amount);
-    const top5 = ranked.slice(0, 5).map((r) => r.ic_full_name);
-    // 20-year share trend per top-5 IC.
-    const byFy = new Map<number, Record<string, number>>();
-    for (const r of nihIcs) {
-      const fullName = r.ic_full_name || r.ic_code;
-      if (!top5.includes(fullName)) continue;
-      const row = byFy.get(r.fiscal_year) ?? {};
-      row[fullName] = (Number(r.pct_of_nih) || 0) * 100;
-      byFy.set(r.fiscal_year, row);
-    }
-    const trend = Array.from(byFy.keys())
-      .sort((a, b) => a - b)
-      .map((fy) => {
-        const v = byFy.get(fy) ?? {};
-        const row: Record<string, number> = { fiscal_year: fy };
-        for (const t of top5) row[t] = v[t] ?? 0;
-        return row;
-      });
-    return { latestFy, ranked, top5, trend };
-  }, [nihIcs, nihIcFy]);
 
   /* ─── §S5.2 Topic leaders: group {topic: [leader rows]} ─── */
   const topicLeadersByTopic = useMemo(() => {
@@ -710,78 +640,6 @@ export default function NationalPage() {
             showLegend={false}
           />
         </ChartFrame>
-      </section>
-
-      {/* ─── §S5.1 NIH Institutes drill-down ─── */}
-      <section id="nih-ics" aria-labelledby="national-section-nih-ics" className="scroll-mt-24">
-        <SectionDivider
-          eyebrow="National · NIH Institutes"
-          title="Inside the HHS bar: 27 NIH Institutes & Centers"
-          dek="HHS dollars routed through NIH split across the administering Institute. NCI, NIAID, NHLBI lead by funding volume in most years."
-          color="hsl(var(--agency-nih))"
-        />
-        <ChartFrame
-          eyebrow={nihIcView.latestFy ? `FY${nihIcView.latestFy} ranking` : 'NIH ICs'}
-          title={`National NIH funding by Institute / Center, FY${nihIcView.latestFy ?? nihIcFy}`}
-          dek={`Sorted by total NIH funding in FY${nihIcView.latestFy ?? nihIcFy}. % is share of national NIH total that year (sums to 100%).`}
-          sources={[
-            {
-              id: 'nih_exporter',
-              subset: `Project total_cost grouped by ADMIN_IC (27 NIH Institutes/Centers + legacy codes), summed across all U.S. universities for FY${nihIcView.latestFy ?? nihIcFy}`,
-            },
-          ]}
-          methodology={{
-            what: 'Which NIH Institute or Center actually wrote the checks — Cancer (NCI), Allergy/Infectious (NIAID), Heart/Lung/Blood (NHLBI), General Medical (NIGMS), and so on.',
-            how: 'We aggregate fact_nih_project.total_cost_nominal by administering IC (admin_ic_code). Each project is counted once at its administering IC; the 27 standard ICs plus a few legacy/special codes are included.',
-            caveats:
-              'admin_ic_code represents the IC that manages the project. For multi-IC awards, contributing ICs may not be reflected. Total_cost includes both direct + indirect.',
-          }}
-        >
-          <PanelYearPicker value={nihIcFy} onChange={setNihIcFy} />
-          <ResponsiveSvg height={Math.max(480, nihIcView.ranked.length * 22 + 40)}>
-            {(w, h) => <IcBars width={w} height={h} bars={nihIcView.ranked} />}
-          </ResponsiveSvg>
-        </ChartFrame>
-
-        {nihIcView.top5.length > 0 && (
-          <ChartFrame
-            eyebrow="20-year IC share trend"
-            title="Top 5 NIH Institutes: share of national NIH $ over time"
-            dek="One line per top-5 IC, plotted as % of national NIH $ each FY."
-            sources={[
-              {
-                id: 'nih_exporter',
-                subset: 'Project total_cost by ADMIN_IC per FY; share = IC dollars ÷ national NIH total that FY',
-              },
-            ]}
-            methodology={{
-              what: 'Whether the dominant NIH Institutes have held steady or shifted relative to each other over 20 years.',
-              how: 'For each FY we compute IC share = IC dollars ÷ total NIH dollars that year. One line per IC, using the top-5 ranking at the selected FY by dollar amount.',
-              caveats:
-                'Membership of "top 5" is fixed to the ranking at the selected FY, so earlier years may show some non-top-5 ICs missing from this view.',
-            }}
-          >
-            <LineChart
-              data={nihIcView.trend as unknown as Array<Record<string, unknown>>}
-              xKey="fiscal_year"
-              series={nihIcView.top5.map((t, i) => ({
-                key: t,
-                label: t,
-                color: [
-                  'hsl(var(--accent))',
-                  'hsl(var(--agency-nih))',
-                  'hsl(var(--agency-nsf))',
-                  'hsl(var(--agency-dod))',
-                  'hsl(var(--agency-doe))',
-                ][i % 5],
-              }))}
-              yFormat={(v) => `${v.toFixed(1)}%`}
-              height={340}
-              directLabels
-              showLegend={false}
-            />
-          </ChartFrame>
-        )}
       </section>
 
       {/* ─── §3 Concentration ─── */}
@@ -1314,44 +1172,6 @@ export default function NationalPage() {
         </ChartFrame>
       </section>
 
-      {/* ─── §9 PI distribution ─── */}
-      <section id="pi-distribution" aria-labelledby="national-section-pis" className="scroll-mt-24">
-        <SectionDivider
-          eyebrow="National · PIs"
-          title="$/PI distribution"
-          dek="National-level decile distribution of $/PI. Decile 1 = lowest-funded PIs, decile 10 = highest-funded. Counts come from the full federal-PI universe (NSF awards ∪ NIH PI bridge)."
-          color="hsl(var(--agency-nih))"
-        />
-        <ChartFrame
-          eyebrow={piDistLatest.fy ? `FY${piDistLatest.fy} distribution` : 'PI $ distribution'}
-          title={`How federal $ spreads across PIs nationally, FY${piDistLatest.fy ?? piDistFy}`}
-          dek={`Average dollar amount per PI in each decile of the FY${piDistLatest.fy ?? piDistFy} roster, averaged across institutions (decile-of-deciles).`}
-          sources={[
-            {
-              id: 'nsf_awards',
-              subset: `Lead PI obligations bucketed into deciles per institution, FY${piDistFy}`,
-            },
-            { id: 'nih_exporter', subset: `PI total_cost bucketed into deciles per institution, FY${piDistFy}` },
-          ]}
-          note={
-            piDistLatest.rows.length > 0
-              ? `Top decile averages ${formatDollars(piDistLatest.rows[piDistLatest.rows.length - 1].avg_amount)} per PI, vs. ${formatDollars(piDistLatest.rows[0].avg_amount)} in the bottom decile.`
-              : undefined
-          }
-          methodology={{
-            what: 'Whether federal research funding is shared evenly across PIs nationwide, or concentrated in a small slice of top-funded researchers.',
-            how: 'At each university we sort PIs into ten equal $/PI buckets (deciles). We then average each decile across institutions — a "decile of deciles." Decile 1 = lowest-funded 10%, decile 10 = highest-funded.',
-            caveats:
-              'Averaging deciles across institutions is a coarse but defensible national lens. PIs holding grants at multiple universities are counted once per institution.',
-          }}
-        >
-          <PanelYearPicker value={piDistFy} onChange={setPiDistFy} />
-          <ResponsiveSvg height={280}>
-            {(w, h) => <DistributionPlot data={piDistLatest.rows} width={w} height={h} />}
-          </ResponsiveSvg>
-        </ChartFrame>
-      </section>
-
       {/* ─── §S5.4 5-yr climbers & fallers ─── */}
       <section id="climbers-fallers" aria-labelledby="national-section-climbers" className="scroll-mt-24">
         <SectionDivider
@@ -1422,67 +1242,6 @@ function PanelYearPicker({
 }
 
 /* ───────────── Inline visx components (kept local to the file) ──────────── */
-
-function IcBars({
-  bars,
-  width,
-  height,
-}: {
-  bars: Array<{ ic_code: string; ic_full_name: string; amount: number; pct: number }>;
-  width: number;
-  height: number;
-}) {
-  const margin = { top: 8, right: 100, bottom: 28, left: 260 };
-  const innerW = Math.max(0, width - margin.left - margin.right);
-  const innerH = Math.max(0, height - margin.top - margin.bottom);
-  const labels = bars.map((b) => b.ic_full_name);
-  const y = scaleBand({ domain: labels, range: [0, innerH], padding: 0.15 });
-  const x = scaleLinear({
-    domain: [0, Math.max(1, ...bars.map((b) => b.amount))],
-    range: [0, innerW],
-    nice: true,
-  });
-  // IC display name — truncate aggressively so 240px margin always holds
-  // the full string at 11px. d3-axis decimates ticks on its own when names
-  // collide, so passing an explicit `tickValues` is not enough; we render
-  // labels manually inside the band centerlines instead.
-  const labelFor = (full: string) => (full.length > 38 ? `${full.slice(0, 37)}…` : full);
-  return (
-    <svg width={width} height={height} role="img" aria-label="National NIH funding by Institute or Center">
-      <Group left={margin.left} top={margin.top}>
-        {bars.map((b) => {
-          const by = y(b.ic_full_name) ?? 0;
-          const bw = x(b.amount);
-          const bh = y.bandwidth();
-          return (
-            <g key={b.ic_code}>
-              {/* Tooltip for the full IC name as a direct <g> child (SVG spec) */}
-              <title>{b.ic_full_name}</title>
-              {/* Y-axis label rendered manually per row so every IC name shows */}
-              <text x={-6} y={by + bh / 2} dy="0.35em" textAnchor="end" className="fill-text-primary text-[11px]">
-                {labelFor(b.ic_full_name)}
-              </text>
-              <rect x={0} y={by} width={bw} height={bh} fill="hsl(var(--agency-nih))" rx={2} />
-              <text x={bw + 6} y={by + bh / 2} dy="0.35em" className="fill-text-secondary text-[11px] tnum">
-                {formatDollars(b.amount)} · {formatPercent(b.pct)}
-              </text>
-            </g>
-          );
-        })}
-        <AxisBottom
-          top={innerH}
-          scale={x}
-          numTicks={4}
-          tickFormat={(v) => formatDollars(Number(v))}
-          tickLabelProps={() => ({
-            className: 'fill-text-tertiary text-[11px] tnum',
-            textAnchor: 'middle',
-          })}
-        />
-      </Group>
-    </svg>
-  );
-}
 
 function GrowthLeaderboard({
   title,
