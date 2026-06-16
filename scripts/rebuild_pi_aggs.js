@@ -30,7 +30,6 @@
 // Outputs (apps/web/public/data/):
 //   dim_institution_crosswalk.parquet
 //   agg_uni_pi_universe.parquet
-//   agg_uni_pi_distribution.parquet
 //   agg_uni_team_size.parquet
 //   agg_uni_nih_ic.parquet
 //   agg_uni_topic.parquet
@@ -361,45 +360,6 @@ async function main() {
          OR COALESCE(na.amount_nsf, 0) > 0
          OR COALESCE(nh.amount_nih, 0) > 0
     ) TO '${DASH}/agg_uni_pi_universe.parquet' (FORMAT 'parquet', COMPRESSION 'zstd')
-  `);
-
-  console.log('Step 3: agg_uni_pi_distribution (obligation-FY)');
-  await db.exec(`
-    COPY (
-      WITH nsf_per_pi AS (
-        SELECT COALESCE(cw.herd_sk, n.institution_sk) AS institution_sk,
-               n.fiscal_year, n.pi_sk, SUM(n.fy_amount) AS pi_amount
-        FROM nsf_fy n LEFT JOIN sk_crosswalk cw ON cw.fed_sk = n.institution_sk
-        WHERE n.pi_sk IS NOT NULL AND n.institution_sk IS NOT NULL
-          AND n.fy_amount IS NOT NULL
-        GROUP BY 1, 2, 3
-      ),
-      nih_per_pi AS (
-        SELECT COALESCE(cw.herd_sk, p.institution_sk) AS institution_sk,
-               p.fy AS fiscal_year, b.pi_sk,
-               SUM(p.total_cost_nominal / NULLIF((SELECT COUNT(*) FROM nih_pi_bridge b2 WHERE b2.application_id = p.application_id), 0)) AS pi_amount
-        FROM nih_pi_bridge b
-        JOIN nih_raw p ON p.application_id = b.application_id
-        LEFT JOIN sk_crosswalk cw ON cw.fed_sk = p.institution_sk
-        WHERE b.pi_sk IS NOT NULL AND p.institution_sk IS NOT NULL
-          AND p.fy BETWEEN 2005 AND 2024 AND p.total_cost_nominal IS NOT NULL
-        GROUP BY 1, 2, 3
-      ),
-      pi_total AS (
-        SELECT institution_sk, fiscal_year, pi_sk, SUM(pi_amount) AS pi_amount
-        FROM (SELECT * FROM nsf_per_pi UNION ALL SELECT * FROM nih_per_pi)
-        GROUP BY 1, 2, 3
-      ),
-      ranked AS (
-        SELECT institution_sk, fiscal_year, pi_sk, pi_amount,
-          NTILE(10) OVER (PARTITION BY institution_sk, fiscal_year ORDER BY pi_amount ASC) AS decile
-        FROM pi_total WHERE pi_amount > 0
-      )
-      SELECT institution_sk, fiscal_year, decile,
-        MIN(pi_amount) AS min_amount, MAX(pi_amount) AS max_amount,
-        AVG(pi_amount) AS avg_amount, COUNT(*) AS pi_count
-      FROM ranked GROUP BY 1, 2, 3
-    ) TO '${DASH}/agg_uni_pi_distribution.parquet' (FORMAT 'parquet', COMPRESSION 'zstd')
   `);
 
   console.log('Step 4: agg_uni_team_size (obligation-FY)');

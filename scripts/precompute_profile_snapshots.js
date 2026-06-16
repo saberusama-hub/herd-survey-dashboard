@@ -23,7 +23,6 @@ const SOURCES = [
   'agg_uni_agency_split',
   'agg_uni_federal_funds',
   'agg_uni_pi_universe',
-  'agg_uni_pi_distribution',
   'agg_uni_team_size',
   'agg_uni_topic',
   'agg_uni_field_mix',
@@ -74,7 +73,6 @@ async function main() {
       agencies: [],
       federalFunds: [],
       piMetrics: [],
-      piDistribution: [],
       teamSize: [],
       topics: [],
       fieldMix: [],
@@ -141,12 +139,6 @@ async function main() {
                          nsf_est_researchers_n_pi, nsf_avg_n_pi_per_award
                   FROM agg_uni_pi_universe ORDER BY institution_sk, fiscal_year`),
     'piMetrics',
-    toJsonSafe,
-  );
-  bucket(
-    await db.all(`SELECT institution_sk, fiscal_year, decile, min_amount, max_amount, avg_amount, pi_count
-                  FROM agg_uni_pi_distribution ORDER BY institution_sk, fiscal_year, decile`),
-    'piDistribution',
     toJsonSafe,
   );
   bucket(

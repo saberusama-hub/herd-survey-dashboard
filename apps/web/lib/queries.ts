@@ -625,14 +625,6 @@ export interface UniversityProfile extends Row {
     nsf_est_researchers_n_pi: number;
     nsf_avg_n_pi_per_award: number | null;
   }>;
-  piDistribution: Array<{
-    fiscal_year: number;
-    decile: number;
-    min_amount: number;
-    max_amount: number;
-    avg_amount: number;
-    pi_count: number;
-  }>;
   teamSize: Array<{
     fiscal_year: number;
     team_size_bucket: string;
@@ -669,7 +661,6 @@ export async function getUniversityProfile(sk: string): Promise<UniversityProfil
     agencies,
     federalFunds,
     piMetrics,
-    piDistribution,
     teamSize,
     topics,
     fieldMix,
@@ -701,9 +692,6 @@ export async function getUniversityProfile(sk: string): Promise<UniversityProfil
               nih_pi_count, federal_amount_nih_attributed, nih_amount_per_pi,
               nsf_est_researchers_n_pi, nsf_avg_n_pi_per_award
        FROM agg_uni_pi_universe WHERE institution_sk = '${safe}' ORDER BY fiscal_year`,
-    ),
-    query<UniversityProfile['piDistribution'][number]>(
-      `SELECT fiscal_year, decile, min_amount, max_amount, avg_amount, pi_count FROM agg_uni_pi_distribution WHERE institution_sk = '${safe}' ORDER BY fiscal_year, decile`,
     ),
     query<UniversityProfile['teamSize'][number]>(
       `SELECT fiscal_year, team_size_bucket, grant_count, total_amount
@@ -743,7 +731,6 @@ export async function getUniversityProfile(sk: string): Promise<UniversityProfil
     agencies,
     federalFunds,
     piMetrics,
-    piDistribution,
     teamSize,
     topics,
     fieldMix,
@@ -891,33 +878,6 @@ export async function getNationalFieldMix(): Promise<NationalFieldMixRow[]> {
     WHERE amount_nominal IS NOT NULL
     GROUP BY fiscal_year, field_category, is_stem
     ORDER BY fiscal_year, field_category
-  `);
-}
-
-// ─────────── /national §7 PI distribution (P5.2) ───────────
-//
-// National decile distribution of $/PI. Averages per-decile averages across
-// all institutions (decile-of-deciles); a coarse but defensible national
-// view of how federal $ spreads across PIs.
-
-export interface NationalPiDistributionRow extends Row {
-  fiscal_year: number;
-  decile: number;
-  avg_amount: number;
-  pi_count: number;
-}
-
-export async function getNationalPiDistribution(): Promise<NationalPiDistributionRow[]> {
-  return query<NationalPiDistributionRow>(`
-    SELECT
-      fiscal_year,
-      decile,
-      AVG(avg_amount) AS avg_amount,
-      SUM(pi_count) AS pi_count
-    FROM agg_uni_pi_distribution
-    WHERE avg_amount IS NOT NULL
-    GROUP BY fiscal_year, decile
-    ORDER BY fiscal_year, decile
   `);
 }
 

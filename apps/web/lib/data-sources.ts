@@ -231,14 +231,6 @@ export const PARQUET_SOURCES: Record<string, ParquetProvenance> = {
       { id: 'nih_exporter', subset: 'PI bridge counts + total_cost per institution × FY.' },
     ],
   },
-  agg_uni_pi_distribution: {
-    parquet: 'agg_uni_pi_distribution',
-    description: 'Per-university decile distribution of $ per PI × fiscal year.',
-    sources: [
-      { id: 'nsf_awards', subset: 'Lead PI obligations bucketed into deciles per institution × FY.' },
-      { id: 'nih_exporter', subset: 'PI total_cost bucketed into deciles per institution × FY.' },
-    ],
-  },
   agg_uni_specialization: {
     parquet: 'agg_uni_specialization',
     description:

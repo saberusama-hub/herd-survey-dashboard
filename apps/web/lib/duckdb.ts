@@ -39,7 +39,6 @@ const PARQUET_FILES = [
   'agg_uni_agency_split',
   'agg_uni_federal_funds',
   'agg_uni_pi_metrics',
-  'agg_uni_pi_distribution',
   'agg_uni_field_mix',
   'agg_uni_subject_tag',
   'agg_uni_concentration',

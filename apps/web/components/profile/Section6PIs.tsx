@@ -3,9 +3,7 @@
 import { useId, useMemo, useState } from 'react';
 
 import { BarChart } from '@/components/charts/BarChart';
-import { DistributionPlot } from '@/components/charts/DistributionPlot';
 import { LineChart } from '@/components/charts/LineChart';
-import { ResponsiveSvg } from '@/components/charts/ResponsiveSvg';
 import { ChartFrame } from '@/components/editorial/ChartFrame';
 import { KpiStrip, type KpiTile } from '@/components/editorial/KpiStrip';
 import { SectionDivider } from '@/components/editorial/SectionDivider';
@@ -41,7 +39,7 @@ const TEAM_LABEL: Record<TeamBucket, string> = {
  *  - DistributionPlot: latest-FY decile distribution of $/PI (kept for context).
  */
 export function Section6PIs({ profile }: Props) {
-  const { piMetrics, piDistribution, teamSize } = profile;
+  const { piMetrics, teamSize } = profile;
 
   // Independent year state for the team-size chart so a reader can scrub
   // through fiscal years without re-rendering the other panels.
@@ -66,15 +64,11 @@ export function Section6PIs({ profile }: Props) {
       nih_pi_count: Number(r.nih_pi_count) || 0,
       combined_pi_count: Number(r.distinct_pi_count) || 0,
     }));
-    const distLatestFy = latestPi.fiscal_year;
-    const distRows = piDistribution
-      .filter((r) => r.fiscal_year === distLatestFy)
-      .sort((a, b) => a.decile - b.decile)
-      .map((r) => ({ decile: r.decile, avg_amount: Number(r.avg_amount) || 0 }));
+    const latestFy = latestPi.fiscal_year;
 
     // Team-size bars driven by the user-selected fiscal year (falls back to
     // the latest-available FY).
-    const effectiveTeamFy = teamFy ?? distLatestFy;
+    const effectiveTeamFy = teamFy ?? latestFy;
     const teamForFy = teamSize.filter((r) => r.fiscal_year === effectiveTeamFy);
     const teamBars = TEAM_BUCKETS.map((b) => {
       const row = teamForFy.find((r) => r.team_size_bucket === b);
@@ -175,8 +169,6 @@ export function Section6PIs({ profile }: Props) {
     return {
       tiles,
       lineData,
-      distLatestFy,
-      distRows,
       latestPi,
       effectiveTeamFy,
       teamBars,
@@ -184,7 +176,7 @@ export function Section6PIs({ profile }: Props) {
       combinedNote,
       single,
     };
-  }, [piMetrics, piDistribution, teamSize, teamFy]);
+  }, [piMetrics, teamSize, teamFy]);
 
   if (!view) {
     return (
@@ -199,7 +191,7 @@ export function Section6PIs({ profile }: Props) {
     );
   }
 
-  const { tiles, lineData, distLatestFy, distRows, effectiveTeamFy, teamBars, peakPiNote, combinedNote, single } = view;
+  const { tiles, lineData, effectiveTeamFy, teamBars, peakPiNote, combinedNote, single } = view;
 
   return (
     <section aria-labelledby="profile-section-6">
@@ -308,42 +300,6 @@ export function Section6PIs({ profile }: Props) {
               showLegend={false}
             />
           )}
-        </ChartFrame>
-      </div>
-
-      <div className="mt-8">
-        <ChartFrame
-          eyebrow={distLatestFy ? `FY${distLatestFy} distribution` : 'NSF + NIH $ per PI distribution'}
-          title="How NSF + NIH $ spreads across PIs"
-          dek="Average $ per PI across ten equally-sized funding brackets — bracket 1 = lowest-funded 10% of PIs, bracket 10 = highest-funded 10%."
-          sources={[
-            {
-              id: 'nsf_awards',
-              subset: 'NSF lead PI obligations split into ten equal-size brackets per institution × FY',
-            },
-            {
-              id: 'nih_exporter',
-              subset: 'NIH PI total_cost split into ten equal-size brackets per institution × FY',
-            },
-          ]}
-          note={
-            distRows.length > 0
-              ? `The top 10% of NSF + NIH-funded PIs averaged ${formatDollars(
-                  distRows[distRows.length - 1]?.avg_amount ?? 0,
-                  { decimals: 2 },
-                )} per PI.`
-              : undefined
-          }
-          methodology={{
-            what: 'Whether NSF + NIH money at this university is spread evenly across researchers, or concentrated in a few big-grant labs.',
-            how: 'In the latest reported year we sort every PI by total NSF + NIH dollars received, split the roster into ten equal-size brackets (10% each), and plot the average $/PI in each bracket. Bracket 1 = lowest-funded 10% of PIs; bracket 10 = highest-funded 10%.',
-            caveats:
-              'A "PI" here means lead or co-PI on any NSF/NIH grant — including small no-cost extensions. PIs working at multiple institutions are counted at each.',
-          }}
-        >
-          <ResponsiveSvg height={240}>
-            {(w, h) => <DistributionPlot data={distRows} width={w} height={h} />}
-          </ResponsiveSvg>
         </ChartFrame>
       </div>
 
