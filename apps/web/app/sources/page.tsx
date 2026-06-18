@@ -6,10 +6,10 @@ import { SOURCES, type SourceId } from '@/lib/sources';
 export const metadata = {
   title: 'Sources',
   description:
-    'Every number on this dashboard traces to a federal raw data archive. The eight source datasets, their publishers, publication identifiers, raw-data downloads, and recipes for verifying any figure yourself.',
+    'Every number on this dashboard traces to a federal raw data archive. The ten source datasets, their publishers, publication identifiers, raw-data downloads, and recipes for verifying any figure yourself.',
 };
 
-// Ordering: HERD first (most-used), then federal grant streams, then dims/deflator.
+// Ordering: HERD first (most-used), then federal grant streams, then patent data + verification, then dims/deflator.
 const SOURCE_ORDER: SourceId[] = [
   'ncses_herd',
   'ncses_federal_funds',
@@ -17,6 +17,8 @@ const SOURCE_ORDER: SourceId[] = [
   'nsf_awards',
   'usaspending',
   'sbir_sttr',
+  'uspto_patentsview',
+  'nai_top100',
   'ipeds',
   'bls_cpi_u',
 ];
@@ -37,7 +39,7 @@ export default function SourcesPage() {
       <PageHeader
         eyebrow="Source bibliography"
         title="Sources"
-        description="Every chart, KPI, and number on this dashboard traces back to a federal raw data archive — not the dashboard's parquets, not the master Excel workbook, but the publisher's own data files. The eight datasets below are the ground truth."
+        description="Every chart, KPI, and number on this dashboard traces back to a federal raw data archive — not the dashboard's parquets, not the master Excel workbook, but the publisher's own data files. The ten datasets below are the ground truth."
       />
 
       <section className="space-y-3 text-sm text-text-secondary">
@@ -68,13 +70,13 @@ export default function SourcesPage() {
           </li>
         </ol>
         <p className="italic">
-          Internal pipeline: federal raw archive → ETL → 41 parquet files in <code>apps/web/public/data/</code> → the
+          Internal pipeline: federal raw archive → ETL → parquet files in <code>apps/web/public/data/</code> → the
           dashboard. Citations on this site always point to step 1 (the federal raw archive), not the parquets.
         </p>
       </section>
 
       <section className="space-y-6">
-        <h2 className="h-section">The eight datasets</h2>
+        <h2 className="h-section">The ten datasets</h2>
         {SOURCE_ORDER.map((id) => {
           const s = SOURCES[id];
           const usedBy = parquetsBySource.get(id) ?? [];

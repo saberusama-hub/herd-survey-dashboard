@@ -273,6 +273,28 @@ export const PARQUET_SOURCES: Record<string, ParquetProvenance> = {
       { id: 'nih_exporter', subset: 'project_title + project_terms text regex-matched per institution × FY.' },
     ],
   },
+  agg_uni_patents: {
+    parquet: 'agg_uni_patents',
+    description:
+      'Per-university USPTO patent rollup × CY: granted utility patents, applications filed (PGPub), federally-funded share, industry co-assignment share, 5-yr mature forward citations, primary CPC top section, and HERD R&D denominators for per-$M ratios.',
+    sources: [
+      {
+        id: 'uspto_patentsview',
+        subset:
+          'g_patent (granted utility patents) + g_assignee_disambiguated (assignee→institution) + g_us_patent_citation (5yr forward window) + pg_published_application (PGPub by first publication CY), CY2005–CY2025. Multi-assignee patents whole-counted per institution; 872 disambiguated assignees crosswalk to 471 HERD institution_sk.',
+      },
+      {
+        id: 'ncses_herd',
+        subset:
+          'herd_total_rd_M + herd_federal_rd_M denominators for patents_per_M_federal_rd and patents_per_M_total_rd ratios, by FY.',
+      },
+      {
+        id: 'nai_top100',
+        subset:
+          'External verification anchor only — 89-cell reconciliation against NAI Top-100 published counts; 78% within ±25% after Phase 3 crosswalk patches. Not used in the aggregation itself.',
+      },
+    ],
+  },
 
   // ─────────────────────── Source-of-truth sheets (master workbook origins) ───────────────────────
   sheet_01_institution_funding_panel: {
@@ -387,6 +409,28 @@ export const PARQUET_SOURCES: Record<string, ParquetProvenance> = {
       {
         id: 'nih_exporter',
         subset: 'fact_nih_project.total_cost_nominal grouped by admin_ic_code per institution × FY.',
+      },
+    ],
+  },
+  sheet_13_ip_patents: {
+    parquet: 'sheet_13_ip_patents',
+    description:
+      'Sheet 13 (source-of-truth): per-university × CY patent metrics — granted patents, federally-funded share, applications filed, average inventors, industry co-assignment share, 5-year mature forward citations, primary CPC top section, top federal funding agency, HERD R&D denominators, and patents-per-$M ratios. CY2005–CY2025 with truncation flags for late years.',
+    sources: [
+      {
+        id: 'uspto_patentsview',
+        subset:
+          'Granted utility patents (PVGPATDIS), pre-grant publications (PVPGPUBDIS), forward citations (PVANNUAL). Bayh-Dole government-interest clause parsed for federal-funding flag; CPC primary section extracted from g_cpc_current. 872 disambiguated assignees mapped to 471 HERD institution_sk via 4-stage crosswalk (Appendix-B seeds → direct alias → foundation/regents pattern strip → filtered fuzzy with WRatio ≥ 95 + token-sort ≥ 88 + US-org assignee_type filter).',
+      },
+      {
+        id: 'ncses_herd',
+        subset:
+          'Q01 total R&D + Q09 federal R&D as denominators for the productivity ratios (patents_per_M_*_rd). Joined on institution_sk × fiscal_year.',
+      },
+      {
+        id: 'nai_top100',
+        subset:
+          'External verification reference (CY2013–CY2024). Cell-level reconciliation documented in data/docs/ip_verification_report_round2.md.',
       },
     ],
   },

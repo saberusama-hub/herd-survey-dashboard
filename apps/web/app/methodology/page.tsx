@@ -36,6 +36,8 @@ export default function MethodologyPage() {
               'nsf_awards',
               'sbir_sttr',
               'ncses_federal_funds',
+              'uspto_patentsview',
+              'nai_top100',
               'ipeds',
               'bls_cpi_u',
             ] as SourceId[]
@@ -288,6 +290,176 @@ export default function MethodologyPage() {
               </code>{' '}
               gives every NSF + NIH row a HERD-side SK when one exists.
             </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="space-y-4" id="patents">
+        <h2 className="h-section">USPTO patents — assignee crosswalk &amp; methodology</h2>
+        <p className="text-text-secondary">
+          The <a className="text-accent underline underline-offset-2" href="/patents">Patents</a> tab, Section 8 on every
+          university profile, and the Patents &amp; IP metric group on <a className="text-accent underline underline-offset-2" href="/compare">/compare</a>{' '}
+          all draw from the same source-of-truth aggregation:{' '}
+          <code className="text-xs bg-accent-muted/40 rounded px-1">sheet_13_ip_patents.parquet</code>. The data layer
+          combines USPTO PatentsView (granted utility patents + pre-grant publications + the forward citation graph)
+          with HERD R&amp;D denominators, calendar-year keyed (CY = patent grant year, not federal FY).
+        </p>
+        <Card>
+          <CardContent className="text-sm text-text-secondary space-y-3">
+            <p>
+              <strong className="text-text-primary">Universe.</strong> CY2005–CY2025 granted utility patents from
+              PatentsView (PVGPATDIS), plus pre-grant publications (PVPGPUBDIS) for applications-filed metrics and the
+              full forward citation graph (PVANNUAL) for the 5-year mature-cohort citation average. CY2026 is excluded
+              because it&apos;s a half-year cohort that bleeds in mid-build. 109,815 distinct utility patents map to{' '}
+              <strong className="text-text-primary">471 HERD institutions</strong>.
+            </p>
+            <p>
+              <strong className="text-text-primary">4-stage assignee → institution_sk crosswalk.</strong>
+            </p>
+            <ol className="list-decimal pl-6 space-y-1">
+              <li>
+                <strong>Appendix-B seeds</strong> — ~50 explicit hand-curated mappings for institutions whose USPTO
+                assignee strings don&apos;t match HERD canonical names cleanly (e.g.,{' '}
+                <em>Georgia Tech Research Corp</em> → Georgia Institute of Technology;{' '}
+                <em>Ohio State Innovation Foundation</em> → Ohio State University). Highest precedence.
+              </li>
+              <li>
+                <strong>Direct alias lookup</strong> against the dim_institution_aliases table for institutions with
+                known short-form / acronym variants.
+              </li>
+              <li>
+                <strong>Foundation / Regents / Trustees pattern strip</strong> — pattern matchers for{' '}
+                <code className="text-xs bg-accent-muted/40 rounded px-1">research foundation</code>,{' '}
+                <code className="text-xs bg-accent-muted/40 rounded px-1">innovation foundation</code>,{' '}
+                <code className="text-xs bg-accent-muted/40 rounded px-1">regents of</code>,{' '}
+                <code className="text-xs bg-accent-muted/40 rounded px-1">trustees of</code>,{' '}
+                <code className="text-xs bg-accent-muted/40 rounded px-1">argonne</code>,{' '}
+                <code className="text-xs bg-accent-muted/40 rounded px-1">school of medicine</code>, and similar
+                wrappers that USPTO uses for the legal entity holding the patent.
+              </li>
+              <li>
+                <strong>Filtered fuzzy match</strong> — RapidFuzz WRatio ≥ 95 AND token-sort-ratio ≥ 88 AND ≥ 12 chars
+                after wrapper strip AND ≥ 2 tokens AND US-org assignee_type only (
+                <code className="text-xs bg-accent-muted/40 rounded px-1">{'{2, 6, 9, 12, 14, 15}'}</code>). Tight
+                thresholds avoid false positives like Khalifa University → Missouri University of S&amp;T.
+              </li>
+            </ol>
+            <p>
+              <strong className="text-text-primary">Hard ID overrides (10).</strong> Some PatentsView assignee_ids have
+              upstream disambiguation bugs we patch by explicit ID:{' '}
+              <em>Penn State Research Foundation</em> (mis-classified as type=3 foreign by PatentsView; 1,248 patents
+              were excluded under the strict filter and force-included via override), <em>Vanderbilt → VU proper</em>{' '}
+              (not VUMC; 1,171 patents), <em>Texas A&amp;M System → College Station</em> (not West Texas A&amp;M;
+              1,207 patents), plus 7 others. See{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">scripts/build_dim_assignee_to_institution.py</code>{' '}
+              in the data-lake repo for the full ASSIGNEE_ID_OVERRIDES dict.
+            </p>
+            <p>
+              <strong className="text-text-primary">System-flagship pinning (Option B).</strong> USPTO assigns patents to{' '}
+              <em>legal entities</em>, which are often system-wide (Regents of the University of California; University
+              of Colorado System; SUNY Research Foundation; Texas A&amp;M System; University of Maine System). HERD
+              tracks individual campuses but has no system-level institution_sk. By design, these system-entity patents
+              are absorbed by the system flagship campus:
+            </p>
+            <ul className="list-disc pl-6 space-y-1 text-[13px]">
+              <li>Regents of the University of California → UC Berkeley (10,333 patents over CY2005-25)</li>
+              <li>University of Colorado System → CU Boulder</li>
+              <li>SUNY Research Foundation → SUNY Albany</li>
+              <li>Texas A&amp;M System → Texas A&amp;M College Station</li>
+              <li>University of Maine System → University of Maine</li>
+            </ul>
+            <p>
+              Each pinned profile carries an inline amber caveat in Section 8 disclosing the pin. UCLA, UCSF, UC Davis,
+              CU Denver, CU Anschutz, etc. report their own HERD R&amp;D under their own SK but legally hold no patents
+              directly.
+            </p>
+            <p>
+              <strong className="text-text-primary">Counting rule.</strong> Multi-assignee patents are{' '}
+              <em>whole-counted</em> per assigned institution: a patent jointly owned by MIT and Harvard contributes 1
+              to each. Cross-institution co-assignment is rare (&lt; 1% of university patents). Industry co-assignment
+              (corporate non-government, non-university co-assignee on the same patent) is exposed separately as{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">co_industry_share</code>.
+            </p>
+            <p>
+              <strong className="text-text-primary">Federal-funding flag.</strong> A patent is flagged{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">patents_granted_fed_funded</code> if its{' '}
+              government-interest clause (mandated by the 1980 Bayh-Dole Act) names any federal agency. The flag is
+              binary per patent — a patent with even one federal-source acknowledgement counts regardless of other
+              non-federal funding sources.
+            </p>
+            <p>
+              <strong className="text-text-primary">External verification.</strong> 89 institution × CY cells were
+              compared against the National Academy of Inventors Top-100 published rankings (CY2013–CY2024). After two
+              iterations of crosswalk patches:{' '}
+              <strong className="text-text-primary">69 of 89 cells (78%)</strong> are within ±25% of NAI counts. The 20
+              residuals decompose:
+            </p>
+            <ul className="list-disc pl-6 space-y-1 text-[13px]">
+              <li>
+                <strong>7 small-delta methodology variance</strong> — Georgia Tech CY2014–21 (+27–36%) and Indiana
+                CY2020 (+32%). All &lt; 20 absolute-patent deltas; commodity-DOD-patent counting differences.
+              </li>
+              <li>
+                <strong>5 structural methodology divergence</strong> — NAI counts first-named-assignee only (pre-CY2022)
+                or all-inventors (CY2022+); we count distinct-assignee whole-counting. Multi-assignee patents create
+                systematic 0–30% variance for Northwestern, Harvard, Cornell, and ASU in flagged years.
+              </li>
+              <li>
+                <strong>2 PatentsView upstream disambiguation bugs</strong> — Northeastern University (Boston) is
+                tagged type=3 (foreign) in PatentsView, evidently conflated with Northeastern University in China. The
+                only "Northeastern University" assignee_ids are not in the US-org universe; unfixable without a
+                PatentsView correction or a manual override.
+              </li>
+              <li>
+                <strong>6 out-of-scope institutions</strong> — Mayo Clinic, University of Advancing Technology,
+                Harrisburg University, National University, Intellectual Properties Inc. appear in NAI but are outside
+                the HERD ~1,014-institution universe. By design.
+              </li>
+            </ul>
+            <p>
+              Full reconciliation report:{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">
+                data/docs/ip_verification_report_round2.md
+              </code>{' '}
+              in the data-lake repo.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="space-y-4" id="patent-caveats">
+        <h2 className="h-section">Patent data — three reading caveats</h2>
+        <p className="text-text-secondary">
+          Same shape as the three federal-funding landmines above: structural quirks of the source data that shape what
+          the patents tab can — and cannot — say.
+        </p>
+        <Card>
+          <CardContent className="space-y-4 text-sm">
+            <Caveat title="Pre-grant publication (PGPub) lag">
+              Applications counts come from pre-grant publications, which USPTO releases ~18 months after the actual
+              filing. CY2024 and CY2025 application counts are truncated — true filings continue to publish through
+              ~mid-2026. The patents tab year table flags affected rows with a dagger (
+              <code className="text-xs bg-accent-muted/40 rounded px-1">†</code>) and a footnote. Use CY2023 as the last
+              fully-published applications cohort.
+            </Caveat>
+            <Caveat title="5-year forward citation maturation">
+              The{' '}
+              <code className="text-xs bg-accent-muted/40 rounded px-1">avg_cites_5yr_mature</code> metric requires the
+              full 5 calendar years after grant to accumulate citations. Only CYs ≤ 2020 have a fully matured 5-year
+              window as of the latest build (December 2025). Later cohorts show truncation flags; downstream metrics
+              (
+              <code className="text-xs bg-accent-muted/40 rounded px-1">citations_truncated_5yr_flag</code>) are masked
+              or labeled accordingly. The Patents tab&apos;s mature-cohort KPI pins to CY2020 for this reason.
+            </Caveat>
+            <Caveat title="NAI methodology divergence (counting rules)">
+              The National Academy of Inventors&apos; Top-100 ranking uses{' '}
+              <em>first-named assignee only</em> through CY2021 and switched to <em>all-inventors counting</em> in
+              CY2022. Our aggregation uses{' '}
+              <em>distinct-assignee whole-counting</em> consistently across years (a patent with multiple university
+              assignees contributes 1 to each, every year). The methodologies systematically diverge by 0–30% on
+              multi-assignee patents and produce the residual variance flagged in the Phase 3 verification report.
+              Neither methodology is &ldquo;wrong&rdquo; — they answer different questions.
+            </Caveat>
           </CardContent>
         </Card>
       </section>
