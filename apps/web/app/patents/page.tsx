@@ -424,46 +424,6 @@ export default function PatentsPage() {
       >
         <CpcMixTable rows={snapshot?.cpc_mix ?? []} />
       </ChartFrame>
-
-      {/* Methodology / NAI divergence */}
-      <section className="rounded-md border border-rule bg-surface-elevated p-5">
-        <h2 className="text-sm font-semibold tracking-tight text-text-primary">Methodology and verification</h2>
-        <div className="mt-3 space-y-3 text-[12px] leading-relaxed text-text-secondary">
-          <p>
-            <strong>Crosswalk.</strong> 872 USPTO PatentsView disambiguated assignees were mapped to 471 HERD
-            institutions through a 4-stage pipeline: explicit Appendix-B seeds (hand-curated), direct alias lookup
-            against dim_institution_aliases, foundation/regents pattern strip, and filtered fuzzy match (Weighted-ratio
-            ≥95, token-sort ≥88, US-org assignee types only). 10 hard ID overrides correct PatentsView disambiguation
-            bugs (e.g., Penn State Research Foundation mis-classified as type=3 foreign).
-          </p>
-          <p>
-            <strong>Verification.</strong> Phase 3 verification compared 89 cells (institution × CY) against the
-            National Academy of Inventors Top-100 annual publication. After two iterations of patching, <em>69 of 89
-            cells (78%)</em> are within ±25% of NAI. Residuals decompose as: (a) 7 small-delta methodology variance
-            (Georgia Tech CY2014–21 +27–36% from DOD-heavy commodity patents); (b) 5 structural methodology divergence
-            (NAI first-named-assignee vs our distinct-assignee whole-counting); (c) 2 PatentsView upstream
-            disambiguation bugs (Northeastern Boston tagged type=3 foreign); (d) 6 out-of-scope institutions (Mayo
-            Clinic, etc., not in the HERD universe).
-          </p>
-          <p>
-            <strong>System-level pinning.</strong> The Regents of the University of California → UC Berkeley
-            (system-flagship, Option B); University of Colorado System → CU Boulder; SUNY Research Foundation → SUNY
-            Albany; Texas A&M System → Texas A&M College Station; University of Maine System → University of Maine.
-            HERD does not register these system-level entities as institutions; the flagship campus absorbs system-wide
-            patent counts in this dashboard.
-          </p>
-          <p>
-            <strong>Truncation.</strong> Application counts for CY2024 and CY2025 reflect the ~18-month pre-grant
-            publication lag. 5-year forward citation averages are only mature for grant CYs ≤ 2020 (citation window
-            closes 5 calendar years after grant). CY2026 grants — partial year — are excluded from the trend chart.
-          </p>
-          <p>
-            <strong>Counting rule.</strong> Multi-assignee patents are whole-counted per assigned institution. A patent
-            jointly owned by MIT and Harvard contributes 1 patent to each. Cross-institution co-assignment is rare
-            (&lt;1% of university patents).
-          </p>
-        </div>
-      </section>
     </div>
   );
 }
