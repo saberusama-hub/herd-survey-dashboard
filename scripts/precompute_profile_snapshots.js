@@ -32,6 +32,7 @@ const SOURCES = [
   'agg_uni_peers',
   'agg_uni_nih_ic',
   'agg_uni_specialization',
+  'agg_uni_patents',
 ];
 
 async function main() {
@@ -83,6 +84,7 @@ async function main() {
       nihIcs: [],
       specialization: [],
       ranks: [],
+      patents: [],
     });
   }
 
@@ -188,6 +190,26 @@ async function main() {
     await db.all(`SELECT institution_sk, fiscal_year, ic_code, ic_full_name, amount_nominal, project_count
                   FROM agg_uni_nih_ic ORDER BY institution_sk, fiscal_year, amount_nominal DESC`),
     'nihIcs',
+    toJsonSafe,
+  );
+
+  // Phase 4 — per-institution patent rows. CY-keyed (same column name
+  // `fiscal_year` for shape parity with everything else). Cap at CY2025
+  // (CY2026 is half-year bleed from PatentsView).
+  bucket(
+    await db.all(`SELECT institution_sk, fiscal_year,
+                         patents_granted, patents_granted_fed_funded, federally_funded_share,
+                         applications_filed, applications_truncated_flag,
+                         avg_n_inventors, co_industry_share,
+                         avg_cites_5yr_mature, citations_truncated_5yr_flag,
+                         primary_cpc_top_section, top_gov_agency,
+                         herd_total_rd_M, herd_federal_rd_M,
+                         patents_per_M_federal_rd, patents_per_M_total_rd,
+                         data_quality
+                  FROM agg_uni_patents
+                  WHERE fiscal_year BETWEEN 2005 AND 2025
+                  ORDER BY institution_sk, fiscal_year`),
+    'patents',
     toJsonSafe,
   );
 

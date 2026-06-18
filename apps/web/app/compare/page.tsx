@@ -535,6 +535,110 @@ const METRICS: MetricDef[] = [
         value: r.share_of_state === null || r.share_of_state === undefined ? null : Number(r.share_of_state),
       })),
   },
+  /* ── Patents & IP (Phase 4 — added 2026-06-17) ────────────────────── */
+  {
+    key: 'patentsGranted',
+    label: 'Granted patents (CY)',
+    description: 'U.S. utility patents granted per calendar year, from USPTO PatentsView. CY-keyed (grant calendar year, not fiscal year).',
+    format: 'count',
+    source: 'agg_uni_patents.patents_granted',
+    sources: [
+      { id: 'uspto_patentsview', subset: 'patents_granted by fiscal_year per institution. Multi-assignee patents whole-counted.' },
+    ],
+    series: (p) =>
+      (p.patents ?? []).map((r) => ({ fiscal_year: r.fiscal_year, value: Number(r.patents_granted) || 0 })),
+  },
+  {
+    key: 'patentApplications',
+    label: 'Applications filed (CY)',
+    description: 'Pre-grant publications (PGPub) by first publication CY. Approximates university filing volume with a ~18-month publication lag — CY2024+ truncated.',
+    format: 'count',
+    source: 'agg_uni_patents.applications_filed',
+    sources: [
+      { id: 'uspto_patentsview', subset: 'applications_filed (PGPub count) by fiscal_year per institution. Truncated for CY ≥ 2024.' },
+    ],
+    series: (p) =>
+      (p.patents ?? []).map((r) => ({
+        fiscal_year: r.fiscal_year,
+        value: r.applications_filed === null ? null : Number(r.applications_filed),
+      })),
+  },
+  {
+    key: 'patentsFederalShare',
+    label: 'Federally-funded patent share',
+    description: 'Share of granted patents that disclose a Bayh-Dole government-interest clause (any federal agency named).',
+    format: 'percent',
+    source: 'agg_uni_patents.federally_funded_share',
+    sources: [
+      { id: 'uspto_patentsview', subset: 'patents_granted_fed_funded ÷ patents_granted per fiscal_year' },
+    ],
+    series: (p) =>
+      (p.patents ?? []).map((r) => ({
+        fiscal_year: r.fiscal_year,
+        value: r.federally_funded_share === null ? null : Number(r.federally_funded_share),
+      })),
+  },
+  {
+    key: 'patentsPerMFedRd',
+    label: 'Patents per $M federal R&D',
+    description: 'Granted patents per million dollars of HERD-reported federal R&D, by CY. Productivity ratio normalised by federal funding scale.',
+    format: 'index',
+    source: 'agg_uni_patents.patents_per_M_federal_rd',
+    sources: [
+      { id: 'uspto_patentsview', subset: 'patents_granted per fiscal_year' },
+      { id: 'ncses_herd', subset: 'herd_federal_rd_M denominator (federal R&D expenditure)' },
+    ],
+    series: (p) =>
+      (p.patents ?? []).map((r) => ({
+        fiscal_year: r.fiscal_year,
+        value: r.patents_per_M_federal_rd === null ? null : Number(r.patents_per_M_federal_rd),
+      })),
+  },
+  {
+    key: 'patentsCites5yr',
+    label: 'Avg 5yr citations (mature)',
+    description: 'Average forward citations within 5 years of grant, for the institution\'s grant cohort. Only CYs ≤ 2020 are fully matured; later years truncated.',
+    format: 'index',
+    source: 'agg_uni_patents.avg_cites_5yr_mature',
+    sources: [
+      { id: 'uspto_patentsview', subset: 'avg_cites_5yr_mature per fiscal_year. CY > 2020 still accruing forward citations.' },
+    ],
+    series: (p) =>
+      (p.patents ?? []).map((r) => ({
+        fiscal_year: r.fiscal_year,
+        value: r.avg_cites_5yr_mature === null ? null : Number(r.avg_cites_5yr_mature),
+      })),
+  },
+  {
+    key: 'patentsIndustryCoShare',
+    label: 'Industry co-assign share',
+    description: 'Share of granted patents with a corporate (non-government, non-university) co-assignee — university-industry co-invention signal.',
+    format: 'percent',
+    source: 'agg_uni_patents.co_industry_share',
+    sources: [
+      { id: 'uspto_patentsview', subset: 'co_industry_share per fiscal_year — corporate co-assignee on the same patent' },
+    ],
+    series: (p) =>
+      (p.patents ?? []).map((r) => ({
+        fiscal_year: r.fiscal_year,
+        value: r.co_industry_share === null ? null : Number(r.co_industry_share),
+      })),
+  },
+  {
+    key: 'patentsAvgInventors',
+    label: 'Avg inventors per patent',
+    description: "Average inventor count on this institution's granted patents per CY. Bigger teams correlate with engineering and life-sciences programs.",
+    format: 'index',
+    source: 'agg_uni_patents.avg_n_inventors',
+    sources: [
+      { id: 'uspto_patentsview', subset: 'avg_n_inventors per fiscal_year' },
+    ],
+    series: (p) =>
+      (p.patents ?? []).map((r) => ({
+        fiscal_year: r.fiscal_year,
+        value: r.avg_n_inventors === null ? null : Number(r.avg_n_inventors),
+      })),
+  },
 ];
 
 const METRIC_BY_KEY = new Map(METRICS.map((m) => [m.key, m]));

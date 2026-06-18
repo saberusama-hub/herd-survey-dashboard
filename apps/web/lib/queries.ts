@@ -650,6 +650,28 @@ export interface UniversityProfile extends Row {
     national_rank: number;
     total_ranked: number;
   }>;
+  // Phase 4: per-CY patent rows from agg_uni_patents (= sheet_13_ip_patents).
+  // CY = patent grant calendar year, distinct from federal fiscal year used
+  // elsewhere in this profile. Cohort = CY2005–CY2025; CY2026 excluded.
+  patents?: Array<{
+    fiscal_year: number;
+    patents_granted: number;
+    patents_granted_fed_funded: number | null;
+    federally_funded_share: number | null;
+    applications_filed: number | null;
+    applications_truncated_flag: boolean;
+    avg_n_inventors: number | null;
+    co_industry_share: number | null;
+    avg_cites_5yr_mature: number | null;
+    citations_truncated_5yr_flag: boolean;
+    primary_cpc_top_section: string | null;
+    top_gov_agency: string | null;
+    herd_total_rd_M: number | null;
+    herd_federal_rd_M: number | null;
+    patents_per_M_federal_rd: number | null;
+    patents_per_M_total_rd: number | null;
+    data_quality: string | null;
+  }>;
 }
 
 export async function getUniversityProfile(sk: string): Promise<UniversityProfile> {

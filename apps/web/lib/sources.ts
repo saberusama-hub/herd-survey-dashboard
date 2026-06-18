@@ -18,7 +18,9 @@ export type SourceId =
   | 'usaspending'
   | 'sbir_sttr'
   | 'ipeds'
-  | 'bls_cpi_u';
+  | 'bls_cpi_u'
+  | 'uspto_patentsview'
+  | 'nai_top100';
 
 export interface FederalSource {
   /** Stable identifier used in cross-references. */
@@ -185,6 +187,43 @@ export const SOURCES: Record<SourceId, FederalSource> = {
     googleQuery: 'IPEDS NCES Integrated Postsecondary Education Data System download',
     howToFindRaw:
       'Open https://nces.ed.gov/ipeds/use-the-data/download-access-database, pick a survey year, and download the Access database or component CSV files. Directory file (HDYYYY) has UNITID, OPEID, INSTNM, ADDR, STABBR.',
+  },
+
+  uspto_patentsview: {
+    id: 'uspto_patentsview',
+    shortName: 'USPTO PatentsView',
+    publisher: 'U.S. Patent and Trademark Office (USPTO), Office of the Chief Economist',
+    publisherAcronym: 'USPTO',
+    dataset: 'PatentsView bulk-data products (PVGPATDIS granted patents, PVPGPUBDIS pre-grant publications, PVANNUAL citation graph)',
+    homeUrl: 'https://patentsview.org/',
+    rawDataUrl: 'https://data.uspto.gov/bulkdata/datasets/pvgpatdis',
+    apiUrl: 'https://search.patentsview.org/api/v1',
+    coverage: '1976–present for granted patents; pre-grant publications from 2001; this dashboard uses CY2005–CY2025 granted utility patents + CY2005–CY2024 published applications.',
+    cadence: 'Quarterly disambiguated; annual citation rebuilds',
+    license: 'CC-BY 4.0 (free reuse with attribution)',
+    description:
+      'USPTO bulk-data products with author-disambiguated assignees, inventors, locations, classifications (CPC + USPC), and the full forward-citation graph. The disambiguated assignee table is the canonical hook for mapping patents to universities — we map ~872 university-affiliated assignee strings to 471 HERD institutions via an explicit alias/seed crosswalk + filtered fuzzy match.',
+    googleQuery: 'USPTO PatentsView bulk data download granted patents pre-grant publications',
+    howToFindRaw:
+      'Open https://data.uspto.gov/bulkdata/datasets/pvgpatdis and download g_patent.tsv.zip, g_assignee_disambiguated.tsv.zip, g_inventor_disambiguated.tsv.zip, g_cpc_current.tsv.zip, g_us_patent_citation.tsv.zip. Pre-grant pubs at /pvpgpubdis; annual citation cohort at /pvannual. Files are tab-separated with explicit type metadata in PatentsView dictionary.',
+  },
+
+  nai_top100: {
+    id: 'nai_top100',
+    shortName: 'NAI Top 100 Universities',
+    publisher: 'National Academy of Inventors (NAI), with USPTO data partnership',
+    publisherAcronym: 'NAI',
+    dataset: 'Top 100 Worldwide Universities Granted U.S. Utility Patents (annual)',
+    homeUrl: 'https://academyofinventors.org/top-100-universities/',
+    rawDataUrl: 'https://academyofinventors.org/wp-content/uploads/2024/06/Top-100-Worldwide-Universities-2023.pdf',
+    coverage: 'CY2013–CY2024 annual rankings',
+    cadence: 'Annual (released ~mid-following-CY)',
+    license: 'NAI publication, USPTO public-domain data underneath; we use the published counts for external verification only',
+    description:
+      "Annual NAI ranking of the top 100 universities worldwide by U.S. utility patents granted. Used in this dashboard purely as an external verification anchor for the USPTO PatentsView aggregation: cell-level reconciliation of NAI counts vs. our (institution × CY) totals. Methodology divergence (NAI's first-named-assignee pre-2022 / all-inventors post-2022 vs. our distinct-assignee whole-counting) creates a small known variance.",
+    googleQuery: 'National Academy of Inventors Top 100 Worldwide Universities U.S. utility patents granted',
+    howToFindRaw:
+      'NAI publishes a PDF each June with the CY-1 ranking at https://academyofinventors.org/top-100-universities/. CY2018–CY2019 are only available as HTML tables on the NAI site. Counts are first-named-assignee through CY2021, all-inventors from CY2022 onward — see ip_verification_report_round2.md for the methodology-divergence cells.',
   },
 
   bls_cpi_u: {
