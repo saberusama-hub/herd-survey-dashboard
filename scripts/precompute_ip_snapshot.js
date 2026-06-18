@@ -21,12 +21,36 @@ const DATA_DIR = path.resolve(__dirname, '../apps/web/public/data');
 const OUT = path.join(DATA_DIR, 'snapshots', 'ip-snapshot.json');
 const Database = require('duckdb-async').Database;
 
+// 2-letter abbr → full state name (matches the keying in city-coord lookups)
+const STATE_NAMES = {
+  AL: 'Alabama', AK: 'Alaska', AZ: 'Arizona', AR: 'Arkansas', CA: 'California',
+  CO: 'Colorado', CT: 'Connecticut', DE: 'Delaware', DC: 'District of Columbia',
+  FL: 'Florida', GA: 'Georgia', HI: 'Hawaii', ID: 'Idaho', IL: 'Illinois',
+  IN: 'Indiana', IA: 'Iowa', KS: 'Kansas', KY: 'Kentucky', LA: 'Louisiana',
+  ME: 'Maine', MD: 'Maryland', MA: 'Massachusetts', MI: 'Michigan', MN: 'Minnesota',
+  MS: 'Mississippi', MO: 'Missouri', MT: 'Montana', NE: 'Nebraska', NV: 'Nevada',
+  NH: 'New Hampshire', NJ: 'New Jersey', NM: 'New Mexico', NY: 'New York',
+  NC: 'North Carolina', ND: 'North Dakota', OH: 'Ohio', OK: 'Oklahoma', OR: 'Oregon',
+  PA: 'Pennsylvania', RI: 'Rhode Island', SC: 'South Carolina', SD: 'South Dakota',
+  TN: 'Tennessee', TX: 'Texas', UT: 'Utah', VT: 'Vermont', VA: 'Virginia',
+  WA: 'Washington', WV: 'West Virginia', WI: 'Wisconsin', WY: 'Wyoming', PR: 'Puerto Rico',
+};
+
 async function main() {
   fs.mkdirSync(path.dirname(OUT), { recursive: true });
   const db = await Database.create(':memory:');
   await db.exec(
     `CREATE VIEW patents AS SELECT * FROM read_parquet('${path.join(DATA_DIR, 'agg_uni_patents.parquet')}')`,
   );
+  await db.exec(
+    `CREATE VIEW dim AS SELECT * FROM read_parquet('${path.join(DATA_DIR, 'dim_institution.parquet')}')`,
+  );
+
+  // Static city-coord gazetteers — SBIR's top-200 firm hubs + patent_city_coords
+  // for university-only hubs that SBIR didn't need (Stanford, Urbana, etc.).
+  const sbirCoords = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'sbir_city_coords.json'), 'utf-8'));
+  const patentCoords = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'patent_city_coords.json'), 'utf-8'));
+  const cityCoords = { ...sbirCoords, ...patentCoords };
 
   // National overview (FY2024 + cumulative FY2005-FY2024 mature window).
   // FY2025 is partial (applications cut off mid-cycle), FY2026 is bleed; we
@@ -107,6 +131,50 @@ async function main() {
     total_granted: r.granted === null ? null : Number(r.granted),
   }));
 
+  // ─── Geography (Phase 4 follow-up) ────────────────────────────────────
+  // Per-(state, CY) totals — drives the choropleth.
+  const stateFacts = await db.all(`
+    SELECT
+      d.state_code,
+      p.fiscal_year,
+      SUM(p.patents_granted)::DOUBLE AS granted,
+      SUM(p.applications_filed)::DOUBLE AS filed,
+      COUNT(DISTINCT p.institution_sk)::DOUBLE AS n_institutions
+    FROM patents p
+    JOIN dim d USING (institution_sk)
+    WHERE d.state_code IS NOT NULL AND d.country_code = 'US'
+    GROUP BY 1, 2
+    ORDER BY 1, 2
+  `);
+
+  // Per-(city, state, CY) hub facts — drives the bubble overlay.
+  // Filter to hubs with at least 5 lifetime granted patents (tail is invisible
+  // on the map anyway). Coords applied in JS below to skip un-geocoded cities.
+  const hubFacts = await db.all(`
+    WITH city_year AS (
+      SELECT
+        UPPER(d.city) AS city,
+        d.state_code,
+        p.fiscal_year,
+        SUM(p.patents_granted) AS granted,
+        SUM(p.applications_filed) AS filed
+      FROM patents p
+      JOIN dim d USING (institution_sk)
+      WHERE d.city IS NOT NULL AND d.state_code IS NOT NULL AND d.country_code = 'US'
+      GROUP BY 1, 2, 3
+    ),
+    lifetime AS (
+      SELECT city, state_code, SUM(granted) AS lifetime_granted
+      FROM city_year GROUP BY 1, 2
+    )
+    SELECT cy.city, cy.state_code, cy.fiscal_year,
+           cy.granted::DOUBLE AS granted, cy.filed::DOUBLE AS filed
+    FROM city_year cy
+    JOIN lifetime l USING (city, state_code)
+    WHERE l.lifetime_granted >= 5
+    ORDER BY cy.state_code, cy.city, cy.fiscal_year
+  `);
+
   await db.close();
 
   // BigInt-safe coercion.
@@ -117,12 +185,43 @@ async function main() {
     return out;
   };
 
+  // Inline lat/lon on each hub row. Skip rows whose city isn't in the
+  // gazetteer (long tail; would be invisible on the map regardless).
+  const hubFactsWithCoords = hubFacts
+    .map((r) => {
+      const stateName = STATE_NAMES[r.state_code];
+      if (!stateName) return null;
+      const key = `${r.city}|${stateName}`;
+      const coords = cityCoords[key];
+      if (!coords) return null;
+      return {
+        city: r.city,
+        state_code: r.state_code,
+        fiscal_year: Number(r.fiscal_year),
+        granted: toNum(r.granted),
+        filed: toNum(r.filed),
+        lat: coords[0],
+        lon: coords[1],
+      };
+    })
+    .filter((r) => r !== null);
+
+  // Diagnostic: log un-geocoded city volume so future passes can extend the gazetteer.
+  const ungeocoded = hubFacts.filter((r) => {
+    const stateName = STATE_NAMES[r.state_code];
+    if (!stateName) return true;
+    return !cityCoords[`${r.city}|${stateName}`];
+  });
+  const ungeocodedCities = new Set(ungeocoded.map((r) => `${r.city}|${r.state_code}`));
+
   const snapshot = {
     overview: cleanRow(overview),
     year_stack: yearStack.map(cleanRow),
     top_institutions: topInstitutions.map(cleanRow),
     cpc_mix: cpcMix.map(cleanRow),
     fed_funded_trend: fedFundedTrend,
+    state_facts: stateFacts.map(cleanRow),
+    hub_facts: hubFactsWithCoords,
     generated_at: new Date().toISOString(),
     cohort_note:
       'CY2005-CY2024 mature granted-patent window; CY2025-CY2026 partial (truncation flags surfaced). Citations show 5-year forward window; mature cohort = grant CY <= 2020.',
@@ -132,7 +231,12 @@ async function main() {
   const bytes = fs.statSync(OUT).size;
   console.log(`✓ Wrote ${OUT}`);
   console.log(`  ${(bytes / 1024).toFixed(1)} KB`);
-  console.log(`  ${snapshot.year_stack.length} year rows · ${snapshot.top_institutions.length} top institutions · ${snapshot.cpc_mix.length} CPC sections`);
+  console.log(
+    `  ${snapshot.year_stack.length} year rows · ${snapshot.top_institutions.length} top institutions · ${snapshot.cpc_mix.length} CPC sections`,
+  );
+  console.log(
+    `  ${snapshot.state_facts.length} state rows · ${snapshot.hub_facts.length} geocoded hub rows · ${ungeocodedCities.size} un-geocoded cities (skipped from map)`,
+  );
 }
 
 main().catch((e) => {

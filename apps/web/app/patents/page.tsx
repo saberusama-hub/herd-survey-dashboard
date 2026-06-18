@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useMemo, useState } from 'react';
 
+import { PatentHubMap, type PatentHubPoint, type PatentMetricKey } from '@/components/charts/PatentHubMap';
 import { ChartFrame } from '@/components/editorial/ChartFrame';
 import { KpiStrip } from '@/components/editorial/KpiStrip';
 import { SortableTh, useTableSort } from '@/components/editorial/SortableTable';
@@ -41,6 +42,18 @@ interface CpcRow {
   share_of_fy24: number;
 }
 
+interface StateFact {
+  state_code: string;
+  fiscal_year: number;
+  granted: number | null;
+  filed: number | null;
+  n_institutions: number | null;
+}
+
+interface HubFact extends PatentHubPoint {
+  fiscal_year: number;
+}
+
 interface IpSnapshot {
   overview: {
     total_granted_05_24: number;
@@ -61,6 +74,8 @@ interface IpSnapshot {
     fed_funded_count: number | null;
     total_granted: number | null;
   }>;
+  state_facts: StateFact[];
+  hub_facts: HubFact[];
   generated_at: string;
   cohort_note: string;
 }
@@ -80,6 +95,9 @@ export default function PatentsPage() {
   const [snapshot, setSnapshot] = useState<IpSnapshot | null>(null);
   const [windowStart, setWindowStart] = useState<number>(2020);
   const [windowEnd, setWindowEnd] = useState<number>(2024);
+  // Geography section: single-CY picker + metric toggle.
+  const [geoYear, setGeoYear] = useState<number>(2024);
+  const [geoMetric, setGeoMetric] = useState<PatentMetricKey>('granted');
 
   useEffect(() => {
     let cancelled = false;
@@ -117,6 +135,41 @@ export default function PatentsPage() {
     () => yearStack.filter((r) => r.fiscal_year >= CY_MIN && r.fiscal_year <= CY_MAX),
     [yearStack],
   );
+
+  // Geography slices for the active year + metric.
+  const stateValuesByAbbr = useMemo<Record<string, number>>(() => {
+    const out: Record<string, number> = {};
+    if (!snapshot) return out;
+    for (const s of snapshot.state_facts) {
+      if (s.fiscal_year !== geoYear) continue;
+      const v = geoMetric === 'granted' ? s.granted : s.filed;
+      if (v !== null && v !== undefined) out[s.state_code] = Number(v);
+    }
+    return out;
+  }, [snapshot, geoYear, geoMetric]);
+
+  const geoHubs = useMemo<PatentHubPoint[]>(() => {
+    if (!snapshot) return [];
+    return snapshot.hub_facts
+      .filter((h) => h.fiscal_year === geoYear)
+      .map((h) => ({
+        city: h.city,
+        state_code: h.state_code,
+        granted: Number(h.granted) || 0,
+        filed: Number(h.filed) || 0,
+        lat: h.lat,
+        lon: h.lon,
+      }));
+  }, [snapshot, geoYear]);
+
+  // Top 15 hubs by the active metric, for the leaderboard table below the map.
+  const topHubs = useMemo(() => {
+    const value = (h: PatentHubPoint) => (geoMetric === 'granted' ? h.granted : h.filed);
+    return [...geoHubs]
+      .filter((h) => value(h) > 0)
+      .sort((a, b) => value(b) - value(a))
+      .slice(0, 15);
+  }, [geoHubs, geoMetric]);
 
   return (
     <div className="container-wide py-10 md:py-14 space-y-8">
@@ -296,6 +349,61 @@ export default function PatentsPage() {
         )}
       </ChartFrame>
 
+      {/* Geography — state choropleth + city hub bubbles, toggleable */}
+      <GeographyPicker
+        year={geoYear}
+        metric={geoMetric}
+        onYear={setGeoYear}
+        onMetric={setGeoMetric}
+      />
+
+      <ChartFrame
+        eyebrow="Geography"
+        title={`University patent hubs, CY${geoYear} — ${geoMetric === 'granted' ? 'granted' : 'applications filed'}`}
+        sources={[
+          {
+            id: 'uspto_patentsview',
+            subset: `patents_granted (or applications_filed) per (institution × CY) joined to dim_institution.state_code + .city for fiscal_year = ${geoYear}. State choropleth = SUM across institutions in that state; city bubbles = SUM at the institution-headquarters city for cities with ≥ 5 lifetime granted patents.`,
+          },
+          {
+            id: 'ipeds',
+            subset: 'HD directory: state_code + city per institution_sk (via dim_institution).',
+          },
+        ]}
+        methodology={{
+          what: 'Where U.S. university patent activity concentrates geographically. State shading shows total volume; red dots mark the cities where the patents are actually being assigned to. Toggle between granted patents (final grants in this CY) and applications filed (PGPub publications in this CY).',
+          how: 'Each university\'s patents are attributed to its headquarters state and city (from dim_institution). State choropleth = SUM(metric) across institutions in that state. City bubbles = SUM at the institution-HQ city for the ~470 universities with ≥ 5 lifetime granted patents. Bubble area is proportional to the active metric (granted or filed).',
+          caveats:
+            'Reflects institution HQ city, not where research was performed. A university research campus in another city (e.g., an extension or branch campus) is still rolled into the HQ. Multi-campus systems are pinned per Option B (UC Regents → Berkeley, CU System → Boulder, SUNY-RF → Albany, Texas A&M System → College Station, U Maine System → Orono). CY2024–25 application counts are truncated by the ~18-month PGPub publication lag.',
+        }}
+      >
+        {geoHubs.length === 0 ? (
+          <p className="text-sm text-text-tertiary">Loading…</p>
+        ) : (
+          <PatentHubMap
+            stateValues={stateValuesByAbbr}
+            hubs={geoHubs}
+            metric={geoMetric}
+            height={500}
+            labelTop={10}
+          />
+        )}
+      </ChartFrame>
+
+      {/* Hub leaderboard for the active CY × metric */}
+      <ChartFrame
+        eyebrow="Hub leaderboard"
+        title={`Top 15 patent hub cities, CY${geoYear} — ${geoMetric === 'granted' ? 'granted' : 'filed'}`}
+        sources={[
+          {
+            id: 'uspto_patentsview',
+            subset: `Same hub aggregation as the map above; ranked by ${geoMetric === 'granted' ? 'patents_granted' : 'applications_filed'} for fiscal_year = ${geoYear}.`,
+          },
+        ]}
+      >
+        <HubLeaderboard rows={topHubs} metric={geoMetric} />
+      </ChartFrame>
+
       {/* CPC mix */}
       <ChartFrame
         eyebrow="Technology mix"
@@ -383,6 +491,140 @@ function Caveats() {
         </li>
       </ol>
     </details>
+  );
+}
+
+function GeographyPicker({
+  year,
+  metric,
+  onYear,
+  onMetric,
+}: {
+  year: number;
+  metric: PatentMetricKey;
+  onYear: (y: number) => void;
+  onMetric: (m: PatentMetricKey) => void;
+}) {
+  const yearId = useId();
+  return (
+    <div className="-mb-2 flex flex-col gap-2 rounded-md border border-rule bg-surface-elevated px-4 py-3 sm:flex-row sm:items-center sm:gap-4">
+      <p className="text-[11px] uppercase tracking-wider text-text-tertiary">Geography view</p>
+      <div className="flex items-center gap-2">
+        <label htmlFor={yearId} className="text-xs text-text-tertiary">
+          CY
+        </label>
+        <select
+          id={yearId}
+          value={year}
+          onChange={(e) => onYear(Number(e.target.value))}
+          className="h-7 w-24 rounded border border-rule bg-surface px-2 text-sm tnum focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          {ALL_YEARS.map((y) => (
+            <option key={y} value={y}>
+              CY{y}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="flex items-center gap-1 rounded border border-rule bg-surface p-0.5">
+        <button
+          type="button"
+          onClick={() => onMetric('granted')}
+          className={`px-2.5 py-1 text-xs rounded ${
+            metric === 'granted'
+              ? 'bg-accent/10 text-text-primary font-medium'
+              : 'text-text-secondary hover:text-text-primary'
+          }`}
+        >
+          Granted patents
+        </button>
+        <button
+          type="button"
+          onClick={() => onMetric('filed')}
+          className={`px-2.5 py-1 text-xs rounded ${
+            metric === 'filed'
+              ? 'bg-accent/10 text-text-primary font-medium'
+              : 'text-text-secondary hover:text-text-primary'
+          }`}
+        >
+          Applications filed
+        </button>
+      </div>
+      <span className="text-[11px] italic text-text-tertiary">
+        Toggle drives the map fill, bubble size, and leaderboard ranking below.
+      </span>
+    </div>
+  );
+}
+
+function HubLeaderboard({ rows, metric }: { rows: PatentHubPoint[]; metric: PatentMetricKey }) {
+  const accessors = {
+    city: (r: PatentHubPoint) => r.city.toLowerCase(),
+    state_code: (r: PatentHubPoint) => r.state_code,
+    granted: (r: PatentHubPoint) => r.granted,
+    filed: (r: PatentHubPoint) => r.filed,
+  };
+  const {
+    rows: sorted,
+    sort,
+    requestSort,
+  } = useTableSort(rows, {
+    initial: { key: metric === 'granted' ? 'granted' : 'filed', dir: 'desc' },
+    accessors,
+    defaultDir: { city: 'asc', state_code: 'asc' },
+  });
+  if (rows.length === 0) {
+    return <p className="text-sm text-text-tertiary">No hubs to show for this year.</p>;
+  }
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-rule text-left text-text-tertiary">
+            <SortableTh sortKey="city" sort={sort} onSort={requestSort} className="py-2 pr-4">
+              City
+            </SortableTh>
+            <SortableTh sortKey="state_code" sort={sort} onSort={requestSort} className="py-2 pr-4">
+              State
+            </SortableTh>
+            <SortableTh
+              sortKey="granted"
+              sort={sort}
+              onSort={requestSort}
+              align="right"
+              className="py-2 px-3 whitespace-nowrap"
+            >
+              Granted
+            </SortableTh>
+            <SortableTh
+              sortKey="filed"
+              sort={sort}
+              onSort={requestSort}
+              align="right"
+              className="py-2 pl-3 whitespace-nowrap"
+            >
+              Applications filed
+            </SortableTh>
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map((r) => (
+            <tr key={`${r.city}|${r.state_code}`} className="border-b border-rule/60 hover:bg-mute-3/30">
+              <td className="py-1.5 pr-4 text-text-primary">
+                {r.city
+                  .toLowerCase()
+                  .split(/\s+/)
+                  .map((w) => (w.length > 0 ? w[0].toUpperCase() + w.slice(1) : w))
+                  .join(' ')}
+              </td>
+              <td className="py-1.5 pr-4 text-text-secondary">{r.state_code}</td>
+              <td className="py-1.5 px-3 text-right tnum text-text-primary">{formatCount(r.granted)}</td>
+              <td className="py-1.5 pl-3 text-right tnum text-text-secondary">{formatCount(r.filed)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
